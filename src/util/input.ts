@@ -27,116 +27,117 @@ const clamp = (a: number, b: number, c: number) => {
   return a < b ? b : a > c ? c : a;
 };
 
-export default class Input {
-  keys = {};
-  offset: { x: number; y: number } = { x: 0, y: 0 };
-  mouse: { down: boolean; x: number; y: number } = { down: false, x: 0, y: 0 };
-  onClick = undefined;
-  onKeyUp = undefined;
-  onKeyDown = undefined;
-  element: HTMLElement = undefined;
-  width: number = 0;
-  height: number = 0;
-  hasFocus: boolean = true;
+const createInputHandler = () => {
+  let keys = {};
+  let offset: { x: number; y: number } = { x: 0, y: 0 };
+  let mouse: { down: boolean; x: number; y: number } = { down: false, x: 0, y: 0 };
+  let onClick = undefined;
+  let onKeyUp = undefined;
+  let onKeyDown = undefined;
+  let width: number = 0;
+  let height: number = 0;
+  let hasFocus: boolean = true;
+  let element: HTMLElement = undefined;
 
-  constructor(element: HTMLElement) {
-    this.bind(element);
-    this.reset();
-  }
-
-  bind(element: HTMLElement) {
-    if (!element) return;
-    this.element = element;
-    const elementRect = element.getBoundingClientRect();
-    this.offset = { x: elementRect.left, y: elementRect.top };
-    this.width = elementRect.width;
-    this.height = elementRect.height;
+  const bind = (_element: HTMLElement) => {
+    if (!_element) return;
+    element = _element;
+    const elementRect = _element.getBoundingClientRect();
+    offset = { x: elementRect.left, y: elementRect.top };
+    width = elementRect.width;
+    height = elementRect.height;
     // 绑定监听事件
-    document.onkeydown = e => this.keyDown(e.keyCode);
-    document.onkeyup = e => this.keyUp(e.keyCode);
+    document.onkeydown = e => keyDown(e.keyCode);
+    document.onkeyup = e => keyUp(e.keyCode);
     window.onclick = e => {
-      if (e.target === this.element) {
-        this.focus();
+      if (e.target === element) {
+        focus();
       } else {
-        this.blur();
+        blur();
       }
     };
 
-    window.onblur = () => this.blur();
+    window.onblur = () => blur();
 
     document.onmousemove = e => {
-      this.mouseMove(e.pageX, e.pageY);
+      mouseMove(e.pageX, e.pageY);
     };
     element.onmousedown = () => {
-      this.mouseDown();
+      mouseDown();
     };
-    element.onmouseup = () => {
-      this.mouseUp();
+    document.onmouseup = () => {
+      mouseUp();
     };
     // 禁用 选择
     document.onselectstart = () => false;
-  }
+  };
 
-  focus() {
-    if (!this.hasFocus) {
-      this.hasFocus = true;
-      this.reset();
+  const focus = () => {
+    if (!hasFocus) {
+      hasFocus = true;
+      reset();
     }
-  }
+  };
 
-  blur() {
-    this.hasFocus = false;
-    this.reset();
-  }
+  const blur = () => {
+    hasFocus = false;
+    reset();
+  };
 
-  mouseMove(pageX: number, pageY: number) {
-    this.mouse.x = clamp(pageX - this.offset.x, 0, this.width);
-    this.mouse.y = clamp(pageY - this.offset.y, 0, this.height);
-  }
+  const mouseMove = (pageX: number, pageY: number) => {
+    if(!mouse.down) return 
+    mouse.x = clamp(pageX - offset.x, 0, width);
+    mouse.y = clamp(pageY - offset.y, 0, height);
+  };
 
-  mouseDown() {
-    this.mouse.down = true;
-  }
+  const mouseDown = () => {
+    mouse.down = true;
+  };
 
-  mouseUp() {
-    this.mouse.down = false;
-    if (this.hasFocus && this.onClick) {
-      this.onClick(this.mouse.x, this.mouse.y);
+  const mouseUp = () => {
+    mouse.down = false;
+    if (hasFocus && onClick) {
+      onClick(mouse.x, mouse.y);
     }
-  }
+  };
 
-  keyDown(key: number) {
-    const keyName = this.getKeyName(key);
-    const wasKeyDown = this.keys[keyName];
-    this.keys[keyName] = true;
-    if (this.onKeyDown && !wasKeyDown) {
-      this.onKeyDown(keyName);
+  const keyDown = (key: number) => {
+    const keyName = getKeyName(key);
+    console.log(keyName);
+    const wasKeyDown = keys[keyName];
+    keys[keyName] = true;
+    if (onKeyDown && !wasKeyDown) {
+      onKeyDown(keyName);
     }
-    return this.hasFocus;
-  }
+    return hasFocus;
+  };
 
-  keyUp(key: number) {
-    var name = this.getKeyName(key);
-    this.keys[name] = false;
-    if (this.onKeyUp) {
-      this.onKeyUp(name);
+  const keyUp = (key: number) => {
+    var name = getKeyName(key);
+    keys[name] = false;
+    if (onKeyUp) {
+      onKeyUp(name);
     }
-    return this.hasFocus;
-  }
+    return hasFocus;
+  };
 
-  reset() {
-    this.keys = {};
+  const reset = () => {
+    keys = {};
     for (let i = 65; i < 128; i++) {
-      this.keys[String.fromCharCode(i)] = false;
+      keys[String.fromCharCode(i)] = false;
     }
 
     for (let i in KEYNAME) {
-      this.keys[KEYNAME[i]] = false;
+      keys[KEYNAME[i]] = false;
     }
-    this.mouse = { down: false, x: 0, y: 0 };
-  }
+    mouse = { down: false, x: 0, y: 0 };
+  };
 
-  getKeyName(key: number) {
+  const getKeyName = (key: number) => {
     return KEYNAME[key] || String.fromCharCode(key);
-  }
-}
+  };
+
+  return { bind ,element };
+};
+
+export default createInputHandler;

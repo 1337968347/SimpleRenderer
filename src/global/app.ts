@@ -1,7 +1,15 @@
+import createClock from '../util/clock';
+import createInputHandler from '../util/input';
+import createGlUtils from '../util/glUtils';
+
 export default async () => {
-  /**
-   * The code to be executed should be placed within a default function that is
-   * exported by the global script. Ensure all of the code in the global script
-   * is wrapped in the function() that is exported.
-   */
+  const canvasEl = document.querySelector('canvas');
+  const clock = createClock();
+  const { createTexture2DManger, createVertexBufferObject, getContext, setCanvasFullScreen } = createGlUtils();
+
+  const gl = getContext(canvasEl);
+
+  clock.start();
+  const inputHandler = createInputHandler();
+  inputHandler.bind(canvasEl);
 };
