@@ -85,7 +85,7 @@ const createInputHandler = () => {
   };
 
   const mouseMove = (pageX: number, pageY: number) => {
-    if(!mouse.down) return 
+    if (!mouse.down) return;
     mouse.x = clamp(pageX - offset.x, 0, width);
     mouse.y = clamp(pageY - offset.y, 0, height);
   };
@@ -137,7 +137,7 @@ const createInputHandler = () => {
     return KEYNAME[key] || String.fromCharCode(key);
   };
 
-  return { bind ,element };
+  return { bind, element };
 };
 
 export default createInputHandler;
