@@ -34,21 +34,48 @@ const makeProgram = (gl: WebGLRenderingContext, vertexSource: string, fragmentSo
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
     throw 'Linker exception: ' + gl.getProgramInfoLog(program);
   }
-
   return program;
 };
 
+/**
+ * 创建一个shader
+ * @param gl
+ * @param vertexSource
+ * @param fragmentSource
+ * @returns
+ */
 const createShader = (gl: WebGLRenderingContext, vertexSource: string, fragmentSource: string) => {
   const program = makeProgram(gl, vertexSource, fragmentSource);
-  const uniformInfo = {};
+  // const uniformInfo = {};
 
   const use = () => {
     gl.useProgram(program);
   };
 
-  
+  const uniforms = values => {
+    for (let name in values) {
+      const value = values[name];
+      const location = gl.getUniformLocation(program, name);
+      if (typeof value === 'number') {
+        gl.uniform1f(location, value);
+        return;
+      } else {
+        value.uniform(location);
+      }
+    }
+  };
 
-  return { use };
+  const getAttributeLocation = name => {
+    const location = gl.getAttribLocation(program, name);
+    if (location < 0) throw 'attribute not found';
+    return location;
+  };
+
+  return { use, uniforms, getAttributeLocation };
 };
 
-const createShaderManager = () => {};
+const createShaderManager = resources => {
+  const shaders = [];
+
+  
+};
