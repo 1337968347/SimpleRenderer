@@ -74,8 +74,31 @@ const createShader = (gl: WebGLRenderingContext, vertexSource: string, fragmentS
   return { use, uniforms, getAttributeLocation };
 };
 
-const createShaderManager = resources => {
+const createShaderManager = (gl: WebGLRenderingContext, resources: any) => {
   const shaders = [];
 
-  
+  const get = (vertex: string, frag?: string) => {
+    if (!frag) {
+      frag = vertex + '.frag';
+      vertex = vertex + '.vertex';
+    }
+    const key = `${vertex}-${frag}`;
+
+    if (!(key in resources)) {
+      shaders[key] = createShader(gl, getSource(vertex), getSource(frag));
+    }
+    return shaders[key];
+  };
+
+  const getSource = (shaderPath: string) => {
+    const name = _getSourceName(shaderPath);
+    return resources[name] || '';
+  };
+
+  const _getSourceName = name => {
+    const nameArr = name.split('/');
+    return nameArr[nameArr.length - 1];
+  };
+
+  return { get, getSource };
 };

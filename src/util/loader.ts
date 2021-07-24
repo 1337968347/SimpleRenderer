@@ -13,12 +13,12 @@ const createLoader = (rootPath: string) => {
   // 资源加载完成回调
   let _onRendy: () => void;
   // 资源路径 与 资源对应
-  const _resources = {};
+  const resources = {};
 
-  const load = (resources: string[]) => {
-    for (let i = 0; i < resources.length; i++) {
-      const path = resources[i];
-      if (path in _resources) {
+  const load = (_resources: string[]) => {
+    for (let i = 0; i < _resources.length; i++) {
+      const path = _resources[i];
+      if (path in resources) {
         continue;
       }
       pendingStatus.pending++;
@@ -26,7 +26,15 @@ const createLoader = (rootPath: string) => {
 
       if (/\.(jpe?g|gif|png)$/.test(path)) {
         _loadImage(path);
+        return
       }
+
+      if (/\.json$/.test(path)) {
+        _loadJSON(path);
+        return
+      }
+
+      _loadData(path)
     }
     setTimeout(() => {
       pendingStatus.pending === 0 && _onRendy && _onRendy();
@@ -48,8 +56,29 @@ const createLoader = (rootPath: string) => {
     };
   };
 
+
+  const _loadJSON = (src: string) => {
+    fetch(rootPath + src)
+      .then(res => {
+        _success(src, res.json());
+      })
+      .catch(e => {
+        _error(src, e);
+      });
+  };
+
+  const _loadData = (src: string) => {
+    fetch(rootPath + src)
+      .then(res => {
+        _success(src, res.blob());
+      })
+      .catch(e => {
+        _error(src, e);
+      });
+  };
+
   const _success = (src: string, data: any) => {
-    _resources[src] = data;
+    resources[src] = data;
     pendingStatus.pending--;
     pendingStatus.pending === 0 && _onRendy && _onRendy();
   };
@@ -57,13 +86,14 @@ const createLoader = (rootPath: string) => {
   const _error = (src: string, err: any) => {
     pendingStatus.pending--;
     pendingStatus.failed++;
-    _resources[src] = null;
+    resources[src] = null;
     err.src = src;
     throw err;
   };
 
   return {
     load,
+    resources,
     setOnRendy,
   };
 };
