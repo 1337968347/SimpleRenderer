@@ -1,85 +1,135 @@
-export const createSceneNode = (children: any[] = []) => {
-  const visit = (scene: any) => {
-    enter(scene);
-    for (let i = 0; i < children.length; i++) {
-      children[i].visit(scene);
+export class SceneNode {
+  children: any[] = [];
+
+  constructor(childrenP: any[] = []) {
+    this.children = childrenP;
+  }
+
+  visit(scene: any) {
+    this.enter(scene);
+    for (let i = 0; i < this.children.length; i++) {
+      this.children[i].visit(scene);
     }
-    exit(scene);
-  };
+    this.exit(scene);
+  }
 
-  const append = (child: any) => {
-    children.push(child);
-  };
+  append(child: any) {
+    this.children.push(child);
+  }
 
-  const enter = scene => {
+  enter(scene) {
     console.log(scene);
-  };
+  }
 
-  const exit = scene => {
+  exit(scene) {
     console.log(scene);
-  };
+  }
+}
 
-  return {
-    visit,
-    append,
-    enter,
-    exit,
-  };
-};
+export class SceneRenderTarget extends SceneNode {
+  fbo;
+  children: any[] = [];
 
-export const createSceneGraph = (gl: WebGLRenderingContext) => {
-  const root = createSceneNode();
-  let uniforms = {};
-  const shaders = [];
-  const viewportWidth = 640;
-  const viewportHeight = 480;
-  let sceneGraph = undefined;
-  let textureUnit: number = 0;
+  constructor(fbo, children) {
+    super();
+    this.fbo = fbo;
+    this.children = children;
+  }
 
-  const draw = () => {
-    gl.viewport(0, 0, viewportWidth, viewportHeight);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    root.visit(sceneGraph);
-  };
+  enter(scene) {
+    this.fbo.bind();
 
-  const pushUniforms = () => {
-    uniforms = Object.create(uniforms);
-  };
+    scene.gl.clear(scene.gl.COLOR_BUFFER_BIT | scene.gl.DEPTH_BUFFER_BIT);
+    scene.gl.viewport(0, 0, this.fbo.width, this.fbo.height);
+  }
 
-  const popUniforms = () => {
-    uniforms = Object.getPrototypeOf(uniforms);
-  };
+  exit(scene) {
+    this.fbo.unbind();
+    scene.gl.viewport(0, 0, scene.viewportWidth, scene.viewportHeight);
+  }
+}
 
-  const pushTextura = () => {
-    textureUnit++;
-  };
+export class SceneGraph {
+  gl: WebGLRenderingContext;
+  root = new SceneNode();
+  uniforms = {};
+  shaders = [];
+  viewportWidth = 640;
+  viewportHeight = 480;
+  textureUnit: number = 0;
 
-  const popTextura = () => {
-    textureUnit--;
-  };
+  constructor(gl: WebGLRenderingContext) {
+    this.gl = gl;
+    this.root = new SceneNode();
+  }
 
-  const pushShader = shader => {
-    shaders.push(shader);
-  };
+  draw() {
+    this.gl.viewport(0, 0, this.viewportWidth, this.viewportHeight);
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+    this.root.visit(this);
+  }
 
-  const popShader = () => {
-    shaders.pop();
-  };
+  pushUniforms() {
+    this.uniforms = Object.create(this.uniforms);
+  }
 
-  const getShader = () => {
-    return shaders[shaders.length - 1];
-  };
+  popUniforms() {
+    this.uniforms = Object.getPrototypeOf(this.uniforms);
+  }
 
-  return (sceneGraph = {
-    draw,
-    pushUniforms,
-    popUniforms,
-    pushTextura,
-    popTextura,
-    pushShader,
-    popShader,
-    getShader,
-  });
-};
+  pushTextura() {
+    this.textureUnit++;
+  }
+
+  popTextura() {
+    this.textureUnit--;
+  }
+
+  pushShader(shader) {
+    this.shaders.push(shader);
+  }
+
+  popShader() {
+    this.shaders.pop();
+  }
+
+  getShader() {
+    return this.shaders[this.shaders.length - 1];
+  }
+}
+
+export class SceneMaterial {
+  shader: any;
+  uniforms: any;
+  children: any[] = [];
+
+  constructor(shader, uniforms, children) {
+    this.shader = shader;
+    this.uniforms = uniforms;
+
+    this.children = children;
+  }
+
+  enter(scene) {
+    for (let uniform of this.uniforms) {
+      if (uniform.bindTexture) {
+        uniform.bindTexture(scene.pushTextura());
+      }
+    }
+    scene.pushShader(this.shader);
+    this.shader.use();
+    this.shader.uniforms(scene.uniforms);
+    this.shader.uniforms(this.uniforms);
+  }
+
+  exit(scene) {
+    for (let uniform of this.uniforms) {
+      if (uniform.bindTexture) {
+        scene.popTextura();
+      }
+    }
+    scene.popShader();
+  }
+}
 
 export const sceneUtil = () => {};

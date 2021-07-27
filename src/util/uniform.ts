@@ -1,13 +1,13 @@
-interface UniforHandler {
+interface UniformHandler {
   uniform: (location: any) => void;
   value: any;
 }
 interface UniformManager {
-  Mat4: (value: any) => UniforHandler;
-  Mat3: (value: any) => UniforHandler;
-  Vec3: (value: any) => UniforHandler;
-  Vec4: (value: any) => UniforHandler;
-  Int: (value: any) => UniforHandler;
+  Mat4: (value: any) => UniformHandler;
+  Mat3: (value: any) => UniformHandler;
+  Vec3: (value: any) => UniformHandler;
+  Vec4: (value: any) => UniformHandler;
+  Int: (value: any) => UniformHandler;
 }
 const createUniformManager = (gl: WebGLRenderingContext): UniformManager => {
   // 创建一个uniform
