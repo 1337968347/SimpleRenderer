@@ -132,4 +132,14 @@ export class SceneMaterial {
   }
 }
 
+export class SceneCamera {
+  children: any[] = [];
+  
+  
+  constructor(children: any[]) {
+    this.children = children;
+
+  }
+}
+
 export const sceneUtil = () => {};
