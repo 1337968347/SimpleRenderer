@@ -803,7 +803,6 @@ export const mat4 = {
     dest[13] = (a00 * b09 - a01 * b07 + a02 * b06) * invDet;
     dest[14] = (-a30 * b03 + a31 * b01 - a32 * b00) * invDet;
     dest[15] = (a20 * b03 - a21 * b01 + a22 * b00) * invDet;
-
     return dest;
   },
   /*
@@ -1409,352 +1408,352 @@ export const mat4 = {
 
     return dest;
   },
+
+  /*
+   * mat4.frustum
+   * Generates a frustum matrix with the given bounds
+   *
+   * Params:
+   * left, right - scalar, left and right bounds of the frustum
+   * bottom, top - scalar, bottom and top bounds of the frustum
+   * near, far - scalar, near and far bounds of the frustum
+   * dest - Optional, mat4 frustum matrix will be written into
+   *
+   * Returns:
+   * dest if specified, a new mat4 otherwise
+   */
+  frustum: function (left, right, bottom, top, near, far, dest) {
+    if (!dest) {
+      dest = mat4.create();
+    }
+    var rl = right - left;
+    var tb = top - bottom;
+    var fn = far - near;
+    dest[0] = (near * 2) / rl;
+    dest[1] = 0;
+    dest[2] = 0;
+    dest[3] = 0;
+    dest[4] = 0;
+    dest[5] = (near * 2) / tb;
+    dest[6] = 0;
+    dest[7] = 0;
+    dest[8] = (right + left) / rl;
+    dest[9] = (top + bottom) / tb;
+    dest[10] = -(far + near) / fn;
+    dest[11] = -1;
+    dest[12] = 0;
+    dest[13] = 0;
+    dest[14] = -(far * near * 2) / fn;
+    dest[15] = 0;
+    return dest;
+  },
+
+  /*
+   * mat4.perspective
+   * Generates a perspective projection matrix with the given bounds
+   *
+   * Params:
+   * fovy - scalar, vertical field of view
+   * aspect - scalar, aspect ratio. typically viewport width/height
+   * near, far - scalar, near and far bounds of the frustum
+   * dest - Optional, mat4 frustum matrix will be written into
+   *
+   * Returns:
+   * dest if specified, a new mat4 otherwise
+   */
+  perspective: function (fovy, aspect, near, far, dest) {
+    var top = near * Math.tan((fovy * Math.PI) / 360.0);
+    var right = top * aspect;
+    return mat4.frustum(-right, right, -top, top, near, far, dest);
+  },
+
+  /*
+   * mat4.ortho 正交矩阵
+   * Generates a orthogonal projection matrix with the given bounds
+   *
+   * Params:
+   * left, right - scalar, left and right bounds of the frustum
+   * bottom, top - scalar, bottom and top bounds of the frustum
+   * near, far - scalar, near and far bounds of the frustum
+   * dest - Optional, mat4 frustum matrix will be written into
+   *
+   * Returns:
+   * dest if specified, a new mat4 otherwise
+   */
+  ortho: function (left, right, bottom, top, near, far, dest) {
+    if (!dest) {
+      dest = mat4.create();
+    }
+    var rl = right - left;
+    var tb = top - bottom;
+    var fn = far - near;
+    dest[0] = 2 / rl;
+    dest[1] = 0;
+    dest[2] = 0;
+    dest[3] = 0;
+    dest[4] = 0;
+    dest[5] = 2 / tb;
+    dest[6] = 0;
+    dest[7] = 0;
+    dest[8] = 0;
+    dest[9] = 0;
+    dest[10] = -2 / fn;
+    dest[11] = 0;
+    dest[12] = -(left + right) / rl;
+    dest[13] = -(top + bottom) / tb;
+    dest[14] = -(far + near) / fn;
+    dest[15] = 1;
+    return dest;
+  },
+
+  /*
+   * mat4.ortho
+   * Generates a look-at matrix with the given eye position, focal point, and up axis
+   *
+   * Params:
+   * eye - vec3, position of the viewer
+   * center - vec3, point the viewer is looking at
+   * up - vec3 pointing "up"
+   * dest - Optional, mat4 frustum matrix will be written into
+   *
+   * Returns:
+   * dest if specified, a new mat4 otherwise
+   */
+  lookAt: function (eye, center, up, dest) {
+    if (!dest) {
+      dest = mat4.create();
+    }
+
+    var eyex = eye[0],
+      eyey = eye[1],
+      eyez = eye[2],
+      upx = up[0],
+      upy = up[1],
+      upz = up[2],
+      centerx = center[0],
+      centery = center[1],
+      centerz = center[2];
+
+    if (eyex == centerx && eyey == centery && eyez == centerz) {
+      return mat4.identity(dest);
+    }
+
+    var z0, z1, z2, x0, x1, x2, y0, y1, y2, len;
+
+    //vec3.direction(eye, center, z);
+    z0 = eyex - center[0];
+    z1 = eyey - center[1];
+    z2 = eyez - center[2];
+
+    // normalize (no check needed for 0 because of early return)
+    len = 1 / Math.sqrt(z0 * z0 + z1 * z1 + z2 * z2);
+    z0 *= len;
+    z1 *= len;
+    z2 *= len;
+
+    //vec3.normalize(vec3.cross(up, z, x));
+    x0 = upy * z2 - upz * z1;
+    x1 = upz * z0 - upx * z2;
+    x2 = upx * z1 - upy * z0;
+    len = Math.sqrt(x0 * x0 + x1 * x1 + x2 * x2);
+    if (!len) {
+      x0 = 0;
+      x1 = 0;
+      x2 = 0;
+    } else {
+      len = 1 / len;
+      x0 *= len;
+      x1 *= len;
+      x2 *= len;
+    }
+
+    //vec3.normalize(vec3.cross(z, x, y));
+    y0 = z1 * x2 - z2 * x1;
+    y1 = z2 * x0 - z0 * x2;
+    y2 = z0 * x1 - z1 * x0;
+
+    len = Math.sqrt(y0 * y0 + y1 * y1 + y2 * y2);
+    if (!len) {
+      y0 = 0;
+      y1 = 0;
+      y2 = 0;
+    } else {
+      len = 1 / len;
+      y0 *= len;
+      y1 *= len;
+      y2 *= len;
+    }
+
+    dest[0] = x0;
+    dest[1] = y0;
+    dest[2] = z0;
+    dest[3] = 0;
+    dest[4] = x1;
+    dest[5] = y1;
+    dest[6] = z1;
+    dest[7] = 0;
+    dest[8] = x2;
+    dest[9] = y2;
+    dest[10] = z2;
+    dest[11] = 0;
+    dest[12] = -(x0 * eyex + x1 * eyey + x2 * eyez);
+    dest[13] = -(y0 * eyex + y1 * eyey + y2 * eyez);
+    dest[14] = -(z0 * eyex + z1 * eyey + z2 * eyez);
+    dest[15] = 1;
+
+    return dest;
+  },
+
+  /*
+   * mat4.str
+   * Returns a string representation of a mat4
+   *
+   * Params:
+   * mat - mat4 to represent as a string
+   *
+   * Returns:
+   * string representation of mat
+   */
+  str: function (mat) {
+    return (
+      '[' +
+      mat[0] +
+      ', ' +
+      mat[1] +
+      ', ' +
+      mat[2] +
+      ', ' +
+      mat[3] +
+      ', ' +
+      mat[4] +
+      ', ' +
+      mat[5] +
+      ', ' +
+      mat[6] +
+      ', ' +
+      mat[7] +
+      ', ' +
+      mat[8] +
+      ', ' +
+      mat[9] +
+      ', ' +
+      mat[10] +
+      ', ' +
+      mat[11] +
+      ', ' +
+      mat[12] +
+      ', ' +
+      mat[13] +
+      ', ' +
+      mat[14] +
+      ', ' +
+      mat[15] +
+      ']'
+    );
+  },
 };
 
 /*
- * mat4.frustum
- * Generates a frustum matrix with the given bounds
- *
- * Params:
- * left, right - scalar, left and right bounds of the frustum
- * bottom, top - scalar, bottom and top bounds of the frustum
- * near, far - scalar, near and far bounds of the frustum
- * dest - Optional, mat4 frustum matrix will be written into
- *
- * Returns:
- * dest if specified, a new mat4 otherwise
+ * quat4 - Quaternions 四元数
  */
-mat4.frustum = function (left, right, bottom, top, near, far, dest) {
-  if (!dest) {
-    dest = mat4.create();
-  }
-  var rl = right - left;
-  var tb = top - bottom;
-  var fn = far - near;
-  dest[0] = (near * 2) / rl;
-  dest[1] = 0;
-  dest[2] = 0;
-  dest[3] = 0;
-  dest[4] = 0;
-  dest[5] = (near * 2) / tb;
-  dest[6] = 0;
-  dest[7] = 0;
-  dest[8] = (right + left) / rl;
-  dest[9] = (top + bottom) / tb;
-  dest[10] = -(far + near) / fn;
-  dest[11] = -1;
-  dest[12] = 0;
-  dest[13] = 0;
-  dest[14] = -(far * near * 2) / fn;
-  dest[15] = 0;
-  return dest;
-};
+export const quat4 = {
+  /*
+   * quat4.create
+   * Creates a new instance of a quat4 using the default array type
+   * Any javascript array containing at least 4 numeric elements can serve as a quat4
+   *
+   * Params:
+   * quat - Optional, quat4 containing values to initialize with
+   *
+   * Returns:
+   * New quat4
+   */
+  create: function (quat) {
+    var dest = new Float32Array(4);
 
-/*
- * mat4.perspective
- * Generates a perspective projection matrix with the given bounds
- *
- * Params:
- * fovy - scalar, vertical field of view
- * aspect - scalar, aspect ratio. typically viewport width/height
- * near, far - scalar, near and far bounds of the frustum
- * dest - Optional, mat4 frustum matrix will be written into
- *
- * Returns:
- * dest if specified, a new mat4 otherwise
- */
-mat4.perspective = function (fovy, aspect, near, far, dest) {
-  var top = near * Math.tan((fovy * Math.PI) / 360.0);
-  var right = top * aspect;
-  return mat4.frustum(-right, right, -top, top, near, far, dest);
-};
+    if (quat) {
+      dest[0] = quat[0];
+      dest[1] = quat[1];
+      dest[2] = quat[2];
+      dest[3] = quat[3];
+    }
 
-/*
- * mat4.ortho
- * Generates a orthogonal projection matrix with the given bounds
- *
- * Params:
- * left, right - scalar, left and right bounds of the frustum
- * bottom, top - scalar, bottom and top bounds of the frustum
- * near, far - scalar, near and far bounds of the frustum
- * dest - Optional, mat4 frustum matrix will be written into
- *
- * Returns:
- * dest if specified, a new mat4 otherwise
- */
-mat4.ortho = function (left, right, bottom, top, near, far, dest) {
-  if (!dest) {
-    dest = mat4.create();
-  }
-  var rl = right - left;
-  var tb = top - bottom;
-  var fn = far - near;
-  dest[0] = 2 / rl;
-  dest[1] = 0;
-  dest[2] = 0;
-  dest[3] = 0;
-  dest[4] = 0;
-  dest[5] = 2 / tb;
-  dest[6] = 0;
-  dest[7] = 0;
-  dest[8] = 0;
-  dest[9] = 0;
-  dest[10] = -2 / fn;
-  dest[11] = 0;
-  dest[12] = -(left + right) / rl;
-  dest[13] = -(top + bottom) / tb;
-  dest[14] = -(far + near) / fn;
-  dest[15] = 1;
-  return dest;
-};
+    return dest;
+  },
 
-/*
- * mat4.ortho
- * Generates a look-at matrix with the given eye position, focal point, and up axis
- *
- * Params:
- * eye - vec3, position of the viewer
- * center - vec3, point the viewer is looking at
- * up - vec3 pointing "up"
- * dest - Optional, mat4 frustum matrix will be written into
- *
- * Returns:
- * dest if specified, a new mat4 otherwise
- */
-mat4.lookAt = function (eye, center, up, dest) {
-  if (!dest) {
-    dest = mat4.create();
-  }
-
-  var eyex = eye[0],
-    eyey = eye[1],
-    eyez = eye[2],
-    upx = up[0],
-    upy = up[1],
-    upz = up[2],
-    centerx = center[0],
-    centery = center[1],
-    centerz = center[2];
-
-  if (eyex == centerx && eyey == centery && eyez == centerz) {
-    return mat4.identity(dest);
-  }
-
-  var z0, z1, z2, x0, x1, x2, y0, y1, y2, len;
-
-  //vec3.direction(eye, center, z);
-  z0 = eyex - center[0];
-  z1 = eyey - center[1];
-  z2 = eyez - center[2];
-
-  // normalize (no check needed for 0 because of early return)
-  len = 1 / Math.sqrt(z0 * z0 + z1 * z1 + z2 * z2);
-  z0 *= len;
-  z1 *= len;
-  z2 *= len;
-
-  //vec3.normalize(vec3.cross(up, z, x));
-  x0 = upy * z2 - upz * z1;
-  x1 = upz * z0 - upx * z2;
-  x2 = upx * z1 - upy * z0;
-  len = Math.sqrt(x0 * x0 + x1 * x1 + x2 * x2);
-  if (!len) {
-    x0 = 0;
-    x1 = 0;
-    x2 = 0;
-  } else {
-    len = 1 / len;
-    x0 *= len;
-    x1 *= len;
-    x2 *= len;
-  }
-
-  //vec3.normalize(vec3.cross(z, x, y));
-  y0 = z1 * x2 - z2 * x1;
-  y1 = z2 * x0 - z0 * x2;
-  y2 = z0 * x1 - z1 * x0;
-
-  len = Math.sqrt(y0 * y0 + y1 * y1 + y2 * y2);
-  if (!len) {
-    y0 = 0;
-    y1 = 0;
-    y2 = 0;
-  } else {
-    len = 1 / len;
-    y0 *= len;
-    y1 *= len;
-    y2 *= len;
-  }
-
-  dest[0] = x0;
-  dest[1] = y0;
-  dest[2] = z0;
-  dest[3] = 0;
-  dest[4] = x1;
-  dest[5] = y1;
-  dest[6] = z1;
-  dest[7] = 0;
-  dest[8] = x2;
-  dest[9] = y2;
-  dest[10] = z2;
-  dest[11] = 0;
-  dest[12] = -(x0 * eyex + x1 * eyey + x2 * eyez);
-  dest[13] = -(y0 * eyex + y1 * eyey + y2 * eyez);
-  dest[14] = -(z0 * eyex + z1 * eyey + z2 * eyez);
-  dest[15] = 1;
-
-  return dest;
-};
-
-/*
- * mat4.str
- * Returns a string representation of a mat4
- *
- * Params:
- * mat - mat4 to represent as a string
- *
- * Returns:
- * string representation of mat
- */
-mat4.str = function (mat) {
-  return (
-    '[' +
-    mat[0] +
-    ', ' +
-    mat[1] +
-    ', ' +
-    mat[2] +
-    ', ' +
-    mat[3] +
-    ', ' +
-    mat[4] +
-    ', ' +
-    mat[5] +
-    ', ' +
-    mat[6] +
-    ', ' +
-    mat[7] +
-    ', ' +
-    mat[8] +
-    ', ' +
-    mat[9] +
-    ', ' +
-    mat[10] +
-    ', ' +
-    mat[11] +
-    ', ' +
-    mat[12] +
-    ', ' +
-    mat[13] +
-    ', ' +
-    mat[14] +
-    ', ' +
-    mat[15] +
-    ']'
-  );
-};
-
-/*
- * quat4 - Quaternions
- */
-quat4 = {};
-
-/*
- * quat4.create
- * Creates a new instance of a quat4 using the default array type
- * Any javascript array containing at least 4 numeric elements can serve as a quat4
- *
- * Params:
- * quat - Optional, quat4 containing values to initialize with
- *
- * Returns:
- * New quat4
- */
-quat4.create = function (quat) {
-  var dest = new Float32Array(4);
-
-  if (quat) {
+  /*
+   * quat4.set
+   * Copies the values of one quat4 to another
+   *
+   * Params:
+   * quat - quat4 containing values to copy
+   * dest - quat4 receiving copied values
+   *
+   * Returns:
+   * dest
+   */
+  set: function (quat, dest) {
     dest[0] = quat[0];
     dest[1] = quat[1];
     dest[2] = quat[2];
     dest[3] = quat[3];
-  }
 
-  return dest;
-};
+    return dest;
+  },
 
-/*
- * quat4.set
- * Copies the values of one quat4 to another
- *
- * Params:
- * quat - quat4 containing values to copy
- * dest - quat4 receiving copied values
- *
- * Returns:
- * dest
- */
-quat4.set = function (quat, dest) {
-  dest[0] = quat[0];
-  dest[1] = quat[1];
-  dest[2] = quat[2];
-  dest[3] = quat[3];
+  /*
+   * quat4.calculateW
+   * Calculates the W component of a quat4 from the X, Y, and Z components.
+   * Assumes that quaternion is 1 unit in length.
+   * Any existing W component will be ignored.
+   *
+   * Params:
+   * quat - quat4 to calculate W component of
+   * dest - Optional, quat4 receiving calculated values. If not specified result is written to quat
+   *
+   * Returns:
+   * dest if specified, quat otherwise
+   */
+  calculateW: function (quat, dest) {
+    var x = quat[0],
+      y = quat[1],
+      z = quat[2];
 
-  return dest;
-};
+    if (!dest || quat == dest) {
+      quat[3] = -Math.sqrt(Math.abs(1.0 - x * x - y * y - z * z));
+      return quat;
+    }
+    dest[0] = x;
+    dest[1] = y;
+    dest[2] = z;
+    dest[3] = -Math.sqrt(Math.abs(1.0 - x * x - y * y - z * z));
+    return dest;
+  },
 
-/*
- * quat4.calculateW
- * Calculates the W component of a quat4 from the X, Y, and Z components.
- * Assumes that quaternion is 1 unit in length.
- * Any existing W component will be ignored.
- *
- * Params:
- * quat - quat4 to calculate W component of
- * dest - Optional, quat4 receiving calculated values. If not specified result is written to quat
- *
- * Returns:
- * dest if specified, quat otherwise
- */
-quat4.calculateW = function (quat, dest) {
-  var x = quat[0],
-    y = quat[1],
-    z = quat[2];
-
-  if (!dest || quat == dest) {
-    quat[3] = -Math.sqrt(Math.abs(1.0 - x * x - y * y - z * z));
-    return quat;
-  }
-  dest[0] = x;
-  dest[1] = y;
-  dest[2] = z;
-  dest[3] = -Math.sqrt(Math.abs(1.0 - x * x - y * y - z * z));
-  return dest;
-};
-
-/*
- * quat4.inverse
- * Calculates the inverse of a quat4
- *
- * Params:
- * quat - quat4 to calculate inverse of
- * dest - Optional, quat4 receiving inverse values. If not specified result is written to quat
- *
- * Returns:
- * dest if specified, quat otherwise
- */
-quat4.inverse = function (quat, dest) {
-  if (!dest || quat == dest) {
-    quat[0] *= -1;
-    quat[1] *= -1;
-    quat[2] *= -1;
-    return quat;
-  }
-  dest[0] = -quat[0];
-  dest[1] = -quat[1];
-  dest[2] = -quat[2];
-  dest[3] = quat[3];
-  return dest;
+  /*
+   * quat4.inverse
+   * Calculates the inverse of a quat4
+   *
+   * Params:
+   * quat - quat4 to calculate inverse of
+   * dest - Optional, quat4 receiving inverse values. If not specified result is written to quat
+   *
+   * Returns:
+   * dest if specified, quat otherwise
+   */
+  inverse: function (quat, dest) {
+    if (!dest || quat == dest) {
+      quat[0] *= -1;
+      quat[1] *= -1;
+      quat[2] *= -1;
+      return quat;
+    }
+    dest[0] = -quat[0];
+    dest[1] = -quat[1];
+    dest[2] = -quat[2];
+    dest[3] = quat[3];
+    return dest;
+  },
 };
 
 /*
