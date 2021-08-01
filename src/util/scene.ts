@@ -1,3 +1,4 @@
+import { mat4, vec3 } from '../lib/MV';
 export class SceneNode {
   children: any[] = [];
 
@@ -134,11 +135,25 @@ export class SceneMaterial {
 
 export class SceneCamera {
   children: any[] = [];
-  
-  
+  position: Float32Array;
+  pitch: number = 0.0;
+  yaw: number = 0.0;
+  near: number = 0.1;
+  far: number = 5000;
+  fov: number = 50;
+
   constructor(children: any[]) {
     this.children = children;
+    this.position = vec3.create([0, 0, 10]);
+  }
 
+  // ModelView
+  getWorldView() {
+    const matrix = mat4.identity(mat4.create());
+    mat4.rotateX(matrix, this.pitch);
+    mat4.rotateY(matrix, this.yaw);
+    mat4.translate(matrix, vec3.negate(this.position, vec3.create()));
+    return matrix;
   }
 }
 

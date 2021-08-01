@@ -41,7 +41,7 @@ export const vec3 = {
    * Returns:
    * New vec3
    */
-  create: function (vec) {
+  create: function (vec?) {
     var dest = new Float32Array(3);
 
     if (vec) {
@@ -1061,7 +1061,7 @@ export const mat4 = {
    * Returns:
    * dest if specified, mat otherwise
    */
-  translate: function (mat, vec, dest) {
+  translate: function (mat, vec, dest?) {
     var x = vec[0],
       y = vec[1],
       z = vec[2];
