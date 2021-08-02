@@ -1422,7 +1422,7 @@ export const mat4 = {
    * Returns:
    * dest if specified, a new mat4 otherwise
    */
-  frustum: function (left, right, bottom, top, near, far, dest) {
+  frustum: function (left: number, right: number, bottom: number, top: number, near: number, far: number, dest?) {
     if (!dest) {
       dest = mat4.create();
     }
@@ -1461,7 +1461,7 @@ export const mat4 = {
    * Returns:
    * dest if specified, a new mat4 otherwise
    */
-  perspective: function (fovy, aspect, near, far, dest) {
+  perspective: function (fovy: number, aspect: number, near: number, far: number, dest?) {
     var top = near * Math.tan((fovy * Math.PI) / 360.0);
     var right = top * aspect;
     return mat4.frustum(-right, right, -top, top, near, far, dest);

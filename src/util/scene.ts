@@ -1,4 +1,6 @@
-import { mat4, vec3 } from '../lib/MV';
+import { mat3, mat4, vec3 } from '../lib/MV';
+import UniformManager from './uniform';
+
 export class SceneNode {
   children: any[] = [];
 
@@ -111,7 +113,7 @@ export class SceneMaterial {
     this.children = children;
   }
 
-  enter(scene) {
+  enter(scene: SceneGraph) {
     for (let uniform of this.uniforms) {
       if (uniform.bindTexture) {
         uniform.bindTexture(scene.pushTextura());
@@ -123,7 +125,7 @@ export class SceneMaterial {
     this.shader.uniforms(this.uniforms);
   }
 
-  exit(scene) {
+  exit(scene: SceneGraph) {
     for (let uniform of this.uniforms) {
       if (uniform.bindTexture) {
         scene.popTextura();
@@ -134,6 +136,7 @@ export class SceneMaterial {
 }
 
 export class SceneCamera {
+  gl: WebGLRenderingContext;
   children: any[] = [];
   position: Float32Array;
   pitch: number = 0.0;
@@ -142,9 +145,28 @@ export class SceneCamera {
   far: number = 5000;
   fov: number = 50;
 
-  constructor(children: any[]) {
+  constructor(gl: WebGLRenderingContext, children: any[]) {
     this.children = children;
+    this.gl = gl;
     this.position = vec3.create([0, 0, 10]);
+  }
+
+  enter(scene: SceneGraph) {
+    scene.pushUniforms();
+    scene.uniforms['projection'] = UniformManager.Mat4(this.gl)(this.getProjection(scene));
+  }
+
+  exit(scene: SceneGraph) {
+    scene.popUniforms();
+  }
+
+  getInverseRotation() {
+    return mat3.toMat4(mat4.toInverseMat3(this.getWorldView()));
+  }
+
+  // project
+  getProjection(scene: SceneGraph) {
+    return mat4.perspective(this.fov, scene.viewportWidth / scene.viewportHeight, this.near, this.far);
   }
 
   // ModelView
