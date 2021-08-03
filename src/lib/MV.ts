@@ -1032,7 +1032,7 @@ export const mat4 = {
    * Returns:
    * dest if specified, vec otherwise
    */
-  multiplyVec4: function (mat, vec, dest) {
+  multiplyVec4: function (mat, vec: Float32Array, dest?: Float32Array) {
     if (!dest) {
       dest = vec;
     }
@@ -2075,7 +2075,7 @@ export const vec4 = {
    * Returns  :
    * New vec4
    */
-  create: function (vec, w) {
+  create: function (vec?: Float32Array, w?: number) {
     var dest = new Float32Array(4);
 
     if (vec) {
@@ -2103,7 +2103,7 @@ export const vec4 = {
    * Returns:
    * dest if specified, vec otherwise
    */
-  scale: function (vec, val, dest) {
+  scale: function (vec, val: number, dest?) {
     if (!dest || vec == dest) {
       vec[0] *= val;
       vec[1] *= val;

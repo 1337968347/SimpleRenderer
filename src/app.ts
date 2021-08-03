@@ -1,15 +1,14 @@
 import createClock from './util/clock';
 import createInputHandler from './util/input';
-import createGlUtils from './util/glUtils';
-import createUniformManager from './util/uniform';
+import { getGL } from './util/glUtils';
+import Uniform from './util/uniform';
 
 export default async () => {
   const canvasEl = document.querySelector('canvas');
   const clock = createClock();
-  const glUtils = createGlUtils();
-  const gl = glUtils.getContext(canvasEl);
-  const uniform = createUniformManager(gl);
-  console.log(uniform);
+  const gl = getGL();
+  const uniform = new Uniform();
+  console.log(uniform, gl);
   clock.start();
   const inputHandler = createInputHandler();
   inputHandler.bind(canvasEl);

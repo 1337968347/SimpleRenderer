@@ -1,3 +1,4 @@
+import { GlValue } from './uniform';
 /**
  * 创建一个Shader
  * @param gl
@@ -44,61 +45,69 @@ const makeProgram = (gl: WebGLRenderingContext, vertexSource: string, fragmentSo
  * @param fragmentSource
  * @returns
  */
-const createShader = (gl: WebGLRenderingContext, vertexSource: string, fragmentSource: string) => {
-  const program = makeProgram(gl, vertexSource, fragmentSource);
-  // const uniformInfo = {};
+export class Shader {
+  gl: WebGLRenderingContext;
+  program: WebGLProgram;
 
-  const use = () => {
-    gl.useProgram(program);
-  };
+  constructor(gl: WebGLRenderingContext, vertexSource: string, fragmentSource: string) {
+    this.gl = gl;
+    this.program = makeProgram(gl, vertexSource, fragmentSource);
+  }
 
-  const uniforms = values => {
+  use() {
+    this.gl.useProgram(this.program);
+  }
+
+  uniforms(values: GlValue[]) {
     for (let name in values) {
       const value = values[name];
-      const location = gl.getUniformLocation(program, name);
+      const location = this.gl.getUniformLocation(this.program, name);
       if (typeof value === 'number') {
-        gl.uniform1f(location, value);
+        this.gl.uniform1f(location, value);
         return;
       } else {
         value.uniform(location);
       }
     }
-  };
+  }
 
-  const getAttributeLocation = name => {
-    const location = gl.getAttribLocation(program, name);
+  getAttributeLocation(name: string) {
+    const location = this.gl.getAttribLocation(this.program, name);
     if (location < 0) throw 'attribute not found';
     return location;
-  };
+  }
+}
 
-  return { use, uniforms, getAttributeLocation };
-};
+export class ShaderManager {
+  shaders: { [propName: string]: Shader };
+  gl: WebGLRenderingContext;
+  resources: any;
 
-const createShaderManager = (gl: WebGLRenderingContext, resources: any) => {
-  const shaders = [];
+  constructor(gl: WebGLRenderingContext, resources: any) {
+    this.gl = gl;
+    this.resources = resources;
+  }
 
-  const get = (vertex: string, frag?: string) => {
+  get(vertex: string, frag?: string) {
     if (!frag) {
       frag = vertex + '.frag';
       vertex = vertex + '.vertex';
     }
     const key = `${vertex}-${frag}`;
 
-    if (!(key in resources)) {
-      shaders[key] = createShader(gl, getSource(vertex), getSource(frag));
+    if (!(key in this.resources)) {
+      this.shaders[key] = new Shader(this.gl, this.getSource(vertex), this.getSource(frag));
     }
-    return shaders[key];
-  };
+    return this.shaders[key];
+  }
 
-  const getSource = (shaderPath: string) => {
-    const name = _getSourceName(shaderPath);
-    return resources[name] || '';
-  };
+  getSource(shaderPath: string) {
+    const name = this._getSourceName(shaderPath);
+    return this.resources[name] || '';
+  }
 
-  const _getSourceName = name => {
+  _getSourceName(name) {
     const nameArr = name.split('/');
     return nameArr[nameArr.length - 1];
-  };
-
-  return { get, getSource };
-};
+  }
+}

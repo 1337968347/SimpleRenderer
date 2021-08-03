@@ -1,12 +1,15 @@
 let globalGL = undefined;
-const getContext = (canvas: HTMLCanvasElement) => {
+
+export const getGL = (canvas?: HTMLCanvasElement) => {
   if (!globalGL) {
+    if (!canvas) canvas = document.querySelector('canvas');
+    if (!canvas) return null;
     globalGL = canvas.getContext('webgl');
   }
   return globalGL;
 };
 
-const createTexture2DManger = (gl: WebGLRenderingContext, image: HTMLImageElement) => {
+export const createTexture2DManger = (gl: WebGLRenderingContext, image: HTMLImageElement) => {
   const texture: WebGLTexture = gl.createTexture();
   let unit: number = -1;
 
@@ -32,7 +35,7 @@ const createTexture2DManger = (gl: WebGLRenderingContext, image: HTMLImageElemen
   return { uniform, bind };
 };
 
-const createVertexBufferObject = (gl: WebGLRenderingContext, data: BufferSource) => {
+export const createVertexBufferObject = (gl: WebGLRenderingContext, data: BufferSource) => {
   const bind = () => {
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
   };
@@ -52,7 +55,7 @@ const createVertexBufferObject = (gl: WebGLRenderingContext, data: BufferSource)
   };
 };
 
-const setCanvasFullScreen = (canvas: HTMLCanvasElement, scene) => {
+export const setCanvasFullScreen = (canvas: HTMLCanvasElement, scene) => {
   const onResize = () => {
     canvas.width = scene.viewportWidth = window.innerWidth;
     canvas.height = scene.viewportHeight = window.innerHeight;
@@ -61,9 +64,3 @@ const setCanvasFullScreen = (canvas: HTMLCanvasElement, scene) => {
   window.addEventListener('resize', onResize, false);
   onResize();
 };
-
-const createGlUtils = () => {
-  return { createTexture2DManger, createVertexBufferObject, getContext, setCanvasFullScreen };
-};
-
-export default createGlUtils;
