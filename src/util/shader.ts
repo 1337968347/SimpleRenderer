@@ -71,7 +71,7 @@ export class Shader {
     }
   }
 
-  getAttributeLocation(name: string) {
+  getAttribLocation(name: string) {
     const location = this.gl.getAttribLocation(this.program, name);
     if (location < 0) throw 'attribute not found';
     return location;

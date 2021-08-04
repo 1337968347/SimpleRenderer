@@ -1,4 +1,6 @@
 import { mat3, mat4, vec3, vec4 } from '../lib/MV';
+import { getGL, VertexBufferObject } from './glUtils';
+import { Shader } from './shader';
 import Uniform from './uniform';
 
 export class SceneNode {
@@ -108,16 +110,16 @@ export class SceneCamera {
     scene.uniforms['worldView'] = Uniform.Mat4(this.getWorldView());
   }
 
+  exit(scene: SceneGraph) {
+    scene.popUniforms();
+  }
+
   project(point, scene: SceneGraph) {
     const mvp = mat4.create();
     mat4.multiply(this.getProjection(scene), this.getWorldView(), mvp);
     const projected = mat4.multiplyVec4(mvp, point, vec4.create());
     vec4.scale(projected, 1 / projected[3]);
     return projected;
-  }
-
-  exit(scene: SceneGraph) {
-    scene.popUniforms();
   }
 
   getInverseRotation() {
@@ -143,7 +145,7 @@ export class SceneGraph {
   gl: WebGLRenderingContext;
   root = new SceneNode();
   uniforms = {};
-  shaders = [];
+  shaders: Shader[] = [];
   viewportWidth = 640;
   viewportHeight = 480;
   textureUnit: number = 0;
@@ -185,5 +187,24 @@ export class SceneGraph {
 
   getShader() {
     return this.shaders[this.shaders.length - 1];
+  }
+}
+
+export class SceneSimpleMesh {
+  vbo: VertexBufferObject;
+  gl: WebGLRenderingContext;
+  constructor(vbo: VertexBufferObject) {
+    this.vbo = vbo;
+    this.gl = getGL();
+  }
+
+  visit(scene: SceneGraph) {
+    const shader = scene.getShader();
+    const location = shader.getAttribLocation('position');
+    const stride = 0;
+    const offset = 0;
+    const normalized = false;
+    this.gl.enableVertexAttribArray(location);
+    this.gl.vertexAttribPointer(location, 3, this.gl.FLOAT, normalized, stride, offset);
   }
 }

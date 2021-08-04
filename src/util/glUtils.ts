@@ -9,51 +9,57 @@ export const getGL = (canvas?: HTMLCanvasElement) => {
   return globalGL;
 };
 
-export const createTexture2DManger = (gl: WebGLRenderingContext, image: HTMLImageElement) => {
-  const texture: WebGLTexture = gl.createTexture();
-  let unit: number = -1;
+export class Texture2D {
+  gl: WebGLRenderingContext;
+  texture: WebGLTexture;
+  image: HTMLImageElement;
+  unit: number = -1;
 
-  const bind = (_unit?: number) => {
-    if (_unit !== undefined) {
-      gl.activeTexture(gl.TEXTURE0 + _unit);
-      unit = _unit;
+  constructor(image: HTMLImageElement) {
+    this.image = image;
+    this.gl = getGL();
+    this.texture = this.gl.createTexture();
+
+    const gl = this.gl;
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    gl.generateMipmap(gl.TEXTURE_2D);
+  }
+
+  bind(unit: number) {
+    if (unit !== undefined) {
+      this.gl.activeTexture(this.gl.TEXTURE0 + unit);
+      this.unit = unit;
     }
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-  };
+    this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
+  }
 
-  const uniform = (location: number) => {
-    gl.uniform1i(location, unit);
-  };
+  uniform(location: number) {
+    this.gl.uniform1i(location, this.unit);
+  }
+}
 
-  bind();
+export class VertexBufferObject {
+  gl: WebGLRenderingContext;
+  buffer: WebGLBuffer;
+  data: Float32Array;
+  constructor(vertexData: Float32Array) {
+    this.data = vertexData;
+    this.gl = getGL();
+    this.buffer = this.gl.createBuffer();
+    this.bind();
+  }
 
-  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-  gl.generateMipmap(gl.TEXTURE_2D);
-  return { uniform, bind };
-};
+  bind() {
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffer);
+  }
 
-export const createVertexBufferObject = (gl: WebGLRenderingContext, data: BufferSource) => {
-  const bind = () => {
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-  };
-
-  const draw = () => {
-    gl.drawArrays(gl.TRIANGLES, 0, length / 3);
-  };
-
-  let buffer = gl.createBuffer();
-  const length = data.byteLength;
-  bind();
-  gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
-
-  return {
-    bind,
-    draw,
-  };
-};
+  drawTriangles() {
+    this.gl.drawArrays(this.gl.TRIANGLES, 0, this.data.length / 3);
+  }
+}
 
 export const setCanvasFullScreen = (canvas: HTMLCanvasElement, scene) => {
   const onResize = () => {
