@@ -1,3 +1,4 @@
+import { getGL } from './glUtils';
 import { GlValue } from './uniform';
 /**
  * 创建一个Shader
@@ -49,16 +50,16 @@ export class Shader {
   gl: WebGLRenderingContext;
   program: WebGLProgram;
 
-  constructor(gl: WebGLRenderingContext, vertexSource: string, fragmentSource: string) {
-    this.gl = gl;
-    this.program = makeProgram(gl, vertexSource, fragmentSource);
+  constructor(vertexSource: string, fragmentSource: string) {
+    this.gl = getGL();
+    this.program = makeProgram(this.gl, vertexSource, fragmentSource);
   }
 
   use() {
     this.gl.useProgram(this.program);
   }
 
-  uniforms(values: GlValue[]) {
+  uniforms(values: { [k: string]: GlValue }) {
     for (let name in values) {
       const value = values[name];
       const location = this.gl.getUniformLocation(this.program, name);
@@ -83,8 +84,8 @@ export class ShaderManager {
   gl: WebGLRenderingContext;
   resources: any;
 
-  constructor(gl: WebGLRenderingContext, resources: any) {
-    this.gl = gl;
+  constructor(resources: any) {
+    this.gl = getGL();
     this.resources = resources;
   }
 
@@ -96,7 +97,7 @@ export class ShaderManager {
     const key = `${vertex}-${frag}`;
 
     if (!(key in this.resources)) {
-      this.shaders[key] = new Shader(this.gl, this.getSource(vertex), this.getSource(frag));
+      this.shaders[key] = new Shader(this.getSource(vertex), this.getSource(frag));
     }
     return this.shaders[key];
   }

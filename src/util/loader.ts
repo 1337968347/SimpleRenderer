@@ -4,7 +4,7 @@ interface PendIngStatus {
   failed: number;
 }
 
-const createLoader = (rootPath: string) => {
+export const createLoader = (rootPath: string) => {
   const pendingStatus: PendIngStatus = {
     total: 0,
     pending: 0,

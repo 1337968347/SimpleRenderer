@@ -55,11 +55,11 @@ export class SceneRenderTarget extends SceneNode {
 }
 
 export class SceneMaterial {
-  shader: any;
+  shader: Shader;
   uniforms: any;
   children: any[] = [];
 
-  constructor(shader, uniforms, children) {
+  constructor(shader: Shader, uniforms, children) {
     this.shader = shader;
     this.uniforms = uniforms;
 
@@ -98,9 +98,9 @@ export class SceneCamera {
   far: number = 5000;
   fov: number = 50;
 
-  constructor(gl: WebGLRenderingContext, children: any[]) {
+  constructor(children: any[]) {
     this.children = children;
-    this.gl = gl;
+    this.gl = getGL();
     this.position = vec3.create([0, 0, 10]);
   }
 
@@ -177,7 +177,7 @@ export class SceneGraph {
     this.textureUnit--;
   }
 
-  pushShader(shader) {
+  pushShader(shader: Shader) {
     this.shaders.push(shader);
   }
 
