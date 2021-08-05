@@ -2,6 +2,7 @@ import { mat3, mat4, vec3, vec4 } from '../lib/MV';
 import { getGL, VertexBufferObject } from './glUtils';
 import { Shader } from './shader';
 import Uniform from './uniform';
+import { GlValue } from './uniform';
 
 export class SceneNode {
   children: any[] = [];
@@ -10,7 +11,7 @@ export class SceneNode {
     this.children = childrenP;
   }
 
-  visit(scene: any) {
+  visit(scene: SceneGraph) {
     this.enter(scene);
     for (let i = 0; i < this.children.length; i++) {
       this.children[i].visit(scene);
@@ -22,12 +23,12 @@ export class SceneNode {
     this.children.push(child);
   }
 
-  enter(scene) {
-    console.log(scene);
+  enter(_scene) {
+    // console.log(scene);
   }
 
-  exit(scene) {
-    console.log(scene);
+  exit(_scene) {
+    // console.log(scene);
   }
 }
 
@@ -54,12 +55,13 @@ export class SceneRenderTarget extends SceneNode {
   }
 }
 
-export class SceneMaterial {
+export class SceneMaterial extends SceneNode {
   shader: Shader;
-  uniforms: any;
+  uniforms: { [k: string]: GlValue };
   children: any[] = [];
 
   constructor(shader: Shader, uniforms, children) {
+    super();
     this.shader = shader;
     this.uniforms = uniforms;
 
@@ -67,11 +69,11 @@ export class SceneMaterial {
   }
 
   enter(scene: SceneGraph) {
-    for (let uniform of this.uniforms) {
-      if (uniform.bindTexture) {
-        uniform.bindTexture(scene.pushTextura());
-      }
-    }
+    // for (let uniform of Object.values(this.uniforms)) {
+    //   if (uniform.bindTexture) {
+    //     uniform.bindTexture(scene.pushTextura());
+    //   }
+    // }
     scene.pushShader(this.shader);
     this.shader.use();
     this.shader.uniforms(scene.uniforms);
@@ -79,16 +81,16 @@ export class SceneMaterial {
   }
 
   exit(scene: SceneGraph) {
-    for (let uniform of this.uniforms) {
-      if (uniform.bindTexture) {
-        scene.popTextura();
-      }
-    }
+    // for (let uniform of this.uniforms) {
+    //   if (uniform.bindTexture) {
+    //     scene.popTextura();
+    //   }
+    // }
     scene.popShader();
   }
 }
 
-export class SceneCamera {
+export class SceneCamera extends SceneNode {
   gl: WebGLRenderingContext;
   children: any[] = [];
   position: Float32Array;
@@ -99,6 +101,7 @@ export class SceneCamera {
   fov: number = 50;
 
   constructor(children: any[]) {
+    super();
     this.children = children;
     this.gl = getGL();
     this.position = vec3.create([0, 0, 10]);
@@ -204,7 +207,10 @@ export class SceneSimpleMesh {
     const stride = 0;
     const offset = 0;
     const normalized = false;
-    this.gl.enableVertexAttribArray(location);
     this.gl.vertexAttribPointer(location, 3, this.gl.FLOAT, normalized, stride, offset);
+    this.gl.enableVertexAttribArray(location);
+    
+    this.vbo.bind();
+    this.vbo.drawTriangles();
   }
 }

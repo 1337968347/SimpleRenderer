@@ -80,7 +80,8 @@ export class Shader {
 }
 
 export class ShaderManager {
-  shaders: { [propName: string]: Shader };
+  shaders: { [propName: string]: Shader } = {};
+  prefix: string = 'shaders/';
   gl: WebGLRenderingContext;
   resources: any;
 
@@ -104,7 +105,8 @@ export class ShaderManager {
 
   getSource(shaderPath: string) {
     const name = this._getSourceName(shaderPath);
-    return this.resources[name] || '';
+    const path = this.prefix + name
+    return this.resources[path] || '';
   }
 
   _getSourceName(name) {

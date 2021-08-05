@@ -4,96 +4,99 @@ interface PendIngStatus {
   failed: number;
 }
 
-export const createLoader = (rootPath: string) => {
-  const pendingStatus: PendIngStatus = {
+export default class Loader {
+  rootPath: string;
+  resources = {};
+  // 资源加载完成回调
+  onRendy: () => void;
+  pendingStatus: PendIngStatus = {
     total: 0,
     pending: 0,
     failed: 0,
   };
-  // 资源加载完成回调
-  let _onRendy: () => void;
-  // 资源路径 与 资源对应
-  const resources = {};
 
-  const load = (_resources: string[]) => {
-    for (let i = 0; i < _resources.length; i++) {
-      const path = _resources[i];
+  constructor(rootPath: string) {
+    this.rootPath = rootPath;
+  }
+
+  load(resources: string[]) {
+    for (let i = 0; i < resources.length; i++) {
+      const path = resources[i];
       if (path in resources) {
         continue;
       }
-      pendingStatus.pending++;
-      pendingStatus.total++;
+      this.pendingStatus.pending++;
+      this.pendingStatus.total++;
 
       if (/\.(jpe?g|gif|png)$/.test(path)) {
-        _loadImage(path);
-        return
+        this.loadImage(path);
+        return;
       }
 
       if (/\.json$/.test(path)) {
-        _loadJSON(path);
-        return
+        this.loadJSON(path);
+        return;
       }
 
-      _loadData(path)
+      this.loadData(path);
     }
     setTimeout(() => {
-      pendingStatus.pending === 0 && _onRendy && _onRendy();
+      this.pendingStatus.pending === 0 && this.onRendy && this.onRendy();
     }, 1);
-  };
+  }
 
-  const setOnRendy = (onRendy: () => void) => {
-    _onRendy = onRendy;
-  };
+  setOnRendy(onRendy: () => void) {
+    this.onRendy = onRendy;
+  }
 
-  const _loadImage = (src: string) => {
+  loadImage = (src: string) => {
     const imageEl = document.createElement('img');
-    imageEl.src = rootPath + src;
+    imageEl.src = this.rootPath + src;
     imageEl.onload = () => {
-      _success(src, imageEl);
+      this.success(src, imageEl);
     };
     imageEl.onerror = () => {
-      _error(src, imageEl);
+      this.error(src, imageEl);
     };
   };
 
-
-  const _loadJSON = (src: string) => {
-    fetch(rootPath + src)
-      .then(res => {
-        _success(src, res.json());
+  loadJSON = (src: string) => {
+    fetch(this.rootPath + src)
+      .then(async res => {
+        return res.json();
       })
+      .then(json => this.success(src, json))
       .catch(e => {
-        _error(src, e);
+        this.error(src, e);
       });
   };
 
-  const _loadData = (src: string) => {
-    fetch(rootPath + src)
-      .then(res => {
-        _success(src, res.blob());
+  loadData = (src: string) => {
+    fetch(this.rootPath + src)
+      .then(async res => {
+        return res.text();
+      })
+      .then(text => {
+        this.success(src, text);
       })
       .catch(e => {
-        _error(src, e);
+        this.error(src, e);
       });
   };
 
-  const _success = (src: string, data: any) => {
-    resources[src] = data;
-    pendingStatus.pending--;
-    pendingStatus.pending === 0 && _onRendy && _onRendy();
+  success = (src: string, data: any) => {
+    this.resources[src] = data;
+    this.pendingStatus.pending--;
+    this.pendingStatus.pending === 0 && this.onRendy && this.onRendy();
   };
 
-  const _error = (src: string, err: any) => {
-    pendingStatus.pending--;
-    pendingStatus.failed++;
-    resources[src] = null;
-    err.src = src;
+  error = (src: string, err: any) => {
+    this.pendingStatus.pending--;
+    this.pendingStatus.failed++;
+    this.resources[src] = null;
+    if (typeof err !== 'string') {
+      err.src = src;
+    }
     throw err;
   };
-
-  return {
-    load,
-    resources,
-    setOnRendy,
-  };
-};
+}

@@ -1,3 +1,4 @@
+import { SceneGraph } from './scene';
 let globalGL = undefined;
 
 export const getGL = (canvas?: HTMLCanvasElement) => {
@@ -50,6 +51,7 @@ export class VertexBufferObject {
     this.gl = getGL();
     this.buffer = this.gl.createBuffer();
     this.bind();
+    this.gl.bufferData(this.gl.ARRAY_BUFFER, this.data, this.gl.STATIC_DRAW);
   }
 
   bind() {
@@ -57,11 +59,11 @@ export class VertexBufferObject {
   }
 
   drawTriangles() {
-    this.gl.drawArrays(this.gl.TRIANGLES, 0, this.data.length / 3);
+    this.gl.drawArrays(this.gl.TRIANGLES, 0, this.data.length/3);
   }
 }
 
-export const setCanvasFullScreen = (canvas: HTMLCanvasElement, scene) => {
+export const setCanvasFullScreen = (canvas: HTMLCanvasElement, scene: SceneGraph) => {
   const onResize = () => {
     canvas.width = scene.viewportWidth = window.innerWidth;
     canvas.height = scene.viewportHeight = window.innerHeight;
