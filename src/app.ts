@@ -30,7 +30,6 @@ export default async () => {
 
     sceneGraph.root.append(camera);
     clock.setOnTick(() => {
-      debugger
       sceneGraph.draw();
     });
     clock.start();
