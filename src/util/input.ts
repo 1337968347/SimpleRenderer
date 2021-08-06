@@ -28,7 +28,7 @@ const clamp = (a: number, b: number, c: number) => {
 };
 
 export default class InputHandler {
-  keys = {};
+  keys: { [k: string]: boolean } = {};
   offset: { x: number; y: number } = { x: 0, y: 0 };
   mouse: { down: boolean; x: number; y: number } = { down: false, x: 0, y: 0 };
   onClick = undefined;
@@ -38,9 +38,14 @@ export default class InputHandler {
   height: number = 0;
   hasFocus: boolean = true;
   element: HTMLElement = undefined;
-  constructor(element: HTMLElement) {}
 
-  bind(element: HTMLElement) {
+  constructor(element: HTMLCanvasElement) {
+    this.element = element;
+    this.bind(element);
+    this.reset();
+  }
+
+  bind(element: HTMLCanvasElement) {
     if (!element) return;
     this.element = element;
     const elementRect = element.getBoundingClientRect();
@@ -57,6 +62,21 @@ export default class InputHandler {
         blur();
       }
     };
+
+    this.element.onmousedown = this.mouseDown;
+    document.onmousemove = e => this.mouseMove(e.pageX, e.pageY);
+    document.onmouseup = this.mouseUp;
+  }
+
+  // 获取鼠标点击点距离元素中心的距离
+  getOffsetFromElementCenter() {
+    if (!this.element) {
+      return { x: 0, y: 0 };
+    }
+    if (this.mouse.down) {
+      return { x: this.mouse.x - this.element.clientWidth * 0.5, y: this.mouse.y - this.element.clientHeight * 0.5 };
+    }
+    return { x: 0, y: 0 };
   }
 
   focus = () => {

@@ -83,7 +83,7 @@ export const vec3 = {
    * Returns:
    * dest if specified, vec otherwise
    */
-  add: function (vec, vec2, dest) {
+  add: function (vec: Float32Array, vec2: Float32Array, dest?: Float32Array) {
     if (!dest || vec == dest) {
       vec[0] += vec2[0];
       vec[1] += vec2[1];
@@ -157,7 +157,7 @@ export const vec3 = {
    * Returns:
    * dest if specified, vec otherwise
    */
-  scale: function (vec, val, dest) {
+  scale: function (vec: Float32Array, val: number, dest?: Float32Array) {
     if (!dest || vec == dest) {
       vec[0] *= val;
       vec[1] *= val;
@@ -183,7 +183,7 @@ export const vec3 = {
    * Returns:
    * dest if specified, vec otherwise
    */
-  normalize: function (vec, dest?) {
+  normalize: function (vec: Float32Array, dest?: Float32Array) {
     if (!dest) {
       dest = vec;
     }
@@ -481,7 +481,7 @@ export const mat3 = {
    * Returns:
    * dest if specified, a new mat4 otherwise
    */
-  toMat4: function (mat, dest?) {
+  toMat4: function (mat: Float32Array, dest?: Float32Array) {
     if (!dest) {
       dest = mat4.create();
     }
@@ -605,7 +605,7 @@ export const mat4 = {
    * Returns:
    * dest
    */
-  identity: function (dest) {
+  identity: function (dest: Float32Array) {
     dest[0] = 1;
     dest[1] = 0;
     dest[2] = 0;
@@ -1258,7 +1258,7 @@ export const mat4 = {
    * Returns:
    * dest if specified, mat otherwise
    */
-  rotateX: function (mat, angle, dest?) {
+  rotateX: function (mat: Float32Array, angle: number, dest?: Float32Array) {
     var s = Math.sin(angle);
     var c = Math.cos(angle);
 

@@ -153,8 +153,8 @@ export class SceneGraph {
   viewportHeight = 480;
   textureUnit: number = 0;
 
-  constructor(gl: WebGLRenderingContext) {
-    this.gl = gl;
+  constructor() {
+    this.gl = getGL();
     this.root = new SceneNode();
   }
 
@@ -209,7 +209,7 @@ export class SceneSimpleMesh {
     const normalized = false;
     this.gl.vertexAttribPointer(location, 3, this.gl.FLOAT, normalized, stride, offset);
     this.gl.enableVertexAttribArray(location);
-    
+
     this.vbo.bind();
     this.vbo.drawTriangles();
   }
