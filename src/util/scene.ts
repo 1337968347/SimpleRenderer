@@ -136,6 +136,7 @@ export class SceneCamera extends SceneNode {
 
   // ModelView
   getWorldView() {
+    // 先平移到标架原点， 然后再旋转
     const matrix = mat4.identity(mat4.create());
     mat4.rotateX(matrix, this.pitch);
     mat4.rotateY(matrix, this.yaw);

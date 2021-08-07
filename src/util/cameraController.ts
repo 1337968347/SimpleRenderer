@@ -12,8 +12,8 @@ export default class CameraConstroller {
 
   tick() {
     const { x, y } = this.input.getOffsetFromElementCenter();
-    this.camera.yaw += x * 0.0001;
-    this.camera.pitch += y * 0.0001;
+    this.camera.yaw += x * 0.00005;
+    this.camera.pitch += y * 0.00005;
     const inverseRotation = this.camera.getInverseRotation();
     const direction = vec3.create();
     if (this.input.keys.W) {
@@ -28,7 +28,7 @@ export default class CameraConstroller {
     }
 
     vec3.scale(vec3.normalize(direction), 0.05);
-
+    // 先获取方向, 然后在这个方向上平移
     mat4.multiplyVec3(inverseRotation, direction);
     vec3.add(this.camera.position, direction);
   }

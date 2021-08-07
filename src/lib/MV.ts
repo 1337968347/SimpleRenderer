@@ -134,7 +134,7 @@ export const vec3 = {
    * Returns:
    * dest if specified, vec otherwise
    */
-  negate: function (vec, dest?) {
+  negate: function (vec: Float32Array, dest?: Float32Array) {
     if (!dest) {
       dest = vec;
     }
@@ -1004,7 +1004,7 @@ export const mat4 = {
    * Returns:
    * dest if specified, vec otherwise
    */
-  multiplyVec3: function (mat, vec, dest?) {
+  multiplyVec3: function (mat: Float32Array, vec: Float32Array, dest?: Float32Array) {
     if (!dest) {
       dest = vec;
     }

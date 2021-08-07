@@ -37,7 +37,7 @@ export default class InputHandler {
   width: number = 0;
   height: number = 0;
   hasFocus: boolean = true;
-  element: HTMLElement = undefined;
+  element: HTMLCanvasElement = undefined;
 
   constructor(element: HTMLCanvasElement) {
     this.element = element;
@@ -50,8 +50,6 @@ export default class InputHandler {
     this.element = element;
     const elementRect = element.getBoundingClientRect();
     this.offset = { x: elementRect.left, y: elementRect.top };
-    this.width = elementRect.width;
-    this.height = elementRect.height;
     // 绑定监听事件
     document.onkeydown = e => this.keyDown(e.keyCode);
     document.onkeyup = e => this.keyUp(e.keyCode);
@@ -63,7 +61,7 @@ export default class InputHandler {
       }
     };
 
-    this.element.onmousedown = this.mouseDown;
+    this.element.onmousedown = (e)=> this.mouseDown(e.pageX, e.pageY);
     document.onmousemove = e => this.mouseMove(e.pageX, e.pageY);
     document.onmouseup = this.mouseUp;
   }
@@ -74,7 +72,7 @@ export default class InputHandler {
       return { x: 0, y: 0 };
     }
     if (this.mouse.down) {
-      return { x: this.mouse.x - this.element.clientWidth * 0.5, y: this.mouse.y - this.element.clientHeight * 0.5 };
+      return { x: this.mouse.x - this.element.width * 0.5, y: this.mouse.y - this.element.height * 0.5 };
     }
     return { x: 0, y: 0 };
   }
@@ -92,12 +90,14 @@ export default class InputHandler {
 
   mouseMove = (pageX: number, pageY: number) => {
     if (!this.mouse.down) return;
-    this.mouse.x = clamp(pageX - this.offset.x, 0, this.width);
-    this.mouse.y = clamp(pageY - this.offset.y, 0, this.height);
+    this.mouse.x = clamp(pageX - this.offset.x, 0, this.element.width);
+    this.mouse.y = clamp(pageY - this.offset.y, 0, this.element.height);
   };
 
-  mouseDown = () => {
+  mouseDown = (pageX: number, pageY: number) => {
     this.mouse.down = true;
+    this.mouse.x = clamp(pageX - this.offset.x, 0, this.element.width);
+    this.mouse.y = clamp(pageY - this.offset.y, 0, this.element.height);
   };
 
   mouseUp = () => {
@@ -109,7 +109,6 @@ export default class InputHandler {
 
   keyDown = (key: number) => {
     const keyName = this.getKeyName(key);
-    console.log(keyName);
     const wasKeyDown = this.keys[keyName];
     this.keys[keyName] = true;
     if (this.onKeyDown && !wasKeyDown) {
