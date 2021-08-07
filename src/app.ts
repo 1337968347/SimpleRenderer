@@ -13,13 +13,17 @@ export default async () => {
   const clock = createClock();
   const loader = new Loader('/assets/');
   loader.load(['shaders/transform.vert', 'shaders/color.frag']);
+  
   loader.setOnRendy(() => {
     const shaderManager = new ShaderManager(loader.resources);
-
+    // 着色器
+    const shader = shaderManager.get('transform.vert', 'color.frag');
+    // 场景图
     const sceneGraph = new SceneGraph();
+    // 被观察物
     const triangle = new VertexBufferObject(new Float32Array([-1, 1, 1, 0, -1, 1, 1, 1, 1]));
     const mesh = new SceneSimpleMesh(triangle);
-    const shader = shaderManager.get('transform.vert', 'color.frag');
+    // 材质
     const material = new SceneMaterial(
       shader,
       {
@@ -27,11 +31,14 @@ export default async () => {
       },
       [mesh],
     );
+
+    // 观察者
     const camera = new SceneCamera([material]);
     const cameraController = new CameraConstroller(inputHandler, camera);
+    sceneGraph.root.append(camera);
+
     setCanvasFullScreen(canvasEl, sceneGraph);
 
-    sceneGraph.root.append(camera);
     clock.setOnTick(() => {
       cameraController.tick();
       sceneGraph.draw();
