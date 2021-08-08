@@ -98,20 +98,20 @@ export class SceneCamera extends SceneNode {
     super();
     this.children = children;
     this.gl = getGL();
-    this.position = vec3.create([0, 0, 10]);
+    this.position = vec3.create([0, 1, 2]);
   }
 
   enter(scene: SceneGraph) {
     scene.pushUniforms();
-    scene.uniforms['projection'] = Uniform.Mat4(this.getProjection(scene));
-    scene.uniforms['worldView'] = Uniform.Mat4(this.getWorldView());
+    scene.uniforms.projection = Uniform.Mat4(this.getProjection(scene));
+    scene.uniforms.worldView = Uniform.Mat4(this.getWorldView());
   }
 
   exit(scene: SceneGraph) {
     scene.popUniforms();
   }
 
-  project(point, scene: SceneGraph) {
+  project(point: Float32Array, scene: SceneGraph) {
     const mvp = mat4.create();
     mat4.multiply(this.getProjection(scene), this.getWorldView(), mvp);
     const projected = mat4.multiplyVec4(mvp, point, vec4.create());
@@ -224,7 +224,7 @@ export class SceneTransform extends SceneNode {
 
   enter(scene: SceneGraph) {
     scene.pushUniforms();
-    scene.uniforms.wordTransform = Uniform.Mat4(this.wordMatrix);
+    scene.uniforms.modelTransform = Uniform.Mat4(this.wordMatrix);
   }
 
   exit(scene: SceneGraph) {

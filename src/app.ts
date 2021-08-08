@@ -4,6 +4,7 @@ import Uniform from './util/uniform';
 import { SceneCamera, SceneGraph, SceneMaterial, SceneSimpleMesh, SceneTransform, SceneUniforms } from './util/scene';
 import { ShaderManager } from './util/shader';
 import Loader from './util/loader';
+import { gird } from './util/mesh';
 import CameraConstroller from './util/cameraController';
 import InputHandler from './util/input';
 
@@ -11,7 +12,7 @@ export default async () => {
   const canvasEl = document.querySelector('canvas');
   const inputHandler = new InputHandler(canvasEl);
   const clock = createClock();
-  const loader = new Loader('/assets/');
+  const loader = new Loader('./assets/');
   loader.load(['shaders/transform.vert', 'shaders/color.frag']);
 
   loader.setOnRendy(() => {
@@ -21,10 +22,10 @@ export default async () => {
     // 场景图
     const sceneGraph = new SceneGraph();
     // 被观察物
-    const triangle = new VertexBufferObject(new Float32Array([-1, 1, 1, 0, -1, 1, 1, 1, 1]));
+    const triangle = new VertexBufferObject(gird(15));
     // 观察者
     const camera = new SceneCamera([
-      new SceneUniforms({ color: Uniform.Vec3([1, 0, 0]) }, [
+      new SceneUniforms({ color: Uniform.Vec3([0, 1, 0]) }, [
         new SceneMaterial(shader, {}, [new SceneTransform([new SceneSimpleMesh(triangle)])]),
       ]),
     ]);

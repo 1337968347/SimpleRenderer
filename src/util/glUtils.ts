@@ -45,13 +45,13 @@ export class Texture2D {
 export class VertexBufferObject {
   gl: WebGLRenderingContext;
   buffer: WebGLBuffer;
-  data: Float32Array;
+  length: number;
   constructor(vertexData: Float32Array) {
-    this.data = vertexData;
     this.gl = getGL();
+    this.length = vertexData.length;
     this.buffer = this.gl.createBuffer();
     this.bind();
-    this.gl.bufferData(this.gl.ARRAY_BUFFER, this.data, this.gl.STATIC_DRAW);
+    this.gl.bufferData(this.gl.ARRAY_BUFFER, vertexData, this.gl.STATIC_DRAW);
   }
 
   bind() {
@@ -59,7 +59,7 @@ export class VertexBufferObject {
   }
 
   drawTriangles() {
-    this.gl.drawArrays(this.gl.TRIANGLES, 0, this.data.length / 3);
+    this.gl.drawArrays(this.gl.TRIANGLES, 0, this.length / 3);
   }
 }
 
