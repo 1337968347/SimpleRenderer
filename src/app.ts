@@ -1,7 +1,7 @@
 import createClock from './util/clock';
 import { VertexBufferObject, setCanvasFullScreen } from './util/glUtils';
 import Uniform from './util/uniform';
-import { SceneCamera, SceneGraph, SceneMaterial, SceneSimpleMesh } from './util/scene';
+import { SceneCamera, SceneGraph, SceneMaterial, SceneSimpleMesh, SceneTransform, SceneUniforms } from './util/scene';
 import { ShaderManager } from './util/shader';
 import Loader from './util/loader';
 import CameraConstroller from './util/cameraController';
@@ -13,7 +13,7 @@ export default async () => {
   const clock = createClock();
   const loader = new Loader('/assets/');
   loader.load(['shaders/transform.vert', 'shaders/color.frag']);
-  
+
   loader.setOnRendy(() => {
     const shaderManager = new ShaderManager(loader.resources);
     // 着色器
@@ -22,18 +22,13 @@ export default async () => {
     const sceneGraph = new SceneGraph();
     // 被观察物
     const triangle = new VertexBufferObject(new Float32Array([-1, 1, 1, 0, -1, 1, 1, 1, 1]));
-    const mesh = new SceneSimpleMesh(triangle);
-    // 材质
-    const material = new SceneMaterial(
-      shader,
-      {
-        color: Uniform.Vec3([1, 0, 0]),
-      },
-      [mesh],
-    );
-
     // 观察者
-    const camera = new SceneCamera([material]);
+    const camera = new SceneCamera([
+      new SceneUniforms({ color: Uniform.Vec3([1, 0, 0]) }, [
+        new SceneMaterial(shader, {}, [new SceneTransform([new SceneSimpleMesh(triangle)])]),
+      ]),
+    ]);
+
     const cameraController = new CameraConstroller(inputHandler, camera);
     sceneGraph.root.append(camera);
 

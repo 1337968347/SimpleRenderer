@@ -1,11 +1,15 @@
 import { mat3, mat4, vec3, vec4 } from '../lib/MV';
-import { getGL, VertexBufferObject } from './glUtils';
-import { Shader } from './shader';
+import { getGL } from './glUtils';
 import Uniform from './uniform';
-import { GlValue } from './uniform';
+import { VertexBufferObject, Texture2D } from './glUtils';
+import { GlValue, Shader } from '../interface';
+
+export interface Uniforms {
+  [k: string]: GlValue | Texture2D;
+}
 
 export class SceneNode {
-  children: any[] = [];
+  children: SceneNode[] = [];
 
   constructor(childrenP: any[] = []) {
     this.children = childrenP;
@@ -19,24 +23,24 @@ export class SceneNode {
     this.exit(scene);
   }
 
+  exit(_scene: SceneGraph) {
+    // console.log(scene);
+  }
+
   append(child: any) {
     this.children.push(child);
   }
 
-  enter(_scene) {
-    // console.log(scene);
-  }
-
-  exit(_scene) {
+  enter(_scene: SceneGraph) {
     // console.log(scene);
   }
 }
 
 export class SceneRenderTarget extends SceneNode {
   fbo;
-  children: any[] = [];
+  children: SceneNode[] = [];
 
-  constructor(fbo, children) {
+  constructor(fbo, children: SceneNode[]) {
     super();
     this.fbo = fbo;
     this.children = children;
@@ -57,10 +61,10 @@ export class SceneRenderTarget extends SceneNode {
 
 export class SceneMaterial extends SceneNode {
   shader: Shader;
-  uniforms: { [k: string]: GlValue };
-  children: any[] = [];
+  uniforms: Uniforms;
+  children: SceneNode[] = [];
 
-  constructor(shader: Shader, uniforms, children) {
+  constructor(shader: Shader, uniforms: Uniforms, children: SceneNode[]) {
     super();
     this.shader = shader;
     this.uniforms = uniforms;
@@ -69,30 +73,20 @@ export class SceneMaterial extends SceneNode {
   }
 
   enter(scene: SceneGraph) {
-    // for (let uniform of Object.values(this.uniforms)) {
-    //   if (uniform.bindTexture) {
-    //     uniform.bindTexture(scene.pushTextura());
-    //   }
-    // }
     scene.pushShader(this.shader);
     this.shader.use();
-    this.shader.uniforms(scene.uniforms);
-    this.shader.uniforms(this.uniforms);
+    SceneUniforms.prototype.enter.call(this, scene);
   }
 
   exit(scene: SceneGraph) {
-    // for (let uniform of this.uniforms) {
-    //   if (uniform.bindTexture) {
-    //     scene.popTextura();
-    //   }
-    // }
     scene.popShader();
+    SceneUniforms.prototype.exit.call(this, scene);
   }
 }
 
 export class SceneCamera extends SceneNode {
   gl: WebGLRenderingContext;
-  children: any[] = [];
+  children: SceneNode[] = [];
   position: Float32Array;
   pitch: number = 0.0;
   yaw: number = 0.0;
@@ -100,7 +94,7 @@ export class SceneCamera extends SceneNode {
   far: number = 5000;
   fov: number = 50;
 
-  constructor(children: any[]) {
+  constructor(children: SceneNode[]) {
     super();
     this.children = children;
     this.gl = getGL();
@@ -148,7 +142,7 @@ export class SceneCamera extends SceneNode {
 export class SceneGraph {
   gl: WebGLRenderingContext;
   root = new SceneNode();
-  uniforms = {};
+  uniforms: Uniforms = {};
   shaders: Shader[] = [];
   viewportWidth = 640;
   viewportHeight = 480;
@@ -174,7 +168,7 @@ export class SceneGraph {
   }
 
   pushTextura() {
-    this.textureUnit++;
+    return this.textureUnit++;
   }
 
   popTextura() {
@@ -194,10 +188,12 @@ export class SceneGraph {
   }
 }
 
-export class SceneSimpleMesh {
+export class SceneSimpleMesh extends SceneNode {
   vbo: VertexBufferObject;
   gl: WebGLRenderingContext;
+
   constructor(vbo: VertexBufferObject) {
+    super();
     this.vbo = vbo;
     this.gl = getGL();
   }
@@ -212,6 +208,59 @@ export class SceneSimpleMesh {
     this.gl.enableVertexAttribArray(location);
 
     this.vbo.bind();
+    shader.uniforms(scene.uniforms);
     this.vbo.drawTriangles();
+  }
+}
+
+export class SceneTransform extends SceneNode {
+  children: SceneNode[] = [];
+  wordMatrix: Float32Array = mat4.create();
+
+  constructor(children: SceneNode[]) {
+    super();
+    this.children = children;
+  }
+
+  enter(scene: SceneGraph) {
+    scene.pushUniforms();
+    scene.uniforms.wordTransform = Uniform.Mat4(this.wordMatrix);
+  }
+
+  exit(scene: SceneGraph) {
+    scene.popUniforms();
+  }
+}
+
+export class SceneUniforms extends SceneNode {
+  uniforms: Uniforms;
+  children: SceneNode[];
+
+  constructor(uniforms: Uniforms, children: SceneNode[]) {
+    super();
+    this.uniforms = uniforms;
+    this.children = children;
+  }
+
+  enter(scene: SceneGraph) {
+    scene.pushUniforms();
+
+    for (let uniform in this.uniforms) {
+      const value = this.uniforms[uniform];
+      if (value instanceof Texture2D) {
+        value.bindTexture(scene.pushTextura());
+      }
+      // 把this.uniform 绑定到Scene的uniform属性上去
+      scene.uniforms[uniform] = value;
+    }
+  }
+
+  exit(scene: SceneGraph) {
+    for (let uniform in this.uniforms) {
+      const value = this.uniforms[uniform];
+      if (value instanceof Texture2D) {
+        scene.popTextura();
+      }
+    }
   }
 }

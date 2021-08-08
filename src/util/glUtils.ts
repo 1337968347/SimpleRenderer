@@ -29,7 +29,7 @@ export class Texture2D {
     gl.generateMipmap(gl.TEXTURE_2D);
   }
 
-  bind(unit: number) {
+  bindTexture(unit: number) {
     if (unit !== undefined) {
       this.gl.activeTexture(this.gl.TEXTURE0 + unit);
       this.unit = unit;
@@ -37,7 +37,7 @@ export class Texture2D {
     this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
   }
 
-  uniform(location: number) {
+  uniform(location: WebGLUniformLocation) {
     this.gl.uniform1i(location, this.unit);
   }
 }
@@ -59,7 +59,7 @@ export class VertexBufferObject {
   }
 
   drawTriangles() {
-    this.gl.drawArrays(this.gl.TRIANGLES, 0, this.data.length/3);
+    this.gl.drawArrays(this.gl.TRIANGLES, 0, this.data.length / 3);
   }
 }
 

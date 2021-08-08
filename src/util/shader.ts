@@ -1,5 +1,5 @@
 import { getGL } from './glUtils';
-import { GlValue } from './uniform';
+import {  Uniforms } from '../interface';
 /**
  * 创建一个Shader
  * @param gl
@@ -59,7 +59,7 @@ export class Shader {
     this.gl.useProgram(this.program);
   }
 
-  uniforms(values: { [k: string]: GlValue }) {
+  uniforms(values: Uniforms) {
     for (let name in values) {
       const value = values[name];
       const location = this.gl.getUniformLocation(this.program, name);
@@ -105,7 +105,7 @@ export class ShaderManager {
 
   getSource(shaderPath: string) {
     const name = this._getSourceName(shaderPath);
-    const path = this.prefix + name
+    const path = this.prefix + name;
     return this.resources[path] || '';
   }
 
