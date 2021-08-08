@@ -215,7 +215,7 @@ export class SceneSimpleMesh extends SceneNode {
 
 export class SceneTransform extends SceneNode {
   children: SceneNode[] = [];
-  wordMatrix: Float32Array = mat4.create();
+  wordMatrix = mat4.create();
 
   constructor(children: SceneNode[]) {
     super();

@@ -1119,7 +1119,7 @@ export const mat4 = {
    * Returns:
    * dest if specified, mat otherwise
    */
-  scale: function (mat, vec, dest) {
+  scale: function (mat:Float32Array, vec:Float32Array, dest?:Float32Array) {
     var x = vec[0],
       y = vec[1],
       z = vec[2];
