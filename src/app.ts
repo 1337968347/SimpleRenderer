@@ -1,5 +1,5 @@
 import createClock from './util/clock';
-import { VertexBufferObject, setCanvasFullScreen } from './util/glUtils';
+import { VertexBufferObject, setCanvasFullScreen, Texture2D } from './util/glUtils';
 import Uniform from './util/uniform';
 import { SceneCamera, SceneGraph, SceneMaterial, SceneSimpleMesh, SceneTransform, SceneUniforms } from './util/scene';
 import { ShaderManager } from './util/shader';
@@ -9,34 +9,62 @@ import CameraConstroller from './util/cameraController';
 import InputHandler from './util/input';
 import { mat4 } from './lib/MV';
 
-const MESHNUM = 128;
+const MESHNUM = 512;
 
 export default async () => {
   const canvasEl = document.querySelector('canvas');
   const inputHandler = new InputHandler(canvasEl);
   const clock = createClock();
   const loader = new Loader('./assets/');
-  loader.load(['shaders/transform.vert', 'shaders/color.frag']);
+  loader.load(['shaders/transform.vert', 'shaders/color.frag', 'heightmap.png', 'shaders/heightmap.vert', 'shaders/terrain.frag']);
 
   loader.setOnRendy(() => {
     const shaderManager = new ShaderManager(loader.resources);
+    const heightText2D = new Texture2D(loader.resources['heightmap.png']);
     // 着色器
-    const shader = shaderManager.get('transform.vert', 'color.frag');
+    const moutainShader = shaderManager.get('heightmap.vert', 'terrain.frag');
+    // const waterShader = shaderManager.get('transform.vert', 'color.frag');
     // 场景图
     const sceneGraph = new SceneGraph();
     // 被观察物
     const triangle = new VertexBufferObject(gird(MESHNUM));
-    const sceneTransform = new SceneTransform([new SceneSimpleMesh(triangle)]);
+
+    let moutainTransform;
+    // let waterTransform;
+
     // 观察者
     const camera = new SceneCamera([
-      new SceneUniforms({ color: Uniform.Vec3([0, 1, 0]) }, [new SceneMaterial(shader, {}, [sceneTransform])]),
+      new SceneUniforms(
+        {
+          skyColor: Uniform.Vec3([0.2, 0.3, 0.35]),
+          groundColor: Uniform.Vec3([0.05, 0.1, 0.3]),
+          sunColor: Uniform.Vec3([0.7, 0.6, 0.75]),
+          sunDirection: Uniform.Vec3([0.577, 0.577, 0.577]),
+        },
+        [
+          new SceneMaterial(moutainShader, { heightmap: heightText2D }, [
+            (moutainTransform = new SceneTransform([new SceneSimpleMesh(triangle)])),
+          ]),
+          // ,
+          // new SceneMaterial(
+          //   waterShader,
+          //   {
+          //     color: Uniform.Vec3([0, 0, 1]),
+          //   },
+          //   [(waterTransform = new SceneTransform([new SceneSimpleMesh(triangle)]))],
+          // ),
+        ],
+      ),
     ]);
 
     const cameraController = new CameraConstroller(inputHandler, camera);
     sceneGraph.root.append(camera);
 
-    mat4.translate(sceneTransform.wordMatrix, new Float32Array([-0.5 * MESHNUM, -50, -0.5 * MESHNUM]));
-    mat4.scale(sceneTransform.wordMatrix, new Float32Array([MESHNUM, 100, MESHNUM]));
+    camera.position[1] = 30;
+    mat4.translate(moutainTransform.wordMatrix, new Float32Array([-0.5 * MESHNUM, -50, -0.5 * MESHNUM]));
+    mat4.scale(moutainTransform.wordMatrix, new Float32Array([MESHNUM, 100, MESHNUM]));
+
+    // mat4.scale(waterTransform.wordMatrix, new Float32Array([MESHNUM * 20, 100, MESHNUM * 20]));
 
     setCanvasFullScreen(canvasEl, sceneGraph);
 

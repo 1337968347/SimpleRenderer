@@ -20,7 +20,7 @@ export class Texture2D {
     this.image = image;
     this.gl = getGL();
     this.texture = this.gl.createTexture();
-
+    this.bindTexture();
     const gl = this.gl;
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
@@ -29,7 +29,7 @@ export class Texture2D {
     gl.generateMipmap(gl.TEXTURE_2D);
   }
 
-  bindTexture(unit: number) {
+  bindTexture(unit?: number) {
     if (unit !== undefined) {
       this.gl.activeTexture(this.gl.TEXTURE0 + unit);
       this.unit = unit;

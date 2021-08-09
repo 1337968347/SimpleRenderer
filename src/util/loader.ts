@@ -30,12 +30,12 @@ export default class Loader {
 
       if (/\.(jpe?g|gif|png)$/.test(path)) {
         this.loadImage(path);
-        return;
+        continue;
       }
 
       if (/\.json$/.test(path)) {
         this.loadJSON(path);
-        return;
+        continue;
       }
 
       this.loadData(path);
@@ -95,7 +95,7 @@ export default class Loader {
     this.pendingStatus.failed++;
     this.resources[src] = null;
     if (typeof err !== 'string') {
-      err.src = src;
+      err.path = src;
     }
     throw err;
   };

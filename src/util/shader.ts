@@ -1,5 +1,5 @@
 import { getGL } from './glUtils';
-import {  Uniforms } from '../interface';
+import { Uniforms } from '../interface';
 /**
  * 创建一个Shader
  * @param gl
@@ -96,7 +96,6 @@ export class ShaderManager {
       vertex = vertex + '.vertex';
     }
     const key = `${vertex}-${frag}`;
-
     if (!(key in this.resources)) {
       this.shaders[key] = new Shader(this.getSource(vertex), this.getSource(frag));
     }

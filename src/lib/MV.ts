@@ -539,7 +539,7 @@ export const mat4 = {
    * Returns:
    * New mat4
    */
-  create: function (mat?) {
+  create: function (mat?:Float32Array) {
     var dest = new Float32Array(16);
 
     if (mat) {
@@ -816,7 +816,7 @@ export const mat4 = {
    * Returns:
    * dest is specified, a new mat4 otherwise
    */
-  toRotationMat: function (mat, dest?) {
+  toRotationMat: function (mat:Float32Array, dest?:Float32Array) {
     if (!dest) {
       dest = mat4.create();
     }

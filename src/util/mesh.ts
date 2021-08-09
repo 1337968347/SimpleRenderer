@@ -6,7 +6,7 @@ export const gird = (size: number) => {
   for (var y = 0; y < size; y++) {
     for (var x = 0; x < size; x++) {
       buffer[i++] = x / size;
-      buffer[i++] = Math.random();
+      buffer[i++] = 0;
       buffer[i++] = y / size;
 
       buffer[i++] = x / size;

@@ -103,8 +103,14 @@ export class SceneCamera extends SceneNode {
 
   enter(scene: SceneGraph) {
     scene.pushUniforms();
-    scene.uniforms.projection = Uniform.Mat4(this.getProjection(scene));
-    scene.uniforms.worldView = Uniform.Mat4(this.getWorldView());
+    const project = this.getProjection(scene);
+    const wordView = this.getWorldView();
+    // modeView Project ; not most valuable player
+    const mvp = mat4.create();
+
+    mat4.multiply(project, wordView, mvp);
+    scene.uniforms.projection = Uniform.Mat4(mvp);
+    scene.uniforms.eye = Uniform.Mat4(this.position);
   }
 
   exit(scene: SceneGraph) {
@@ -206,7 +212,7 @@ export class SceneSimpleMesh extends SceneNode {
     const normalized = false;
     this.gl.vertexAttribPointer(location, 3, this.gl.FLOAT, normalized, stride, offset);
     this.gl.enableVertexAttribArray(location);
-
+    this.gl.enable(this.gl.DEPTH_TEST)
     this.vbo.bind();
     shader.uniforms(scene.uniforms);
     this.vbo.drawTriangles();
@@ -220,6 +226,7 @@ export class SceneTransform extends SceneNode {
   constructor(children: SceneNode[]) {
     super();
     this.children = children;
+    mat4.identity(this.wordMatrix);
   }
 
   enter(scene: SceneGraph) {
