@@ -166,11 +166,11 @@ export class SceneGraph {
   }
 
   pushUniforms() {
-    this.uniforms = Object.create(this.uniforms);
+    // this.uniforms = Object.create(this.uniforms);
   }
 
   popUniforms() {
-    this.uniforms = Object.getPrototypeOf(this.uniforms);
+    // this.uniforms = Object.getPrototypeOf(this.uniforms);
   }
 
   pushTextura() {
