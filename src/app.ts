@@ -37,7 +37,7 @@ export default async () => {
       new SceneUniforms(
         {
           skyColor: Uniform.Vec3([0.2, 0.3, 0.35]),
-          groundColor: Uniform.Vec3([0.05, 0.1, 0.3]),
+          groundColor: Uniform.Vec3([0.7, 0.87, 1.0]),
           sunColor: Uniform.Vec3([0.7, 0.6, 0.75]),
           sunDirection: Uniform.Vec3([0.577, 0.577, 0.577]),
         },
@@ -59,7 +59,7 @@ export default async () => {
     const cameraController = new CameraConstroller(inputHandler, camera);
     sceneGraph.root.append(camera);
 
-    camera.position[1] = 30;
+    camera.position[1] = 20;
     // 把世界坐标 从 0-1 变成 0- MESHNUM
     // 并且 把坐标原点移到中心
     mat4.translate(moutainTransform.wordMatrix, new Float32Array([-0.5 * MESHNUM, -50, -0.5 * MESHNUM]));

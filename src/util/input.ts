@@ -27,6 +27,22 @@ const clamp = (a: number, b: number, c: number) => {
   return a < b ? b : a > c ? c : a;
 };
 
+const pointerCoord = (ev: any): { x: number; y: number } => {
+  // get X coordinates for either a mouse click
+  // or a touch depending on the given event
+  if (ev) {
+    const changedTouches = ev.changedTouches;
+    if (changedTouches && changedTouches.length > 0) {
+      const touch = changedTouches[0];
+      return { x: touch.clientX, y: touch.clientY };
+    }
+    if (ev.pageX !== undefined) {
+      return { x: ev.pageX, y: ev.pageY };
+    }
+  }
+  return { x: 0, y: 0 };
+};
+
 export default class InputHandler {
   keys: { [k: string]: boolean } = {};
   offset: { x: number; y: number } = { x: 0, y: 0 };
@@ -61,8 +77,24 @@ export default class InputHandler {
       }
     };
 
-    this.element.onmousedown = (e)=> this.mouseDown(e.pageX, e.pageY);
-    document.onmousemove = e => this.mouseMove(e.pageX, e.pageY);
+    this.element.onmousedown = e => {
+      const { x, y } = pointerCoord(e);
+      this.mouseDown(x, y);
+    };
+    this.element.ontouchstart = e => {
+      const { x, y } = pointerCoord(e);
+      this.mouseDown(x, y);
+    };
+    document.ontouchmove = e => {
+      const { x, y } = pointerCoord(e);
+      this.mouseMove(x, y);
+    };
+    document.onmousemove = e => {
+      const { x, y } = pointerCoord(e);
+      this.mouseMove(x, y);
+    };
+    document.ontouchend = this.mouseUp;
+    document.ontouchcancel = this.mouseUp;
     document.onmouseup = this.mouseUp;
   }
 
