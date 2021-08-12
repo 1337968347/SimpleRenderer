@@ -16,14 +16,22 @@ export default async () => {
   const inputHandler = new InputHandler(canvasEl);
   const clock = createClock();
   const loader = new Loader('./assets/');
-  loader.load(['shaders/transform.vert', 'shaders/color.frag', 'heightmap.png', 'shaders/heightmap.vert', 'shaders/terrain.frag']);
+  loader.load([
+    'shaders/water.vert',
+    'shaders/water.frag',
+    'heightmap.png',
+    'normalnoise.png',
+    'shaders/heightmap.vert',
+    'shaders/terrain.frag',
+  ]);
 
   loader.setOnRendy(() => {
     const shaderManager = new ShaderManager(loader.resources);
     const heightText2D = new Texture2D(loader.resources['heightmap.png']);
+    const waterText2D = new Texture2D(loader.resources['normalnoise.png']);
     // 着色器
     const moutainShader = shaderManager.get('heightmap.vert', 'terrain.frag');
-    const waterShader = shaderManager.get('transform.vert', 'color.frag');
+    const waterShader = shaderManager.get('water.vert', 'water.frag');
     // 场景图
     const sceneGraph = new SceneGraph();
     // 被观察物
@@ -31,21 +39,22 @@ export default async () => {
 
     let moutainTransform;
     let waterTransform;
-
-    // 观察者
-    const camera = new SceneCamera([
-      new SceneUniforms(
-        {
-          skyColor: Uniform.Vec3([0.2, 0.3, 0.35]),
+    const globaluniform ={
+      skyColor: Uniform.Vec3([0.2, 0.3, 0.35]),
           groundColor: Uniform.Vec3([0.7, 0.87, 1.0]),
           sunColor: Uniform.Vec3([0.7, 0.6, 0.75]),
           sunDirection: Uniform.Vec3([0.577, 0.577, 0.577]),
-        },
+          time: 0.0,
+    }
+    // 观察者
+    const camera = new SceneCamera([
+      new SceneUniforms(
+        globaluniform,
         [
           new SceneMaterial(
             waterShader,
             {
-              color: Uniform.Vec3([0, 0, 1]),
+              waterNoise: waterText2D,
             },
             [(waterTransform = new SceneTransform([new SceneSimpleMesh(triangle)]))],
           ),
@@ -70,7 +79,8 @@ export default async () => {
 
     setCanvasFullScreen(canvasEl, sceneGraph);
 
-    clock.setOnTick(() => {
+    clock.setOnTick((t) => {
+      globaluniform.time+=t
       cameraController.tick();
       sceneGraph.draw();
     });

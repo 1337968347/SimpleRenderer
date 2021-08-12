@@ -5,7 +5,7 @@ import { VertexBufferObject, Texture2D } from './glUtils';
 import { GlValue, Shader } from '../interface';
 
 export interface Uniforms {
-  [k: string]: GlValue | Texture2D;
+  [k: string]: GlValue | Texture2D| number;
 }
 
 export class SceneNode {

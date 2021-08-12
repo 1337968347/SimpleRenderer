@@ -65,7 +65,6 @@ export class Shader {
       const location = this.gl.getUniformLocation(this.program, name);
       if (typeof value === 'number') {
         this.gl.uniform1f(location, value);
-        return;
       } else {
         value.uniform(location);
       }
