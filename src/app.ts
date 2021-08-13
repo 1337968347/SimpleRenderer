@@ -39,39 +39,37 @@ export default async () => {
 
     let moutainTransform;
     let waterTransform;
-    const globaluniform ={
+    const globaluniform = {
       skyColor: Uniform.Vec3([0.2, 0.3, 0.35]),
-          groundColor: Uniform.Vec3([0.7, 0.87, 1.0]),
-          sunColor: Uniform.Vec3([0.7, 0.6, 0.75]),
-          sunDirection: Uniform.Vec3([0.577, 0.577, 0.577]),
-          time: 0.0,
-    }
+      groundColor: Uniform.Vec3([0.7, 0.87, 1.0]),
+      sunColor: Uniform.Vec3([0.7, 0.6, 0.75]),
+      sunDirection: Uniform.Vec3([0.577, 0.577, 0.577]),
+      time: 0.0,
+    };
     // 观察者
     const camera = new SceneCamera([
-      new SceneUniforms(
-        globaluniform,
-        [
-          new SceneMaterial(
-            waterShader,
-            {
-              waterNoise: waterText2D,
-            },
-            [(waterTransform = new SceneTransform([new SceneSimpleMesh(triangle)]))],
-          ),
-          new SceneMaterial(moutainShader, { heightmap: heightText2D }, [
-            (moutainTransform = new SceneTransform([new SceneSimpleMesh(triangle)])),
-          ]),
-        ],
-      ),
+      new SceneUniforms(globaluniform, [
+        new SceneMaterial(
+          waterShader,
+          {
+            color: Uniform.Vec3([0.3, 0.5, 0.9]),
+            waterNoise: waterText2D,
+          },
+          [(waterTransform = new SceneTransform([new SceneSimpleMesh(triangle)]))],
+        ),
+        new SceneMaterial(moutainShader, { heightmap: heightText2D }, [
+          (moutainTransform = new SceneTransform([new SceneSimpleMesh(triangle)])),
+        ]),
+      ]),
     ]);
 
     const cameraController = new CameraConstroller(inputHandler, camera);
     sceneGraph.root.append(camera);
 
-    camera.position[1] = 20;
+    camera.position[1] = 40;
     // 把世界坐标 从 0-1 变成 0- MESHNUM
     // 并且 把坐标原点移到中心
-    mat4.translate(moutainTransform.wordMatrix, new Float32Array([-0.5 * MESHNUM, -50, -0.5 * MESHNUM]));
+    mat4.translate(moutainTransform.wordMatrix, new Float32Array([-0.5 * MESHNUM, -40, -0.5 * MESHNUM]));
     mat4.scale(moutainTransform.wordMatrix, new Float32Array([MESHNUM, 100, MESHNUM]));
 
     mat4.translate(waterTransform.wordMatrix, new Float32Array([-10.0 * MESHNUM, 0, -10.0 * MESHNUM]));
@@ -79,8 +77,8 @@ export default async () => {
 
     setCanvasFullScreen(canvasEl, sceneGraph);
 
-    clock.setOnTick((t) => {
-      globaluniform.time+=t
+    clock.setOnTick(t => {
+      globaluniform.time += t;
       cameraController.tick();
       sceneGraph.draw();
     });
