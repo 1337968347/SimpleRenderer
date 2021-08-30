@@ -19,6 +19,7 @@ const gl = getGL();
 export default class Uniform {
   static Mat4(value) {
     return createGlValue(location => {
+      debugger
       gl.uniformMatrix4fv(location, false, value);
     }, value);
   }

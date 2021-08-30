@@ -42,7 +42,7 @@ export default async () => {
     const globaluniform = {
       skyColor: Uniform.Vec3([0.2, 0.3, 0.35]),
       groundColor: Uniform.Vec3([0.7, 0.87, 1.0]),
-      sunColor: Uniform.Vec3([0.7, 0.6, 0.75]),
+      sunColor: Uniform.Vec3([0.8, 0.8, 0.8]),
       sunDirection: Uniform.Vec3([0.577, 0.577, 0.577]),
       time: 0.0,
     };
