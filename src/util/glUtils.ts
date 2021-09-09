@@ -6,6 +6,7 @@ export const getGL = (canvas?: HTMLCanvasElement) => {
     if (!canvas) canvas = document.querySelector('canvas');
     if (!canvas) return null;
     globalGL = canvas.getContext('webgl');
+    globalGL.enable(globalGL.DEPTH_TEST);
   }
   return globalGL;
 };

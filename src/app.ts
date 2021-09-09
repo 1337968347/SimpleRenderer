@@ -25,7 +25,18 @@ export default async () => {
     'shaders/terrain.frag',
   ]);
 
-  loader.setOnRendy(() => {
+  const globaluniform = {
+    skyColor: Uniform.Vec3([0.2, 0.3, 0.35]),
+    groundColor: Uniform.Vec3([0.7, 0.87, 1.0]),
+    sunColor: Uniform.Vec3([0.7, 0.7, 0.7]),
+    sunDirection: Uniform.Vec3([0.577, 0.577, 0.577]),
+    time: 0.0,
+  };
+
+  let cameraController;
+  let sceneGraph;
+
+  const prepareScence = () => {
     const shaderManager = new ShaderManager(loader.resources);
     const heightText2D = new Texture2D(loader.resources['heightmap.png']);
     const waterText2D = new Texture2D(loader.resources['normalnoise.png']);
@@ -33,20 +44,20 @@ export default async () => {
     const moutainShader = shaderManager.get('heightmap.vert', 'terrain.frag');
     const waterShader = shaderManager.get('water.vert', 'water.frag');
     // 场景图
-    const sceneGraph = new SceneGraph();
+    sceneGraph = new SceneGraph();
     // 被观察物
     const triangle = new VertexBufferObject(gird(MESHNUM));
 
-    let moutainTransform;
-    let waterTransform;
-    const globaluniform = {
-      skyColor: Uniform.Vec3([0.2, 0.3, 0.35]),
-      groundColor: Uniform.Vec3([0.7, 0.87, 1.0]),
-      sunColor: Uniform.Vec3([0.7, 0.7, 0.7]),
-      sunDirection: Uniform.Vec3([0.577, 0.577, 0.577]),
-      time: 0.0,
-    };
-    // 观察者
+    // 开放场景图数据传输
+    // SceneGraph 场景
+    // SceneCamera  根据相机的位置获取MVP：ModelView Projection
+    // SceneUniforms 传输uniform变量|纹理
+    // SceneMaterial 绑定着色器 && 传递Uniform变量|纹理
+    // SceneTransform 生成世界缩放平移矩阵
+    // SceneSimpleMesh 绑定好着色器，传好变量后，绘制顶点用
+
+    let moutainTransform = new SceneTransform([new SceneSimpleMesh(triangle)]);
+    let waterTransform = new SceneTransform([new SceneSimpleMesh(triangle)]);
     const camera = new SceneCamera([
       new SceneUniforms(globaluniform, [
         new SceneMaterial(
@@ -55,30 +66,30 @@ export default async () => {
             color: Uniform.Vec3([0.3, 0.5, 0.9]),
             waterNoise: waterText2D,
           },
-          [(waterTransform = new SceneTransform([new SceneSimpleMesh(triangle)]))],
+          [waterTransform],
         ),
-        new SceneMaterial(moutainShader, { heightmap: heightText2D }, [
-          (moutainTransform = new SceneTransform([new SceneSimpleMesh(triangle)])),
-        ]),
+        new SceneMaterial(moutainShader, { heightmap: heightText2D }, [moutainTransform]),
       ]),
     ]);
 
-    const cameraController = new CameraConstroller(inputHandler, camera);
+    cameraController = new CameraConstroller(inputHandler, camera);
     sceneGraph.root.append(camera);
 
-    camera.position[0] -= 40;
-    camera.position[1] = 40;
+    camera.position[1] = 60;
     camera.position[2] += 300;
     // 把世界坐标 从 0-1 变成 0- MESHNUM
     // 并且 把坐标原点移到中心
-    mat4.translate(moutainTransform.wordMatrix, new Float32Array([-0.5 * MESHNUM, -40, -0.5 * MESHNUM]));
+    mat4.translate(moutainTransform.wordMatrix, new Float32Array([-0.5 * MESHNUM, -20, -0.5 * MESHNUM]));
     mat4.scale(moutainTransform.wordMatrix, new Float32Array([MESHNUM, 100, MESHNUM]));
 
     mat4.translate(waterTransform.wordMatrix, new Float32Array([-10.0 * MESHNUM, 0, -10.0 * MESHNUM]));
     mat4.scale(waterTransform.wordMatrix, new Float32Array([MESHNUM * 20, 100, MESHNUM * 20]));
 
     setCanvasFullScreen(canvasEl, sceneGraph);
+  };
 
+  loader.setOnRendy(() => {
+    prepareScence();
     clock.setOnTick(t => {
       globaluniform.time += t;
       cameraController.tick();

@@ -5,7 +5,7 @@ import { VertexBufferObject, Texture2D } from './glUtils';
 import { GlValue, Shader } from '../interface';
 
 export interface Uniforms {
-  [k: string]: GlValue | Texture2D| number;
+  [k: string]: GlValue | Texture2D | number;
 }
 
 export class SceneNode {
@@ -88,7 +88,7 @@ export class SceneCamera extends SceneNode {
   gl: WebGLRenderingContext;
   children: SceneNode[] = [];
   position: Float32Array;
-  pitch: number = 0.0;
+  pitch: number = 0.4;
   yaw: number = 0.0;
   near: number = 0.1;
   far: number = 5000;
@@ -105,7 +105,8 @@ export class SceneCamera extends SceneNode {
     scene.pushUniforms();
     const project = this.getProjection(scene);
     const wordView = this.getWorldView();
-    // modeView Project ; not most valuable player
+    // modeView Project ;
+    // not most valuable player
     const mvp = mat4.create();
 
     mat4.multiply(project, wordView, mvp);
@@ -212,7 +213,6 @@ export class SceneSimpleMesh extends SceneNode {
     const normalized = false;
     this.gl.vertexAttribPointer(location, 3, this.gl.FLOAT, normalized, stride, offset);
     this.gl.enableVertexAttribArray(location);
-    this.gl.enable(this.gl.DEPTH_TEST)
     this.vbo.bind();
     shader.uniforms(scene.uniforms);
     this.vbo.drawTriangles();
