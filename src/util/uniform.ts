@@ -15,11 +15,10 @@ const createGlValue = (set, value) => {
   return setValue(value);
 };
 
-const gl = getGL();
+const gl: WebGLRenderingContext = getGL();
 export default class Uniform {
   static Mat4(value) {
     return createGlValue(location => {
-      debugger
       gl.uniformMatrix4fv(location, false, value);
     }, value);
   }

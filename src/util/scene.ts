@@ -110,7 +110,7 @@ export class SceneCamera extends SceneNode {
 
     mat4.multiply(project, wordView, mvp);
     scene.uniforms.projection = Uniform.Mat4(mvp);
-    scene.uniforms.eye = Uniform.Mat4(this.position);
+    scene.uniforms.eye = Uniform.Vec3(this.position);
   }
 
   exit(scene: SceneGraph) {
