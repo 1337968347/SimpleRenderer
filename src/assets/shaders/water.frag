@@ -10,7 +10,7 @@ varying vec3 worldPosition;
 
 // 漫反射 
 vec3 sunLight(const vec3 surfaceNormal) {
-  vec3 diffuse = max(dot(sunDirection, surfaceNormal), 0.0) * sunColor;
+  vec3 diffuse = 1.2 * max(dot(sunDirection, surfaceNormal), 0.0) * sunColor;
 
   vec3 eyeNormal = normalize(eye - worldPosition);
   // 半角向量

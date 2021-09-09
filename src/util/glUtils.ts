@@ -43,6 +43,50 @@ export class Texture2D {
   }
 }
 
+export class FrameBufferObject {
+  width: number;
+  height: number;
+  gl: WebGLRenderingContext = getGL();
+  frameBuffer: WebGLFramebuffer;
+  texture: WebGLTexture;
+  depth: WebGLRenderbuffer;
+  unit = -1;
+
+  constructor(width: number, height: number, format?: number) {
+    this.width = width;
+    this.height = height;
+    const gl = this.gl;
+    // FBO 对帧缓存进行操作
+    this.frameBuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
+
+    this.texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.texture);
+    // 指定纹理对象
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, format || gl.UNSIGNED_BYTE, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+
+    this.depth = gl.createRenderbuffer();
+    gl.bindRenderbuffer(gl.RENDERBUFFER, this.depth);
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, width, height);
+    // 将纹理对象关联到FBO
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.texture, 0);
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.depth);
+
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+
+  bind() {
+    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.frameBuffer);
+    this.gl.viewport(0, 0, this.width, this.height);
+  }
+  unbind() {
+    this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
+  }
+}
 export class VertexBufferObject {
   gl: WebGLRenderingContext;
   buffer: WebGLBuffer;
