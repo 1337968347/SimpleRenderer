@@ -2,10 +2,10 @@ import { mat3, mat4, vec3, vec4 } from '../lib/MV';
 import { getGL } from './glUtils';
 import Uniform from './uniform';
 import { VertexBufferObject, Texture2D } from './glUtils';
-import { GlValue, Shader } from '../interface';
+import { GlValue, Shader, FrameBufferObject } from '../interface';
 
 export interface Uniforms {
-  [k: string]: GlValue | Texture2D | number;
+  [k: string]: GlValue | Texture2D | FrameBufferObject | number;
 }
 
 export class SceneNode {
@@ -37,7 +37,7 @@ export class SceneNode {
 }
 
 export class SceneRenderTarget extends SceneNode {
-  fbo;
+  fbo: FrameBufferObject;
   children: SceneNode[] = [];
 
   constructor(fbo, children: SceneNode[]) {
@@ -49,8 +49,8 @@ export class SceneRenderTarget extends SceneNode {
   enter(scene: SceneGraph) {
     this.fbo.bind();
 
-    scene.gl.clear(scene.gl.COLOR_BUFFER_BIT | scene.gl.DEPTH_BUFFER_BIT);
     scene.gl.viewport(0, 0, this.fbo.width, this.fbo.height);
+    scene.gl.clear(scene.gl.COLOR_BUFFER_BIT | scene.gl.DEPTH_BUFFER_BIT);
   }
 
   exit(scene: SceneGraph) {
@@ -266,8 +266,21 @@ export class SceneUniforms extends SceneNode {
     for (let uniform in this.uniforms) {
       const value = this.uniforms[uniform];
       if (value instanceof Texture2D) {
+        value.unbindTexture();
         scene.popTextura();
       }
     }
+  }
+}
+
+export class ScenePostProcess extends SceneNode {
+  children: SceneNode[];
+  constructor(shader: Shader, uniforms: Uniforms) {
+    super();
+    const mesh = new SceneSimpleMesh(
+      new VertexBufferObject(new Float32Array([-1, 1, 0, -1, -1, 0, 1, -1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0])),
+    );
+    const material = new SceneMaterial(shader, uniforms, [mesh]);
+    this.children = [material];
   }
 }

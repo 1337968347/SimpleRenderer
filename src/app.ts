@@ -1,7 +1,16 @@
 import createClock from './util/clock';
-import { VertexBufferObject, setCanvasFullScreen, Texture2D } from './util/glUtils';
+import { VertexBufferObject, setCanvasFullScreen, Texture2D, FrameBufferObject } from './util/glUtils';
 import Uniform from './util/uniform';
-import { SceneCamera, SceneGraph, SceneMaterial, SceneSimpleMesh, SceneTransform, SceneUniforms } from './util/scene';
+import {
+  SceneCamera,
+  SceneGraph,
+  SceneMaterial,
+  SceneSimpleMesh,
+  SceneTransform,
+  SceneUniforms,
+  SceneRenderTarget,
+  ScenePostProcess,
+} from './util/scene';
 import { ShaderManager } from './util/shader';
 import Loader from './util/loader';
 import { gird } from './util/mesh';
@@ -23,6 +32,8 @@ export default async () => {
     'normalnoise.png',
     'shaders/heightmap.vert',
     'shaders/terrain.frag',
+    'shaders/screen.vert',
+    'shaders/tonemapping.frag',
   ]);
 
   const globaluniform = {
@@ -72,8 +83,13 @@ export default async () => {
       ]),
     ]);
 
+    const fbo = new FrameBufferObject(2048, 2048);
+    const mountainTarget = new SceneRenderTarget(fbo, [camera]);
+    const postprocess = new ScenePostProcess(shaderManager.get('screen.vert', 'tonemapping.frag'), { texture: fbo });
+
     cameraController = new CameraConstroller(inputHandler, camera);
-    sceneGraph.root.append(camera);
+    sceneGraph.root.append(mountainTarget);
+    sceneGraph.root.append(postprocess);
 
     camera.position[1] = 60;
     camera.position[2] += 300;
