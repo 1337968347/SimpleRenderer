@@ -2,10 +2,13 @@ precision highp float;
 
 varying vec3 surfaceNormal;
 
-uniform vec3 sunColor;
-uniform vec3 sunDirection;
 uniform vec3 groundColor;
 uniform vec3 skyColor;
+uniform vec3 eye;
+
+varying vec3 worldPosition;
+
+import "sun.glsl"
 
 // 根据光线与法向量的夹角 在蓝天 跟 土地 颜色之间插值
 vec3 lightHemisphere(const vec3 surfaceNormal) {
@@ -14,12 +17,8 @@ vec3 lightHemisphere(const vec3 surfaceNormal) {
   return mix(groundColor, skyColor, a);
 }
 
-// 漫反射 
-vec3 sunLight(const vec3 surfaceNormal) {
-  return max(dot(sunDirection, surfaceNormal), 0.0) * sunColor;
-}
-
 void main() {
-  vec3 color = lightHemisphere(surfaceNormal) + sunLight(surfaceNormal);
+  vec3 eyeNormal = normalize(eye - worldPosition);
+  vec3 color = lightHemisphere(surfaceNormal) + sunLight(surfaceNormal, eyeNormal, 100.0, 2.0, 1.5);;
   gl_FragColor = vec4(color, 1.0);
 }
