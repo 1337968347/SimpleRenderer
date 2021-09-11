@@ -1,5 +1,5 @@
 import createClock from './util/clock';
-import { VertexBufferObject, setCanvasFullScreen, Texture2D, FrameBufferObject } from './util/glUtils';
+import { VertexBufferObject, setCanvasFullScreen, Texture2D, FrameBufferObject, getGL } from './util/glUtils';
 import Uniform from './util/uniform';
 import {
   SceneCamera,
@@ -45,9 +45,12 @@ export default async () => {
   };
 
   let cameraController;
-  let sceneGraph;
+  let sceneGraph: SceneGraph;
 
   const prepareScence = () => {
+    const gl = getGL();
+
+    gl.clearColor(0.4, 0.6, 1.0, 1.0);
     const shaderManager = new ShaderManager(loader.resources);
     const heightText2D = new Texture2D(loader.resources['heightmap.png']);
     const waterText2D = new Texture2D(loader.resources['normalnoise.png']);
@@ -66,6 +69,8 @@ export default async () => {
     // SceneMaterial 绑定着色器 && 传递Uniform变量|纹理
     // SceneTransform 生成世界缩放平移矩阵
     // SceneSimpleMesh 绑定好着色器，传好变量后，绘制顶点用
+    // SceneRenderTarget 渲染内容到FrameBufferObject上
+    // ScenePostProcess
 
     let moutainTransform = new SceneTransform([new SceneSimpleMesh(triangle)]);
     let waterTransform = new SceneTransform([new SceneSimpleMesh(triangle)]);
@@ -95,7 +100,7 @@ export default async () => {
     camera.position[2] += 300;
     // 把世界坐标 从 0-1 变成 0- MESHNUM
     // 并且 把坐标原点移到中心
-    mat4.translate(moutainTransform.wordMatrix, new Float32Array([-0.5 * MESHNUM, -20, -0.5 * MESHNUM]));
+    mat4.translate(moutainTransform.wordMatrix, new Float32Array([-0.5 * MESHNUM, -10, -0.5 * MESHNUM]));
     mat4.scale(moutainTransform.wordMatrix, new Float32Array([MESHNUM, 100, MESHNUM]));
 
     mat4.translate(waterTransform.wordMatrix, new Float32Array([-10.0 * MESHNUM, 0, -10.0 * MESHNUM]));

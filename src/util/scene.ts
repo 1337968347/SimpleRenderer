@@ -1,8 +1,8 @@
 import { mat3, mat4, vec3, vec4 } from '../lib/MV';
 import { getGL } from './glUtils';
 import Uniform from './uniform';
-import { VertexBufferObject, Texture2D } from './glUtils';
-import { GlValue, Shader, FrameBufferObject } from '../interface';
+import { VertexBufferObject, Texture2D, FrameBufferObject } from './glUtils';
+import { GlValue, Shader } from '../interface';
 
 export interface Uniforms {
   [k: string]: GlValue | Texture2D | FrameBufferObject | number;
@@ -49,7 +49,6 @@ export class SceneRenderTarget extends SceneNode {
   enter(scene: SceneGraph) {
     this.fbo.bind();
 
-    scene.gl.viewport(0, 0, this.fbo.width, this.fbo.height);
     scene.gl.clear(scene.gl.COLOR_BUFFER_BIT | scene.gl.DEPTH_BUFFER_BIT);
   }
 
@@ -211,11 +210,12 @@ export class SceneSimpleMesh extends SceneNode {
     const stride = 0;
     const offset = 0;
     const normalized = false;
+    this.vbo.bind();
     this.gl.vertexAttribPointer(location, 3, this.gl.FLOAT, normalized, stride, offset);
     this.gl.enableVertexAttribArray(location);
-    this.vbo.bind();
     shader.uniforms(scene.uniforms);
     this.vbo.drawTriangles();
+    this.vbo.unbind();
   }
 }
 
@@ -254,7 +254,7 @@ export class SceneUniforms extends SceneNode {
 
     for (let uniform in this.uniforms) {
       const value = this.uniforms[uniform];
-      if (value instanceof Texture2D) {
+      if (value instanceof Texture2D || value instanceof FrameBufferObject) {
         value.bindTexture(scene.pushTextura());
       }
       // 把this.uniform 绑定到Scene的uniform属性上去
@@ -265,7 +265,7 @@ export class SceneUniforms extends SceneNode {
   exit(scene: SceneGraph) {
     for (let uniform in this.uniforms) {
       const value = this.uniforms[uniform];
-      if (value instanceof Texture2D) {
+      if (value instanceof Texture2D || value instanceof FrameBufferObject) {
         value.unbindTexture();
         scene.popTextura();
       }

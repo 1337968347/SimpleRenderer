@@ -12,7 +12,7 @@ const makeShader = (gl: WebGLRenderingContext, shaderType: number, source: strin
   gl.shaderSource(shader, source);
   gl.compileShader(shader);
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    console.log(gl.getShaderInfoLog(shader), shaderType, source);
+    console.warn(gl.getShaderInfoLog(shader), shaderType, source);
     throw 'Compiler exception: "' + gl.getShaderInfoLog(shader) + '"';
   }
   return shader;
