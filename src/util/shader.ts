@@ -81,6 +81,7 @@ export class Shader {
 export class ShaderManager {
   shaders: { [propName: string]: Shader } = {};
   prefix: string = 'shaders/';
+  importExpression = /import "([^"]+)"/g;
   gl: WebGLRenderingContext;
   resources: any;
 
@@ -104,7 +105,13 @@ export class ShaderManager {
   getSource(shaderPath: string) {
     const name = this._getSourceName(shaderPath);
     const path = this.prefix + name;
-    return this.resources[path] || '';
+    const shaderSourceStr: string = this.resources[path];
+    if (shaderSourceStr == undefined) {
+      throw new Error(`cant found ${shaderPath} Source`);
+    }
+    return shaderSourceStr.replace(this.importExpression, (_, name) => {
+      return this.getSource(name);
+    });
   }
 
   _getSourceName(name) {

@@ -87,7 +87,7 @@ export class SceneCamera extends SceneNode {
   gl: WebGLRenderingContext;
   children: SceneNode[] = [];
   position: Float32Array;
-  pitch: number = 0.4;
+  pitch: number = 0.3;
   yaw: number = 0.0;
   near: number = 0.1;
   far: number = 5000;

@@ -26,11 +26,12 @@ export default async () => {
   const clock = createClock();
   const loader = new Loader('./assets/');
   loader.load([
+    'shaders/sun.glsl',
     'shaders/water.vert',
     'shaders/water.frag',
     'heightmap.png',
     'normalnoise.png',
-    'shaders/heightmap.vert',
+    'shaders/terrain.vert',
     'shaders/terrain.frag',
     'shaders/screen.vert',
     'shaders/tonemapping.frag',
@@ -55,7 +56,7 @@ export default async () => {
     const heightText2D = new Texture2D(loader.resources['heightmap.png']);
     const waterText2D = new Texture2D(loader.resources['normalnoise.png']);
     // 着色器
-    const moutainShader = shaderManager.get('heightmap.vert', 'terrain.frag');
+    const moutainShader = shaderManager.get('terrain.vert', 'terrain.frag');
     const waterShader = shaderManager.get('water.vert', 'water.frag');
     // 场景图
     sceneGraph = new SceneGraph();
