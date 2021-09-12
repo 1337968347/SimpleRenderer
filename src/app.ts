@@ -52,6 +52,7 @@ export default async () => {
 
   const prepareScence = () => {
     const gl = getGL();
+    sceneGraph = new SceneGraph();
 
     gl.clearColor(0.4, 0.6, 1.0, GRID_SIZE);
     const shaderManager = new ShaderManager(loader.resources);
@@ -60,10 +61,29 @@ export default async () => {
     // 着色器
     const moutainShader = shaderManager.get('terrain.vert', 'terrain.frag');
     const waterShader = shaderManager.get('water.vert', 'water.frag');
-    // 场景图
-    sceneGraph = new SceneGraph();
-    // 被观察物
+    const postShader = shaderManager.get('screen.vert', 'tonemapping.frag');
+
     const triangle = new VertexBufferObject(gird(GRID_SIZE));
+    let moutainTransform = new SceneTransform([new SceneSimpleMesh(triangle)]);
+    let waterTransform = new SceneTransform([new SceneSimpleMesh(triangle)]);
+    const mountain = new SceneMaterial(moutainShader, { heightmap: heightText2D }, [moutainTransform]);
+
+    // FrameBufferObject
+    const mountainDepthFBO = new FrameBufferObject(1024, 1024),
+      mountainDepthTarget = new SceneRenderTarget(mountainDepthFBO, [mountain]),
+      reflectionFBO = new FrameBufferObject(1024, 1024),
+      reflectionTarget = new SceneRenderTarget(reflectionFBO, [mountain]);
+
+    const water = new SceneMaterial(
+      waterShader,
+      { color: Uniform.Vec3([0.3, 0.5, 0.9]), waterNoise: waterText2D, reflection: reflectionFBO },
+      [waterTransform],
+    );
+
+    const combinedFBO = new FrameBufferObject(1024, 1024),
+      combinedTarget = new SceneRenderTarget(combinedFBO, [mountain, water]);
+    // 场景图
+    // 被观察物
 
     // 开放场景图数据传输
     // SceneGraph 场景
@@ -75,29 +95,16 @@ export default async () => {
     // SceneRenderTarget 将渲染的内容 渲染到图片上
     // VertexBufferObject 顶点相关数据
     // ScenePostProcess 将生成的纹理进行后处理操作。将渲染生成的图片当成纹理，渲染到一个正方形上。
+    // can be optimized with a z only shader
 
-    let moutainTransform = new SceneTransform([new SceneSimpleMesh(triangle)]);
-    let waterTransform = new SceneTransform([new SceneSimpleMesh(triangle)]);
-    const camera = new SceneCamera([
-      new SceneUniforms(globaluniform, [
-        new SceneMaterial(
-          waterShader,
-          {
-            color: Uniform.Vec3([0.3, 0.5, 0.9]),
-            waterNoise: waterText2D,
-          },
-          [waterTransform],
-        ),
-        new SceneMaterial(moutainShader, { heightmap: heightText2D }, [moutainTransform]),
-      ]),
-    ]);
+    const camera = new SceneCamera([new SceneUniforms(globaluniform, [reflectionTarget, combinedTarget])]);
 
     const fbo = new FrameBufferObject(2048, 2048);
     const mountainTarget = new SceneRenderTarget(fbo, [camera]);
-    const postprocess = new ScenePostProcess(shaderManager.get('screen.vert', 'tonemapping.frag'), { texture: fbo });
+    const postprocess = new ScenePostProcess(postShader, { texture: combinedFBO });
 
     cameraController = new CameraConstroller(inputHandler, camera);
-    sceneGraph.root.append(mountainTarget);
+    sceneGraph.root.append(camera);
     sceneGraph.root.append(postprocess);
 
     camera.position[1] = 50;
