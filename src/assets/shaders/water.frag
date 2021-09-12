@@ -4,7 +4,9 @@ uniform vec3 color;
 uniform sampler2D waterNoise;
 uniform float time;
 uniform vec3 eye;
+
 varying vec3 worldPosition;
+varying float depth;
 
 import "sun.glsl"
 
@@ -17,7 +19,7 @@ vec4 getNoise(vec2 uv) {
     (texture2D(waterNoise, uv1)) +
     (texture2D(waterNoise, uv2)) +
     (texture2D(waterNoise, uv3));
-  return noise * 0.25;
+  return normalize((noise -2.0) / 2.0);
 }
 
 void main() {
@@ -26,6 +28,6 @@ void main() {
 
   vec3 surfaceNormal = normalize(vec3(noise.x, 1.0, noise.z));
   vec3 eyeNormal = normalize(eye - worldPosition);
-  vec3 sun = sunLight(surfaceNormal, eyeNormal, 200.0, 2.0, 1.5);
-  gl_FragColor = vec4(sun * color, 1.0);
+  vec3 sun = sunLight(surfaceNormal, eyeNormal, 100.0, 0.8, 1.5);
+  gl_FragColor = vec4(sun * color, depth);
 }

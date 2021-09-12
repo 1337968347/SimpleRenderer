@@ -69,8 +69,9 @@ export class FrameBufferObject {
     gl.bindTexture(gl.TEXTURE_2D, this.texture);
     // 创建一个空的纹理
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, format || gl.UNSIGNED_BYTE, null);
+    gl.generateMipmap(gl.TEXTURE_2D);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 
     // 存储数据，例如图像，或者可以是渲染操作的源或目标。
     this.depth = gl.createRenderbuffer();

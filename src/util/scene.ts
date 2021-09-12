@@ -48,7 +48,6 @@ export class SceneRenderTarget extends SceneNode {
 
   enter(scene: SceneGraph) {
     this.fbo.bind();
-
     scene.gl.clear(scene.gl.COLOR_BUFFER_BIT | scene.gl.DEPTH_BUFFER_BIT);
   }
 
