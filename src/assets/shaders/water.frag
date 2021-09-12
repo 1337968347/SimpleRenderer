@@ -27,14 +27,8 @@ void main() {
   vec2 uv = vec2(worldPosition.x, worldPosition.z);
   vec4 noise = getNoise(uv);
 
-  vec3 surfaceNormal = normalize(vec3(noise.x, 0.8, noise.z));
+  vec3 surfaceNormal = normalize(vec3(noise.x, 1.0, noise.z));
   vec3 eyeNormal = normalize(eye - worldPosition);
-  vec3 sun = sunLight(surfaceNormal, eyeNormal, 200.0, 0.8, 1.2) ;
-
-  vec3 reflectionSample = vec3(texture2D(reflection, -vec2(noise)*0.05));
-
-  float theta1 = clamp(dot(eyeNormal, surfaceNormal), 0.0, 1.0);
-  float rf0 = 0.02; // realtime rendering, page 236
-  vec3 finalColor = mix(sun, reflectionSample, 0.1);
-  gl_FragColor = vec4(finalColor, depth);
+  vec3 sun = sunLight(surfaceNormal, eyeNormal, 100.0, 0.8, 1.5);
+  gl_FragColor = vec4(sun * color, depth);
 }

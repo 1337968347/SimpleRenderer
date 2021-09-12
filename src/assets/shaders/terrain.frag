@@ -5,6 +5,7 @@ varying vec3 surfaceNormal;
 uniform vec3 groundColor;
 uniform vec3 skyColor;
 uniform vec3 eye;
+uniform float clip;
 uniform vec3 atmosphereColor;
 uniform float atmosphereDistance;
 
@@ -21,6 +22,9 @@ vec3 lightHemisphere(const vec3 surfaceNormal) {
 }
 
 void main() {
+  if(worldPosition.y < clip){
+    discard;
+  }
   vec3 eyeNormal = normalize(eye - worldPosition);
   vec3 color = lightHemisphere(surfaceNormal) + sunLight(surfaceNormal, eyeNormal, 20.0, 0.05, 0.8);;
   gl_FragColor = vec4(color, depth);

@@ -54,7 +54,7 @@ export default async () => {
     const gl = getGL();
     sceneGraph = new SceneGraph();
 
-    gl.clearColor(0.4, 0.6, 1.0, GRID_SIZE);
+    gl.clearColor(0.4, 0.6, 1.0, 1.0);
     const shaderManager = new ShaderManager(loader.resources);
     const heightText2D = new Texture2D(loader.resources['heightmap.png']);
     const waterText2D = new Texture2D(loader.resources['normalnoise.png']);
@@ -63,16 +63,16 @@ export default async () => {
     const waterShader = shaderManager.get('water.vert', 'water.frag');
     const postShader = shaderManager.get('screen.vert', 'tonemapping.frag');
 
-    const triangle = new VertexBufferObject(gird(GRID_SIZE));
-    let moutainTransform = new SceneTransform([new SceneSimpleMesh(triangle)]);
-    let waterTransform = new SceneTransform([new SceneSimpleMesh(triangle)]);
-    const mountain = new SceneMaterial(moutainShader, { heightmap: heightText2D }, [moutainTransform]);
+    const mouTainVbo = new VertexBufferObject(gird(GRID_SIZE));
+    const waterVbo = new VertexBufferObject(gird(100));
+    let moutainTransform = new SceneTransform([new SceneSimpleMesh(mouTainVbo)]);
+    let waterTransform = new SceneTransform([new SceneSimpleMesh(waterVbo)]);
 
+    const mountain = new SceneMaterial(moutainShader, { heightmap: heightText2D }, [moutainTransform]);
+    const flipTransform = new SceneTransform([mountain])
     // FrameBufferObject
-    const mountainDepthFBO = new FrameBufferObject(1024, 1024),
-      mountainDepthTarget = new SceneRenderTarget(mountainDepthFBO, [mountain]),
-      reflectionFBO = new FrameBufferObject(1024, 1024),
-      reflectionTarget = new SceneRenderTarget(reflectionFBO, [mountain]);
+    const reflectionFBO = new FrameBufferObject(1024, 1024),
+      reflectionTarget = new SceneRenderTarget(reflectionFBO, [new SceneUniforms({ clip: 0.0 }, [flipTransform])]);
 
     const water = new SceneMaterial(
       waterShader,
@@ -99,8 +99,6 @@ export default async () => {
 
     const camera = new SceneCamera([new SceneUniforms(globaluniform, [reflectionTarget, combinedTarget])]);
 
-    const fbo = new FrameBufferObject(2048, 2048);
-    const mountainTarget = new SceneRenderTarget(fbo, [camera]);
     const postprocess = new ScenePostProcess(postShader, { texture: combinedFBO });
 
     cameraController = new CameraConstroller(inputHandler, camera);
@@ -115,7 +113,10 @@ export default async () => {
     mat4.scale(moutainTransform.wordMatrix, new Float32Array([GRID_SIZE, 100, GRID_SIZE]));
 
     mat4.translate(waterTransform.wordMatrix, new Float32Array([-1 * FAR_AWAY, 0, -1 * FAR_AWAY]));
-    mat4.scale(waterTransform.wordMatrix, new Float32Array([FAR_AWAY * 2, 100, FAR_AWAY * 2]));
+    mat4.scale(waterTransform.wordMatrix, new Float32Array([FAR_AWAY * 2, 1, FAR_AWAY * 2]));
+
+    mat4.scale(flipTransform.wordMatrix, new Float32Array([1.0,-1.0,1.0]))
+
 
     setCanvasFullScreen(canvasEl, sceneGraph);
   };
