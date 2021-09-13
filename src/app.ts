@@ -44,6 +44,7 @@ export default async () => {
     groundColor: Uniform.Vec3([0.7, 0.87, 1.0]),
     sunColor: Uniform.Vec3([0.7, 0.7, 0.7]),
     sunDirection: Uniform.Vec3([0.0, 0.71, 0.71]),
+    clip: 1000,
     time: 0.0,
   };
 
@@ -102,11 +103,12 @@ export default async () => {
     const postprocess = new ScenePostProcess(postShader, { texture: combinedFBO });
 
     cameraController = new CameraConstroller(inputHandler, camera);
+    
     sceneGraph.root.append(camera);
     sceneGraph.root.append(postprocess);
 
-    camera.position[1] = 50;
-    camera.position[2] += 300;
+    camera.position[1] = 100;
+    camera.position[2] += 450;
     // 把世界坐标 从 0-1 变成 0- MESHNUM
     // 并且 把坐标原点移到中心
     mat4.translate(moutainTransform.wordMatrix, new Float32Array([-0.5 * GRID_SIZE, -10, -0.5 * GRID_SIZE]));
