@@ -110,6 +110,7 @@ export class SceneCamera extends SceneNode {
     mat4.multiply(project, wordView, mvp);
     scene.uniforms.projection = Uniform.Mat4(mvp);
     scene.uniforms.eye = Uniform.Vec3(this.position);
+    console.log(this.project(new Float32Array([0, 0, 0, 1]), scene))
   }
 
   exit(scene: SceneGraph) {
@@ -165,11 +166,11 @@ export class SceneGraph {
   }
 
   pushUniforms() {
-    // this.uniforms = Object.create(this.uniforms);
+    this.uniforms = Object.create(this.uniforms);
   }
 
   popUniforms() {
-    // this.uniforms = Object.getPrototypeOf(this.uniforms);
+    this.uniforms = Object.getPrototypeOf(this.uniforms);
   }
 
   pushTextura() {
@@ -238,6 +239,21 @@ export class SceneTransform extends SceneNode {
   }
 }
 
+export class SceneMirror extends SceneTransform {
+  constructor(children: SceneNode[]) {
+    super(children);
+  }
+
+  enter(scene: SceneGraph) {
+    scene.gl.cullFace(scene.gl.FRONT);
+    super.enter.call(this, scene);
+  }
+
+  exit(scene: SceneGraph) {
+    scene.gl.cullFace(scene.gl.BACK);
+    super.exit.call(this, scene);
+  }
+}
 export class SceneUniforms extends SceneNode {
   uniforms: Uniforms;
   children: SceneNode[];
@@ -249,8 +265,6 @@ export class SceneUniforms extends SceneNode {
   }
 
   enter(scene: SceneGraph) {
-    scene.pushUniforms();
-
     for (let uniform in this.uniforms) {
       const value = this.uniforms[uniform];
       if (value instanceof Texture2D || value instanceof FrameBufferObject) {
@@ -259,6 +273,7 @@ export class SceneUniforms extends SceneNode {
       // 把this.uniform 绑定到Scene的uniform属性上去
       scene.uniforms[uniform] = value;
     }
+    scene.pushUniforms();
   }
 
   exit(scene: SceneGraph) {
@@ -269,6 +284,7 @@ export class SceneUniforms extends SceneNode {
         scene.popTextura();
       }
     }
+    scene.popUniforms();
   }
 }
 

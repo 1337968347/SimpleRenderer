@@ -31,7 +31,9 @@ vec4 noise = getNoise(uv);
 vec3 surfaceNormal = normalize(vec3(noise.x, 1.0, noise.z));
 vec3 eyeNormal = normalize(eye - worldPosition);
 vec3 sun = sunLight(surfaceNormal, eyeNormal, 100.0, 0.8, 1.5);
-vec2 screenPosition = ((vec2(projected)/projected.w) + 1.0) * 0.5;
-vec3 reflection = vec3(texture2D(reflection, screenPosition));
-gl_FragColor = vec4(reflection * color *sun, depth);
+
+vec2 distortion = surfaceNormal.xz/20.0;
+vec2 screen = (projected.xy/projected.z + 1.0)*0.5;
+vec3 reflectionSample = vec3(texture2D(reflection, screen + distortion));
+gl_FragColor = vec4(color *sun *reflectionSample, depth);
 }

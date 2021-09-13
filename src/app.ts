@@ -10,6 +10,7 @@ import {
   SceneUniforms,
   SceneRenderTarget,
   ScenePostProcess,
+  SceneMirror
 } from './util/scene';
 import { ShaderManager } from './util/shader';
 import Loader from './util/loader';
@@ -55,7 +56,7 @@ export default async () => {
     const gl = getGL();
     sceneGraph = new SceneGraph();
 
-    gl.clearColor(0.4, 0.6, 1.0, 1.0);
+    gl.clearColor(0.4, 0.6, 1.0, FAR_AWAY);
     const shaderManager = new ShaderManager(loader.resources);
     const heightText2D = new Texture2D(loader.resources['heightmap.png']);
     const waterText2D = new Texture2D(loader.resources['normalnoise.png']);
@@ -70,7 +71,7 @@ export default async () => {
     let waterTransform = new SceneTransform([new SceneSimpleMesh(waterVbo)]);
 
     const mountain = new SceneMaterial(moutainShader, { heightmap: heightText2D }, [moutainTransform]);
-    const flipTransform = new SceneTransform([mountain])
+    const flipTransform = new SceneMirror([mountain]);
     // FrameBufferObject
     const reflectionFBO = new FrameBufferObject(1024, 1024),
       reflectionTarget = new SceneRenderTarget(reflectionFBO, [new SceneUniforms({ clip: 0.0 }, [flipTransform])]);
@@ -103,7 +104,7 @@ export default async () => {
     const postprocess = new ScenePostProcess(postShader, { texture: combinedFBO });
 
     cameraController = new CameraConstroller(inputHandler, camera);
-    
+
     sceneGraph.root.append(camera);
     sceneGraph.root.append(postprocess);
 
@@ -114,11 +115,10 @@ export default async () => {
     mat4.translate(moutainTransform.wordMatrix, new Float32Array([-0.5 * GRID_SIZE, -10, -0.5 * GRID_SIZE]));
     mat4.scale(moutainTransform.wordMatrix, new Float32Array([GRID_SIZE, 100, GRID_SIZE]));
 
+    mat4.scale(flipTransform.wordMatrix, new Float32Array([1.0, -1.0, 1.0]));
+
     mat4.translate(waterTransform.wordMatrix, new Float32Array([-1 * FAR_AWAY, 0, -1 * FAR_AWAY]));
     mat4.scale(waterTransform.wordMatrix, new Float32Array([FAR_AWAY * 2, 1, FAR_AWAY * 2]));
-
-    mat4.scale(flipTransform.wordMatrix, new Float32Array([1.0,-1.0,1.0]))
-
 
     setCanvasFullScreen(canvasEl, sceneGraph);
   };
