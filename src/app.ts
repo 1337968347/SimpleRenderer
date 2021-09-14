@@ -72,7 +72,7 @@ export default async () => {
 
     const mountain = new SceneMaterial(moutainShader, { heightmap: heightText2D }, [moutainTransform]);
     const flipTransform = new SceneMirror([mountain]);
-    // FrameBufferObject
+
     const reflectionFBO = new FrameBufferObject(1024, 1024),
       reflectionTarget = new SceneRenderTarget(reflectionFBO, [new SceneUniforms({ clip: 0.0 }, [flipTransform])]);
 
@@ -99,6 +99,7 @@ export default async () => {
     // ScenePostProcess 将生成的纹理进行后处理操作。将渲染生成的图片当成纹理，渲染到一个正方形上。
     // can be optimized with a z only shader
 
+    // 先画山的倒影， 然后画山 画水
     const camera = new SceneCamera([new SceneUniforms(globaluniform, [reflectionTarget, combinedTarget])]);
 
     const postprocess = new ScenePostProcess(postShader, { texture: combinedFBO });

@@ -110,7 +110,6 @@ export class SceneCamera extends SceneNode {
     mat4.multiply(project, wordView, mvp);
     scene.uniforms.projection = Uniform.Mat4(mvp);
     scene.uniforms.eye = Uniform.Vec3(this.position);
-    console.log(this.project(new Float32Array([0, 0, 0, 1]), scene))
   }
 
   exit(scene: SceneGraph) {
@@ -222,6 +221,7 @@ export class SceneSimpleMesh extends SceneNode {
 export class SceneTransform extends SceneNode {
   children: SceneNode[] = [];
   wordMatrix = mat4.create();
+  aux = mat4.create();
 
   constructor(children: SceneNode[]) {
     super();
@@ -231,7 +231,13 @@ export class SceneTransform extends SceneNode {
 
   enter(scene: SceneGraph) {
     scene.pushUniforms();
-    scene.uniforms.modelTransform = Uniform.Mat4(this.wordMatrix);
+    if (scene.uniforms.modelTransform) {
+      mat4.multiply((scene.uniforms.modelTransform as any).value, this.wordMatrix, this.aux);
+      scene.uniforms.modelTransform = Uniform.Mat4(this.aux);
+    } else {
+      scene.uniforms.modelTransform = Uniform.Mat4(this.wordMatrix);
+    }
+    console.log(scene.uniforms)
   }
 
   exit(scene: SceneGraph) {
