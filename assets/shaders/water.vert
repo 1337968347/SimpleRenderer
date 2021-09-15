@@ -1,7 +1,8 @@
 attribute vec3 position;
 
 varying vec4 projected;
-import "transform.glsl"
+
+/// import "transform.glsl"
 
 void main() {
   transform(position);

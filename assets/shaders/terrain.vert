@@ -2,7 +2,7 @@ attribute vec3 position;
 uniform sampler2D heightmap;
 varying vec3 surfaceNormal;
 
-import "transform.glsl"
+/// import "transform.glsl"
 
 void main(){
     vec4 heightPixel = texture2D(heightmap, vec2(position.x, position.z ));
