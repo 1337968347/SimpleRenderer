@@ -12,7 +12,7 @@ uniform float atmosphereDistance;
 varying float depth;
 varying vec3 worldPosition;
 
-import "sun.glsl"
+/// import "sun.glsl"
 
 // 根据光线与法向量的夹角 在蓝天 跟 土地 颜色之间插值
 vec3 lightHemisphere(const vec3 surfaceNormal) {
@@ -22,10 +22,11 @@ vec3 lightHemisphere(const vec3 surfaceNormal) {
 }
 
 void main() {
-  if(worldPosition.y > clip){
+  if(worldPosition.y > clip) {
     discard;
   }
   vec3 eyeNormal = normalize(eye - worldPosition);
-  vec3 color = lightHemisphere(surfaceNormal) + sunLight(surfaceNormal, eyeNormal, 10.0, 0.5, 0.8);;
+  vec3 sun = sunLight(surfaceNormal, eyeNormal, 10.0, 0.5, 0.8);
+  vec3 color = lightHemisphere(surfaceNormal) + sun;
   gl_FragColor = vec4(color, depth);
 }

@@ -81,7 +81,7 @@ export class Shader {
 export class ShaderManager {
   shaders: { [propName: string]: Shader } = {};
   prefix: string = 'shaders/';
-  importExpression = /import "([^"]+)"/g;
+  importExpression = /\/\/\/\s*import "([^"]+)"/g;
   gl: WebGLRenderingContext;
   resources: any;
 

@@ -37,7 +37,7 @@ export default async () => {
     'shaders/terrain.vert',
     'shaders/terrain.frag',
     'shaders/screen.vert',
-    'shaders/tonemapping.frag',
+    'shaders/screen.frag',
   ]);
 
 
@@ -65,7 +65,7 @@ export default async () => {
     // 着色器
     const moutainShader = shaderManager.get('terrain.vert', 'terrain.frag');
     const waterShader = shaderManager.get('water.vert', 'water.frag');
-    const postShader = shaderManager.get('screen.vert', 'tonemapping.frag');
+    const postShader = shaderManager.get('screen.vert', 'screen.frag');
 
     const mouTainVbo = new VertexBufferObject(gird(GRID_SIZE));
     const waterVbo = new VertexBufferObject(gird(100));
@@ -111,14 +111,14 @@ export default async () => {
     sceneGraph.root.append(camera);
     sceneGraph.root.append(postprocess);
 
-    camera.position[1] = 1;
+    camera.position[1] = 50;
     camera.position[2] += 450;
     // 把世界坐标 从 0-1 变成 0- MESHNUM
     // 并且 把坐标原点移到中心
     mat4.translate(moutainTransform.wordMatrix, new Float32Array([-0.5 * GRID_SIZE, -10, -0.5 * GRID_SIZE]));
     mat4.scale(moutainTransform.wordMatrix, new Float32Array([GRID_SIZE, 100, GRID_SIZE]));
 
-    mat4.scale(flipTransform.wordMatrix, new Float32Array([1.0, -1.0, 1.0]));
+    mat4.scale(flipTransform.wordMatrix, new Float32Array([1.0, -0.8, 1.0]));
 
     mat4.translate(waterTransform.wordMatrix, new Float32Array([-1 * FAR_AWAY, 0, -1 * FAR_AWAY]));
     mat4.scale(waterTransform.wordMatrix, new Float32Array([FAR_AWAY * 2, 1, FAR_AWAY * 2]));
