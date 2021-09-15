@@ -40,6 +40,11 @@ export default async () => {
     'shaders/tonemapping.frag',
   ]);
 
+
+
+  let cameraController;
+  let sceneGraph: SceneGraph;
+
   const globaluniform = {
     skyColor: Uniform.Vec3([0.2, 0.3, 0.35]),
     groundColor: Uniform.Vec3([0.7, 0.87, 1.0]),
@@ -48,10 +53,7 @@ export default async () => {
     clip: 1000,
     time: 0.0,
   };
-
-  let cameraController;
-  let sceneGraph: SceneGraph;
-
+  
   const prepareScence = () => {
     const gl = getGL();
     sceneGraph = new SceneGraph();
@@ -74,7 +76,7 @@ export default async () => {
     const flipTransform = new SceneMirror([mountain]);
 
     const reflectionFBO = new FrameBufferObject(1024, 1024),
-      reflectionTarget = new SceneRenderTarget(reflectionFBO, [new SceneUniforms({ clip: 0.0 }, [flipTransform])]);
+      reflectionTarget = new SceneRenderTarget(reflectionFBO, [new SceneUniforms({ clip: 0.2 }, [flipTransform])]);
 
     const water = new SceneMaterial(
       waterShader,

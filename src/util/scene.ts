@@ -237,7 +237,6 @@ export class SceneTransform extends SceneNode {
     } else {
       scene.uniforms.modelTransform = Uniform.Mat4(this.wordMatrix);
     }
-    console.log(scene.uniforms)
   }
 
   exit(scene: SceneGraph) {
@@ -269,8 +268,9 @@ export class SceneUniforms extends SceneNode {
     this.uniforms = uniforms;
     this.children = children;
   }
-
+  
   enter(scene: SceneGraph) {
+    scene.pushUniforms();
     for (let uniform in this.uniforms) {
       const value = this.uniforms[uniform];
       if (value instanceof Texture2D || value instanceof FrameBufferObject) {
@@ -279,7 +279,6 @@ export class SceneUniforms extends SceneNode {
       // 把this.uniform 绑定到Scene的uniform属性上去
       scene.uniforms[uniform] = value;
     }
-    scene.pushUniforms();
   }
 
   exit(scene: SceneGraph) {
