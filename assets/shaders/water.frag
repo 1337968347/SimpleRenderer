@@ -25,15 +25,21 @@ return noise * 0.5 - 1.0;
 }
 
 void main() {
-vec2 uv = vec2(worldPosition.x, worldPosition.z);
-vec4 noise = getNoise(uv);
+  vec2 uv = vec2(worldPosition.x, worldPosition.z);
+  // 噪音
+  vec4 noise = getNoise(uv);
+  vec3 surfaceNormal = normalize(vec3(noise.x, 1.0, noise.z));
 
-vec3 surfaceNormal = normalize(vec3(noise.x, 1.0, noise.z));
-vec3 eyeNormal = normalize(eye - worldPosition);
-vec3 sun = sunLight(surfaceNormal, eyeNormal, 100.0, 0.8, 1.5);
+  vec3 eyeNormal = normalize(eye - worldPosition);
+  // 光照
+  vec3 sun = sunLight(surfaceNormal, eyeNormal, 100.0, 1.8, 0.8);
+  // 反射
+  float dist = length(worldPosition - eye);
 
-vec2 distortion = surfaceNormal.xz/20.0;
-vec2 screen = (projected.xy/projected.z + 1.0)*0.5;
-vec3 reflectionSample = vec3(texture2D(reflection, screen + distortion));
-gl_FragColor = vec4(color *sun *reflectionSample, depth);
+  vec2 screenPosition = (projected.xy/projected.z + 1.0)*0.5;
+  float distortionFactor = max(dist/100.0, 10.0);
+  vec2 distortion = surfaceNormal.xz/distortionFactor;
+  vec3 reflectionSample = vec3(texture2D(reflection, screenPosition + distortion));
+
+  gl_FragColor = vec4(sun * (color * reflectionSample), depth);
 }
