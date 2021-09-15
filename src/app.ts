@@ -76,7 +76,7 @@ export default async () => {
     const flipTransform = new SceneMirror([mountain]);
 
     const reflectionFBO = new FrameBufferObject(1024, 1024),
-      reflectionTarget = new SceneRenderTarget(reflectionFBO, [new SceneUniforms({ clip: 0.2 }, [flipTransform])]);
+      reflectionTarget = new SceneRenderTarget(reflectionFBO, [new SceneUniforms({ clip: 0.0 }, [flipTransform])]);
 
     const water = new SceneMaterial(
       waterShader,
@@ -111,7 +111,7 @@ export default async () => {
     sceneGraph.root.append(camera);
     sceneGraph.root.append(postprocess);
 
-    camera.position[1] = 100;
+    camera.position[1] = 1;
     camera.position[2] += 450;
     // 把世界坐标 从 0-1 变成 0- MESHNUM
     // 并且 把坐标原点移到中心
