@@ -88,7 +88,7 @@ export class SceneCamera extends SceneNode {
   position: Float32Array;
   pitch: number = 0.3;
   yaw: number = 0.0;
-  near: number = 0.1;
+  near: number = 0.5;
   far: number = 5000;
   fov: number = 50;
 
@@ -96,7 +96,7 @@ export class SceneCamera extends SceneNode {
     super();
     this.children = children;
     this.gl = getGL();
-    this.position = vec3.create([0, 1, 2]);
+    this.position = vec3.create([0, 0, 0]);
   }
 
   enter(scene: SceneGraph) {
@@ -312,24 +312,19 @@ export class SceneSkybox extends SceneNode {
     const mesh = new SceneSimpleMesh(
       new VertexBufferObject(
         new Float32Array([
-          -1, 1, 1, -1, -1, 1, 1, 1, 1,
-          -1, 1, 1, 1, -1, 1, 1, 1, 1,
+          -1, 1, 1, -1, -1, 1, 1, 1, 1, -1, 1, 1, 1, -1, 1, 1, 1, 1,
 
           // front
-          -1, 1, -1, -1, -1, -1, 1, 1, -1,
-          -1, 1, -1, 1, -1, -1, 1, 1, -1,
+          -1, 1, -1, -1, -1, -1, 1, 1, -1, -1, 1, -1, 1, -1, -1, 1, 1, -1,
 
           // left
-          -1, 1, -1, -1, -1, -1, -1, 1, 1,
-          -1, 1, -1, -1, -1, 1, -1, 1, 1,
+          -1, 1, -1, -1, -1, -1, -1, 1, 1, -1, 1, -1, -1, -1, 1, -1, 1, 1,
 
           // right
-          1, 1, -1, 1, -1, -1, 1, 1, 1,
-          1, 1, -1, 1, -1, 1, 1, 1, 1,
+          1, 1, -1, 1, -1, -1, 1, 1, 1, 1, 1, -1, 1, -1, 1, 1, 1, 1,
 
           // top
-          -1, 1, -1, -1, 1, 1, 1, 1, 1,
-          -1, 1, -1, 1, 1, 1, 1, 1, -1,
+          -1, 1, -1, -1, 1, 1, 1, 1, 1, -1, 1, -1, 1, 1, 1, 1, 1, -1,
         ]),
       ),
     );

@@ -6,8 +6,6 @@ uniform vec3 groundColor;
 uniform vec3 skyColor;
 uniform vec3 eye;
 uniform float clip;
-uniform vec3 atmosphereColor;
-uniform float atmosphereDistance;
 
 varying float depth;
 varying vec3 worldPosition;

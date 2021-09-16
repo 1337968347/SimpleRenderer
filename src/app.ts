@@ -48,7 +48,7 @@ export default async () => {
 
   const globaluniform = {
     skyColor: Uniform.Vec3([0.2, 0.3, 0.35]),
-    groundColor: Uniform.Vec3([0.7, 0.87, 1.0]),
+    groundColor: Uniform.Vec3([-0.025, -0.05, -0.1]),
     sunColor: Uniform.Vec3([0.7, 0.7, 0.7]),
     sunDirection: Uniform.Vec3(vec3.normalize(new Float32Array([0.577, 0.577, 0.077]))),
     clip: 1000,
@@ -64,17 +64,17 @@ export default async () => {
     const heightText2D = new Texture2D(loader.resources['heightmap.png']);
     const waterText2D = new Texture2D(loader.resources['normalnoise.png']);
     // 着色器
-    const moutainShader = shaderManager.get('terrain.vert', 'terrain.frag');
+    const mountainShader = shaderManager.get('terrain.vert', 'terrain.frag');
     const waterShader = shaderManager.get('water.vert', 'water.frag');
     const postShader = shaderManager.get('screen.vert', 'screen.frag');
     const skyShader = shaderManager.get('sky.vert', 'sky.frag');
 
-    const mouTainVbo = new VertexBufferObject(gird(GRID_SIZE));
+    const mounTainVbo = new VertexBufferObject(gird(GRID_SIZE));
     const waterVbo = new VertexBufferObject(gird(100));
-    let moutainTransform = new SceneTransform([new SceneSimpleMesh(mouTainVbo)]);
+    let mountainTransform = new SceneTransform([new SceneSimpleMesh(mounTainVbo)]);
     let waterTransform = new SceneTransform([new SceneSimpleMesh(waterVbo)]);
 
-    const mountain = new SceneMaterial(moutainShader, { heightmap: heightText2D }, [moutainTransform]);
+    const mountain = new SceneMaterial(mountainShader, { heightmap: heightText2D }, [mountainTransform]);
     const sky = new SceneTransform([
       new SceneSkybox(skyShader, {
         horizonColor: Uniform.Vec3([0.2, 0.5, 1]),
@@ -83,12 +83,15 @@ export default async () => {
     ]);
     const flipTransform = new SceneMirror([mountain, sky]);
 
+    const mountainDepthFbo = new FrameBufferObject(512, 512);
+    const mountainDepthTarget = new SceneRenderTarget(mountainDepthFbo, [new SceneUniforms({ clip: 0.0 }, [mountain])]);
+
     const reflectionFBO = new FrameBufferObject(1024, 1024),
       reflectionTarget = new SceneRenderTarget(reflectionFBO, [new SceneUniforms({ clip: 0.0 }, [flipTransform])]);
 
     const water = new SceneMaterial(
       waterShader,
-      { color: Uniform.Vec3([0.3, 0.5, 0.9]), waterNoise: waterText2D, reflection: reflectionFBO },
+      { color: Uniform.Vec3([0.3, 0.5, 0.9]), waterNoise: waterText2D, reflection: reflectionFBO, refraction: mountainDepthFbo },
       [waterTransform],
     );
 
@@ -110,7 +113,7 @@ export default async () => {
     // can be optimized with a z only shader
 
     // 先画山的倒影， 然后画山 画水
-    const camera = new SceneCamera([new SceneUniforms(globaluniform, [reflectionTarget, combinedTarget])]);
+    const camera = new SceneCamera([new SceneUniforms(globaluniform, [mountainDepthTarget, reflectionTarget, combinedTarget])]);
 
     const postprocess = new ScenePostProcess(postShader, { texture: combinedFBO });
 
@@ -120,11 +123,11 @@ export default async () => {
     sceneGraph.root.append(postprocess);
 
     camera.position[1] = 50;
-    camera.position[2] += 450;
+    camera.position[2] += 350;
     // 把世界坐标 从 0-1 变成 0- MESHNUM
     // 并且 把坐标原点移到中心
-    mat4.translate(moutainTransform.wordMatrix, new Float32Array([-0.5 * GRID_SIZE, -10, -0.5 * GRID_SIZE]));
-    mat4.scale(moutainTransform.wordMatrix, new Float32Array([GRID_SIZE, 100, GRID_SIZE]));
+    mat4.translate(mountainTransform.wordMatrix, new Float32Array([-0.5 * GRID_SIZE, -10, -0.5 * GRID_SIZE]));
+    mat4.scale(mountainTransform.wordMatrix, new Float32Array([GRID_SIZE, 100, GRID_SIZE]));
 
     mat4.scale(flipTransform.wordMatrix, new Float32Array([1.0, -1.0, 1.0]));
 

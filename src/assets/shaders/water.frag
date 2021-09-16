@@ -5,6 +5,7 @@ uniform float time;
 uniform vec3 eye;
 uniform sampler2D waterNoise;
 uniform sampler2D reflection;
+uniform sampler2D refraction;
 
 varying vec4 projected;
 varying vec3 worldPosition;
