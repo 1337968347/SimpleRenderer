@@ -21,7 +21,7 @@ vec4 getNoise(vec2 uv) {
     (texture2D(waterNoise, uv1)) +
     (texture2D(waterNoise, uv2)) +
     (texture2D(waterNoise, uv3));
-  return noise * 0.5 - 1.0;
+  return noise * 0.25 - 0.5;
 }
 
 void main() {
@@ -32,11 +32,12 @@ void main() {
 
   vec3 eyeNormal = normalize(eye - worldPosition);
   // 光照
-  vec3 sun = sunLight(surfaceNormal, eyeNormal, 100.0, 1.8, 0.8);
+  vec3 sun = sunLight(surfaceNormal, eyeNormal, 100.0, 1.5, 1.2);
   // 反射
+  // 透视除法
   vec2 screenPosition = (projected.xy / projected.z + 1.0) * 0.5;
   vec2 reflectionUV = clamp(screenPosition + vec2(noise.x, noise.y * 0.5) * 0.05, vec2(0.01), vec2(0.99));
-  vec3 reflectionSample = vec3(texture2D(reflection, reflectionUV - vec2(noise) * 0.1));
+  vec3 reflectionSample = vec3(texture2D(reflection, reflectionUV - vec2(noise) * 0.08));
 
-  gl_FragColor = vec4(color * (0.6 * sun + 0.4 * reflectionSample), depth);
+  gl_FragColor = vec4(color * (0.5 * sun + 0.5 * reflectionSample), depth);
 }
