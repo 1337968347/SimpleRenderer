@@ -268,7 +268,7 @@ export class SceneUniforms extends SceneNode {
     this.uniforms = uniforms;
     this.children = children;
   }
-  
+
   enter(scene: SceneGraph) {
     scene.pushUniforms();
     for (let uniform in this.uniforms) {
@@ -299,6 +299,39 @@ export class ScenePostProcess extends SceneNode {
     super();
     const mesh = new SceneSimpleMesh(
       new VertexBufferObject(new Float32Array([-1, 1, 0, -1, -1, 0, 1, -1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0])),
+    );
+    const material = new SceneMaterial(shader, uniforms, [mesh]);
+    this.children = [material];
+  }
+}
+
+export class SceneSkybox extends SceneNode {
+  children: SceneNode[];
+  constructor(shader: Shader, uniforms: Uniforms) {
+    super();
+    const mesh = new SceneSimpleMesh(
+      new VertexBufferObject(
+        new Float32Array([
+          -1, 1, 1, -1, -1, 1, 1, 1, 1,
+          -1, 1, 1, 1, -1, 1, 1, 1, 1,
+
+          // front
+          -1, 1, -1, -1, -1, -1, 1, 1, -1,
+          -1, 1, -1, 1, -1, -1, 1, 1, -1,
+
+          // left
+          -1, 1, -1, -1, -1, -1, -1, 1, 1,
+          -1, 1, -1, -1, -1, 1, -1, 1, 1,
+
+          // right
+          1, 1, -1, 1, -1, -1, 1, 1, 1,
+          1, 1, -1, 1, -1, 1, 1, 1, 1,
+
+          // top
+          -1, 1, -1, -1, 1, 1, 1, 1, 1,
+          -1, 1, -1, 1, 1, 1, 1, 1, -1,
+        ]),
+      ),
     );
     const material = new SceneMaterial(shader, uniforms, [mesh]);
     this.children = [material];

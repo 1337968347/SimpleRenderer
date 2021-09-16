@@ -10,14 +10,15 @@ import {
   SceneUniforms,
   SceneRenderTarget,
   ScenePostProcess,
-  SceneMirror
+  SceneMirror,
+  SceneSkybox,
 } from './util/scene';
 import { ShaderManager } from './util/shader';
 import Loader from './util/loader';
 import { gird } from './util/mesh';
 import CameraConstroller from './util/cameraController';
 import InputHandler from './util/input';
-import { mat4 } from './lib/MV';
+import { mat4, vec3 } from './lib/MV';
 
 const GRID_SIZE = 512,
   FAR_AWAY = 10000;
@@ -38,9 +39,9 @@ export default async () => {
     'shaders/terrain.frag',
     'shaders/screen.vert',
     'shaders/screen.frag',
+    'shaders/sky.vert',
+    'shaders/sky.frag',
   ]);
-
-
 
   let cameraController;
   let sceneGraph: SceneGraph;
@@ -49,11 +50,11 @@ export default async () => {
     skyColor: Uniform.Vec3([0.2, 0.3, 0.35]),
     groundColor: Uniform.Vec3([0.7, 0.87, 1.0]),
     sunColor: Uniform.Vec3([0.7, 0.7, 0.7]),
-    sunDirection: Uniform.Vec3([0.0, 0.71, 0.71]),
+    sunDirection: Uniform.Vec3(vec3.normalize(new Float32Array([0.577, 0.577, 0.077]))),
     clip: 1000,
     time: 0.0,
   };
-  
+
   const prepareScence = () => {
     const gl = getGL();
     sceneGraph = new SceneGraph();
@@ -66,6 +67,7 @@ export default async () => {
     const moutainShader = shaderManager.get('terrain.vert', 'terrain.frag');
     const waterShader = shaderManager.get('water.vert', 'water.frag');
     const postShader = shaderManager.get('screen.vert', 'screen.frag');
+    const skyShader = shaderManager.get('sky.vert', 'sky.frag');
 
     const mouTainVbo = new VertexBufferObject(gird(GRID_SIZE));
     const waterVbo = new VertexBufferObject(gird(100));
@@ -73,7 +75,13 @@ export default async () => {
     let waterTransform = new SceneTransform([new SceneSimpleMesh(waterVbo)]);
 
     const mountain = new SceneMaterial(moutainShader, { heightmap: heightText2D }, [moutainTransform]);
-    const flipTransform = new SceneMirror([mountain]);
+    const sky = new SceneTransform([
+      new SceneSkybox(skyShader, {
+        horizonColor: Uniform.Vec3([0.2, 0.5, 1]),
+        zenithColor: Uniform.Vec3([0.15, 0.2, 0.8]),
+      }),
+    ]);
+    const flipTransform = new SceneMirror([mountain, sky]);
 
     const reflectionFBO = new FrameBufferObject(1024, 1024),
       reflectionTarget = new SceneRenderTarget(reflectionFBO, [new SceneUniforms({ clip: 0.0 }, [flipTransform])]);
@@ -85,7 +93,7 @@ export default async () => {
     );
 
     const combinedFBO = new FrameBufferObject(1024, 1024),
-      combinedTarget = new SceneRenderTarget(combinedFBO, [mountain, water]);
+      combinedTarget = new SceneRenderTarget(combinedFBO, [mountain, water, sky]);
     // 场景图
     // 被观察物
 
@@ -118,11 +126,14 @@ export default async () => {
     mat4.translate(moutainTransform.wordMatrix, new Float32Array([-0.5 * GRID_SIZE, -10, -0.5 * GRID_SIZE]));
     mat4.scale(moutainTransform.wordMatrix, new Float32Array([GRID_SIZE, 100, GRID_SIZE]));
 
-    mat4.scale(flipTransform.wordMatrix, new Float32Array([1.0, -0.8, 1.0]));
+    mat4.scale(flipTransform.wordMatrix, new Float32Array([1.0, -1.0, 1.0]));
 
     mat4.translate(waterTransform.wordMatrix, new Float32Array([-1 * FAR_AWAY, 0, -1 * FAR_AWAY]));
     mat4.scale(waterTransform.wordMatrix, new Float32Array([FAR_AWAY * 2, 1, FAR_AWAY * 2]));
 
+    mat4.scale(sky.wordMatrix, new Float32Array([FAR_AWAY, FAR_AWAY, FAR_AWAY]));
+
+    camera.far = FAR_AWAY * 2;
     setCanvasFullScreen(canvasEl, sceneGraph);
   };
 
