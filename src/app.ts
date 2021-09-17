@@ -122,11 +122,11 @@ export default async () => {
     sceneGraph.root.append(camera);
     sceneGraph.root.append(postprocess);
 
-    camera.position[1] = 50;
-    camera.position[2] += 350;
+    camera.position[1] = 10;
+    camera.position[2] += 200;
     // 把世界坐标 从 0-1 变成 0- MESHNUM
     // 并且 把坐标原点移到中心
-    mat4.translate(mountainTransform.wordMatrix, new Float32Array([-0.5 * GRID_SIZE, -10, -0.5 * GRID_SIZE]));
+    mat4.translate(mountainTransform.wordMatrix, new Float32Array([-0.5 * GRID_SIZE, -30, -0.5 * GRID_SIZE]));
     mat4.scale(mountainTransform.wordMatrix, new Float32Array([GRID_SIZE, 100, GRID_SIZE]));
 
     mat4.scale(flipTransform.wordMatrix, new Float32Array([1.0, -1.0, 1.0]));
