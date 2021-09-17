@@ -5,6 +5,7 @@ uniform float time;
 uniform vec3 eye;
 uniform sampler2D waterNoise;
 uniform sampler2D reflection;
+uniform sampler2D refraction;
 
 varying vec4 projected;
 varying vec3 worldPosition;
@@ -33,11 +34,16 @@ void main() {
   vec3 eyeNormal = normalize(eye - worldPosition);
   // 光照
   vec3 sun = sunLight(surfaceNormal, eyeNormal, 100.0, 1.5, 1.2);
-  // 反射
   // 透视除法
   vec2 screenPosition = (projected.xy / projected.z + 1.0) * 0.5;
+  // 反射
   vec2 reflectionUV = clamp(screenPosition + vec2(noise.x, noise.y * 0.5) * 0.05, vec2(0.01), vec2(0.99));
   vec3 reflectionSample = vec3(texture2D(reflection, reflectionUV - vec2(noise) * 0.08));
+  // 折射
+  vec2 refractionUV = clamp(screenPosition - vec2(noise) * 0.01, vec2(0.01), vec2(0.99));
+  vec4 refractionSample = texture2D(refraction, refractionUV);
+  float waterDepth = refractionSample.a - projected.z;
+  vec3 refractionColor = mix(vec3(refractionSample), color, min(waterDepth / 6.0 * vec3(1.1, 1.0, 0.9), vec3(1.0))) * 0.5;
 
-  gl_FragColor = vec4(color * (0.5 * sun + 0.5 * reflectionSample), depth);
+  gl_FragColor = vec4(color * (0.5 * sun + 0.4 * reflectionSample + 0.1 * refractionColor), depth);
 }
