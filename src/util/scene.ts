@@ -212,28 +212,6 @@ export class SceneSimpleMesh extends SceneNode {
   }
 }
 
-export class SceneSimpleObj extends SceneNode {
-  gl: WebGLRenderingContext;
-  // 顶点
-  vbo: VertexBufferObject;
-  // 法向量
-  vnO: BufferObject;
-
-  constructor(vbo: VertexBufferObject, vnO: BufferObject) {
-    super();
-    this.vbo = vbo;
-    this.vnO = vnO;
-    this.gl = getGL();
-  }
-
-  visit(scene: SceneGraph) {
-    const shader = scene.getShader();
-    shader.uniforms(scene.uniforms);
-    this.vbo.bind();
-    this.vbo.drawTriangles();
-    this.vbo.unbind();
-  }
-}
 
 export class SceneTransform extends SceneNode {
   children: SceneNode[] = [];

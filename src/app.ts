@@ -12,7 +12,6 @@ import {
   ScenePostProcess,
   SceneMirror,
   SceneSkybox,
-  SceneSimpleObj,
 } from './util/scene';
 import { ShaderManager } from './util/shader';
 import Loader from './util/loader';
@@ -78,11 +77,11 @@ export default async () => {
     const mounTainVbo = new VertexBufferObject(gird(GRID_SIZE), mountainShader.getAttribLocation('position'));
     const waterVbo = new VertexBufferObject(gird(100), waterShader.getAttribLocation('position'));
     const planeVbo = new VertexBufferObject(new Float32Array(position), planeShader.getAttribLocation('position'));
-    const planeVnBo = new BufferObject(new Float32Array(normal), planeShader.getAttribLocation('vNormal'));
+    const planeVnBo = new VertexBufferObject(new Float32Array(normal), planeShader.getAttribLocation('vNormal'));
 
     const mountainTransform = new SceneTransform([new SceneSimpleMesh(mounTainVbo)]);
     const waterTransform = new SceneTransform([new SceneSimpleMesh(waterVbo)]);
-    const planeTransform = new SceneTransform([new SceneSimpleObj(planeVbo, planeVnBo)]);
+    const planeTransform = new SceneTransform([new SceneSimpleMesh(planeVbo)]);
 
     const plane = new SceneMaterial(planeShader, {}, [planeTransform]);
     const mountain = new SceneMaterial(mountainShader, { heightmap: heightText2D }, [mountainTransform]);
@@ -94,7 +93,7 @@ export default async () => {
     ]);
 
     // 倒影
-    const flipTransform = new SceneMirror([plane, mountain, sky]);
+    const flipTransform = new SceneMirror([mountain, sky]);
 
     const mountainDepthFbo = new FrameBufferObject(512, 512);
     const mountainDepthTarget = new SceneRenderTarget(mountainDepthFbo, [new SceneUniforms({ clip: 0.0 }, [mountain])]);
@@ -147,7 +146,7 @@ export default async () => {
     mat4.translate(waterTransform.wordMatrix, new Float32Array([-1 * FAR_AWAY, 0, -1 * FAR_AWAY]));
     mat4.scale(waterTransform.wordMatrix, new Float32Array([FAR_AWAY * 2, 1, FAR_AWAY * 2]));
 
-    mat4.scale(planeTransform.wordMatrix, new Float32Array([100, 100, 100]));
+    mat4.scale(planeTransform.wordMatrix, new Float32Array([0.3, 0.3, 0.3]));
 
     mat4.scale(sky.wordMatrix, new Float32Array([FAR_AWAY, FAR_AWAY, FAR_AWAY]));
 
