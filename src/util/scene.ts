@@ -1,7 +1,7 @@
 import { mat3, mat4, vec3, vec4 } from '../lib/MV';
 import { getGL } from './glUtils';
 import Uniform from './uniform';
-import { VertexBufferObject, Texture2D, FrameBufferObject } from './glUtils';
+import { VertexBufferObject, BufferObject, Texture2D, FrameBufferObject } from './glUtils';
 import { GlValue, Shader } from '../interface';
 
 export interface Uniforms {
@@ -33,6 +33,55 @@ export class SceneNode {
 
   enter(_scene: SceneGraph) {
     // console.log(scene);
+  }
+}
+
+export class SceneGraph {
+  gl: WebGLRenderingContext;
+  root = new SceneNode();
+  uniforms: Uniforms = {};
+  shaders: Shader[] = [];
+  viewportWidth = 640;
+  viewportHeight = 480;
+  textureUnit: number = 0;
+
+  constructor() {
+    this.gl = getGL();
+    this.root = new SceneNode();
+  }
+
+  draw() {
+    this.gl.viewport(0, 0, this.viewportWidth, this.viewportHeight);
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+    this.root.visit(this);
+  }
+
+  pushUniforms() {
+    this.uniforms = Object.create(this.uniforms);
+  }
+
+  popUniforms() {
+    this.uniforms = Object.getPrototypeOf(this.uniforms);
+  }
+
+  pushTextura() {
+    return this.textureUnit++;
+  }
+
+  popTextura() {
+    this.textureUnit--;
+  }
+
+  pushShader(shader: Shader) {
+    this.shaders.push(shader);
+  }
+
+  popShader() {
+    this.shaders.pop();
+  }
+
+  getShader() {
+    return this.shaders[this.shaders.length - 1];
   }
 }
 
@@ -144,55 +193,6 @@ export class SceneCamera extends SceneNode {
   }
 }
 
-export class SceneGraph {
-  gl: WebGLRenderingContext;
-  root = new SceneNode();
-  uniforms: Uniforms = {};
-  shaders: Shader[] = [];
-  viewportWidth = 640;
-  viewportHeight = 480;
-  textureUnit: number = 0;
-
-  constructor() {
-    this.gl = getGL();
-    this.root = new SceneNode();
-  }
-
-  draw() {
-    this.gl.viewport(0, 0, this.viewportWidth, this.viewportHeight);
-    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-    this.root.visit(this);
-  }
-
-  pushUniforms() {
-    this.uniforms = Object.create(this.uniforms);
-  }
-
-  popUniforms() {
-    this.uniforms = Object.getPrototypeOf(this.uniforms);
-  }
-
-  pushTextura() {
-    return this.textureUnit++;
-  }
-
-  popTextura() {
-    this.textureUnit--;
-  }
-
-  pushShader(shader: Shader) {
-    this.shaders.push(shader);
-  }
-
-  popShader() {
-    this.shaders.pop();
-  }
-
-  getShader() {
-    return this.shaders[this.shaders.length - 1];
-  }
-}
-
 export class SceneSimpleMesh extends SceneNode {
   vbo: VertexBufferObject;
   gl: WebGLRenderingContext;
@@ -205,14 +205,31 @@ export class SceneSimpleMesh extends SceneNode {
 
   visit(scene: SceneGraph) {
     const shader = scene.getShader();
-    const location = shader.getAttribLocation('position');
-    const stride = 0;
-    const offset = 0;
-    const normalized = false;
     this.vbo.bind();
-    this.gl.vertexAttribPointer(location, 3, this.gl.FLOAT, normalized, stride, offset);
-    this.gl.enableVertexAttribArray(location);
     shader.uniforms(scene.uniforms);
+    this.vbo.drawTriangles();
+    this.vbo.unbind();
+  }
+}
+
+export class SceneSimpleObj extends SceneNode {
+  gl: WebGLRenderingContext;
+  // 顶点
+  vbo: VertexBufferObject;
+  // 法向量
+  vnO: BufferObject;
+
+  constructor(vbo: VertexBufferObject, vnO: BufferObject) {
+    super();
+    this.vbo = vbo;
+    this.vnO = vnO;
+    this.gl = getGL();
+  }
+
+  visit(scene: SceneGraph) {
+    const shader = scene.getShader();
+    shader.uniforms(scene.uniforms);
+    this.vbo.bind();
     this.vbo.drawTriangles();
     this.vbo.unbind();
   }
@@ -298,7 +315,10 @@ export class ScenePostProcess extends SceneNode {
   constructor(shader: Shader, uniforms: Uniforms) {
     super();
     const mesh = new SceneSimpleMesh(
-      new VertexBufferObject(new Float32Array([-1, 1, 0, -1, -1, 0, 1, -1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0])),
+      new VertexBufferObject(
+        new Float32Array([-1, 1, 0, -1, -1, 0, 1, -1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0]),
+        shader.getAttribLocation('position'),
+      ),
     );
     const material = new SceneMaterial(shader, uniforms, [mesh]);
     this.children = [material];
@@ -326,6 +346,7 @@ export class SceneSkybox extends SceneNode {
           // top
           -1, 1, -1, -1, 1, 1, 1, 1, 1, -1, 1, -1, 1, 1, 1, 1, 1, -1,
         ]),
+        shader.getAttribLocation('position'),
       ),
     );
     const material = new SceneMaterial(shader, uniforms, [mesh]);

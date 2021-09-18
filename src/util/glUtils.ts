@@ -114,15 +114,22 @@ export class FrameBufferObject {
     this.gl.uniform1i(location, this.unit);
   }
 }
-export class VertexBufferObject {
+
+export class BufferObject {
   gl: WebGLRenderingContext;
   buffer: WebGLBuffer;
   length: number;
-  constructor(vertexData: Float32Array) {
+  constructor(vertexData: Float32Array, location: number) {
     this.gl = getGL();
     this.length = vertexData.length;
     this.buffer = this.gl.createBuffer();
+    const stride = 0;
+    const offset = 0;
+    const normalized = false;
+
     this.bind();
+    this.gl.vertexAttribPointer(location, 3, this.gl.FLOAT, normalized, stride, offset);
+    this.gl.enableVertexAttribArray(location);
     this.gl.bufferData(this.gl.ARRAY_BUFFER, vertexData, this.gl.STATIC_DRAW);
     this.unbind();
   }
@@ -133,6 +140,14 @@ export class VertexBufferObject {
 
   unbind() {
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
+  }
+}
+export class VertexBufferObject extends BufferObject {
+  gl: WebGLRenderingContext;
+  buffer: WebGLBuffer;
+  length: number;
+  constructor(vertexData: Float32Array, location: number) {
+    super(vertexData, location);
   }
 
   drawTriangles() {
