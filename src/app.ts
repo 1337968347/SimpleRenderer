@@ -1,5 +1,5 @@
 import createClock from './util/clock';
-import { VertexBufferObject, BufferObject, setCanvasFullScreen, Texture2D, FrameBufferObject, getGL } from './util/glUtils';
+import { VertexBufferObject, setCanvasFullScreen, Texture2D, FrameBufferObject, getGL } from './util/glUtils';
 import Uniform from './util/uniform';
 import {
   SceneCamera,
@@ -46,12 +46,13 @@ export default async () => {
     'obj/seahawk.obj',
   ]);
 
-  let cameraController;
+  let cameraController: CameraConstroller;
   let sceneGraph: SceneGraph;
-
+  let camera: SceneCamera
+  let planeTransform: SceneTransform
   const globaluniform = {
     skyColor: Uniform.Vec3([0.2, 0.3, 0.35]),
-    groundColor: Uniform.Vec3([-0.025, -0.05, -0.1]),
+    groundColor: Uniform.Vec3([0.2, 0.4, 0.2]),
     sunColor: Uniform.Vec3([0.7, 0.7, 0.7]),
     sunDirection: Uniform.Vec3(vec3.normalize(new Float32Array([0.577, 0.577, 0.077]))),
     clip: 1000,
@@ -77,11 +78,11 @@ export default async () => {
     const mounTainVbo = new VertexBufferObject(gird(GRID_SIZE), mountainShader.getAttribLocation('position'));
     const waterVbo = new VertexBufferObject(gird(100), waterShader.getAttribLocation('position'));
     const planeVbo = new VertexBufferObject(new Float32Array(position), planeShader.getAttribLocation('position'));
-    const planeVnBo = new VertexBufferObject(new Float32Array(normal), planeShader.getAttribLocation('vNormal'));
+    new VertexBufferObject(new Float32Array(normal), planeShader.getAttribLocation('vNormal'));
 
     const mountainTransform = new SceneTransform([new SceneSimpleMesh(mounTainVbo)]);
     const waterTransform = new SceneTransform([new SceneSimpleMesh(waterVbo)]);
-    const planeTransform = new SceneTransform([new SceneSimpleMesh(planeVbo)]);
+    planeTransform = new SceneTransform([new SceneSimpleMesh(planeVbo)]);
 
     const plane = new SceneMaterial(planeShader, {}, [planeTransform]);
     const mountain = new SceneMaterial(mountainShader, { heightmap: heightText2D }, [mountainTransform]);
@@ -125,7 +126,7 @@ export default async () => {
     // can be optimized with a z only shader
 
     // 先画山的倒影， 然后画山 画水
-    const camera = new SceneCamera([new SceneUniforms(globaluniform, [mountainDepthTarget, reflectionTarget, combinedTarget])]);
+    camera = new SceneCamera([new SceneUniforms(globaluniform, [mountainDepthTarget, reflectionTarget, combinedTarget])]);
 
     const postprocess = new ScenePostProcess(postShader, { texture: combinedFBO });
 
@@ -146,7 +147,7 @@ export default async () => {
     mat4.translate(waterTransform.wordMatrix, new Float32Array([-1 * FAR_AWAY, 0, -1 * FAR_AWAY]));
     mat4.scale(waterTransform.wordMatrix, new Float32Array([FAR_AWAY * 2, 1, FAR_AWAY * 2]));
 
-    mat4.scale(planeTransform.wordMatrix, new Float32Array([0.3, 0.3, 0.3]));
+
 
     mat4.scale(sky.wordMatrix, new Float32Array([FAR_AWAY, FAR_AWAY, FAR_AWAY]));
 
@@ -160,6 +161,23 @@ export default async () => {
     clock.setOnTick(t => {
       globaluniform.time += t;
       cameraController.tick();
+      const { position, yaw, pitch } = camera
+      const planePosition = new Float32Array(position)
+      // 飞机距离相机的偏离
+      const planePositionOffset = vec3.create(new Float32Array([0, 0, -8]))
+      const inverseRotation = camera.getInverseRotation();
+      // z坐标偏移8 * 逆矩阵 加上现在的位置，可以让飞机在视野的前方
+      mat4.multiplyVec3(inverseRotation, planePositionOffset);
+      const matrix = mat4.identity(mat4.create());
+      mat4.scale(matrix, new Float32Array([0.01, 0.01, 0.01]));
+      mat4.rotateX(matrix, -pitch * 1.7);
+      mat4.rotateY(matrix, Math.PI);
+      mat4.rotateZ(matrix, yaw * 0.5);
+      vec3.add(planePosition, planePositionOffset)
+      matrix[12] = planePosition[0]
+      matrix[13] = planePosition[1] - 1.8
+      matrix[14] = planePosition[2]
+      planeTransform.wordMatrix = matrix
       sceneGraph.draw();
     });
     clock.start();

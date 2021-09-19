@@ -1,6 +1,6 @@
 # SimpleRenderer
 
-按照<a href="https://github.com/jwagner/webglice">大佬仓库</a>的commit提交顺序学习。
+按照<a href="https://github.com/jwagner/webglice">仓库</a>的commit提交顺序学习。
 
 <h2>用到的知识点</h2>
 <h4>数学相关</h4> 立体几何，线性代数（标架变换，MVP）,三角函数，向量

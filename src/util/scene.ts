@@ -1,7 +1,7 @@
 import { mat3, mat4, vec3, vec4 } from '../lib/MV';
 import { getGL } from './glUtils';
 import Uniform from './uniform';
-import { VertexBufferObject, BufferObject, Texture2D, FrameBufferObject } from './glUtils';
+import { VertexBufferObject, Texture2D, FrameBufferObject } from './glUtils';
 import { GlValue, Shader } from '../interface';
 
 export interface Uniforms {

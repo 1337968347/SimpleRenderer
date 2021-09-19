@@ -539,7 +539,7 @@ export const mat4 = {
    * Returns:
    * New mat4
    */
-  create: function (mat?:Float32Array) {
+  create: function (mat?: Float32Array) {
     var dest = new Float32Array(16);
 
     if (mat) {
@@ -816,7 +816,7 @@ export const mat4 = {
    * Returns:
    * dest is specified, a new mat4 otherwise
    */
-  toRotationMat: function (mat:Float32Array, dest?:Float32Array) {
+  toRotationMat: function (mat: Float32Array, dest?: Float32Array) {
     if (!dest) {
       dest = mat4.create();
     }
@@ -1119,7 +1119,7 @@ export const mat4 = {
    * Returns:
    * dest if specified, mat otherwise
    */
-  scale: function (mat:Float32Array, vec:Float32Array, dest?:Float32Array) {
+  scale: function (mat: Float32Array, vec: Float32Array, dest?: Float32Array) {
     var x = vec[0],
       y = vec[1],
       z = vec[2];
@@ -1312,7 +1312,7 @@ export const mat4 = {
    * Returns:
    * dest if specified, mat otherwise
    */
-  rotateY: function (mat, angle, dest?) {
+  rotateY: function (mat: Float32Array, angle: number, dest?: Float32Array) {
     var s = Math.sin(angle);
     var c = Math.cos(angle);
 
