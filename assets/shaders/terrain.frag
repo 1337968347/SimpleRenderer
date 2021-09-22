@@ -24,7 +24,7 @@ void main() {
     discard;
   }
   vec3 eyeNormal = normalize(eye - worldPosition);
-  vec3 sun = sunLight(surfaceNormal, eyeNormal, 5.0, 0.5, 0.8);
+  vec3 sun = sunLight(surfaceNormal, eyeNormal, 5.0, 0.2, 0.8);
   vec3 color = lightHemisphere(surfaceNormal) + sun;
-  gl_FragColor = vec4(color * vec3(0.7, 0.8, 1.0), depth);
+  gl_FragColor = vec4(color, depth);
 }
