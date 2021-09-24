@@ -166,7 +166,7 @@ export default async () => {
       // 然后乘以 摄像机的齐次坐标
       const cameraModelView = mat4.inverse(camera.getWorldView());
       mat4.rotateY(cameraModelView, Math.PI);
-      const offset = new Float32Array([0, -2, 10]);
+      const offset = new Float32Array([0, -3, 10]);
       // 然后缩放的基础上z坐标向前移动 10（右手坐标）
       mat4.translate(cameraModelView , offset)
       // 飞机先缩放 100倍
