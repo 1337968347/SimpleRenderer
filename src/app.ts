@@ -163,10 +163,14 @@ export default async () => {
     clock.setOnTick(t => {
       globaluniform.time += t;
       cameraController.tick();
-      const cameraModelView = camera.getInverseRotation();
+      // 然后乘以 摄像机的齐次坐标
+      const cameraModelView = mat4.inverse(camera.getWorldView());
       mat4.rotateY(cameraModelView, Math.PI);
-      const offset = new Float32Array([0, 0, -8]);
+      const offset = new Float32Array([0, -2, 10]);
+      // 然后缩放的基础上z坐标向前移动 10（右手坐标）
       mat4.translate(cameraModelView , offset)
+      // 飞机先缩放 100倍
+      mat4.scale(cameraModelView, new Float32Array([0.01, 0.01, 0.01]));
       planeTransform.wordMatrix = cameraModelView;
       sceneGraph.draw();
     });
