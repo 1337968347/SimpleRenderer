@@ -7,5 +7,5 @@ varying vec3 surfaceNormal;
 
 void main() {
     transform(position);
-    surfaceNormal = vNormal;
+    surfaceNormal = normalize((modelTransform * vec4(vNormal, 0.0)).xyz);
 }
