@@ -139,18 +139,15 @@ export default async () => {
     camera.position[2] += 200;
     // 把世界坐标 从 0-1 变成 0- MESHNUM
     // 并且 把坐标原点移到中心
-    mat4.translate(mountainTransform.wordMatrix, new Float32Array([-0.5 * GRID_SIZE, -30, -0.5 * GRID_SIZE]));
+    mat4.translate(mountainTransform.wordMatrix, new Float32Array([-0.5 * GRID_SIZE, -50, -0.5 * GRID_SIZE]));
     mat4.scale(mountainTransform.wordMatrix, new Float32Array([GRID_SIZE, 100, GRID_SIZE]));
-
+    // 倒影
     mat4.scale(flipTransform.wordMatrix, new Float32Array([1.0, -1.0, 1.0]));
 
     mat4.translate(waterTransform.wordMatrix, new Float32Array([-1 * FAR_AWAY, 0, -1 * FAR_AWAY]));
     mat4.scale(waterTransform.wordMatrix, new Float32Array([FAR_AWAY * 2, 1, FAR_AWAY * 2]));
 
-    mat4.translate(planeTransform.wordMatrix, camera.position);
-    mat4.scale(planeTransform.wordMatrix, new Float32Array([0.01, 0.01, 0.01]));
-    mat4.rotateY(planeTransform.wordMatrix, Math.PI);
-
+    // mat4.translate(sky.wordMatrix, [0, -200, 0]);
     mat4.scale(sky.wordMatrix, new Float32Array([FAR_AWAY, FAR_AWAY, FAR_AWAY]));
 
     camera.far = FAR_AWAY * 2;
@@ -168,7 +165,7 @@ export default async () => {
       mat4.rotateY(cameraModelView, Math.PI);
       const offset = new Float32Array([0, -3, 10]);
       // 然后缩放的基础上z坐标向前移动 10（右手坐标）
-      mat4.translate(cameraModelView , offset)
+      mat4.translate(cameraModelView, offset);
       // 飞机先缩放 100倍
       mat4.scale(cameraModelView, new Float32Array([0.01, 0.01, 0.01]));
       planeTransform.wordMatrix = cameraModelView;

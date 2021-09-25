@@ -19,7 +19,7 @@ void main() {
     float sunTheta = max(dot(direction, sunDirection), 0.0);
     // 太阳
     vec3 sun = max(sunTheta - 0.9985, 0.0) * sunColor * 1000.0;
-    // 光晕
+    // 光晕 光晕可以用太阳的颜色 减去天空的颜色来表示
     vec3 sunAtmosphere = max(sunColor - zenithColor, vec3(0.0)) * max(sunTheta - 0.993, 0.0) * 50.0;
     sunAtmosphere = sunAtmosphere * sunAtmosphere * 50.0;
     gl_FragColor = vec4(skyColor + sun + sunAtmosphere, depth * (1.0 - a));

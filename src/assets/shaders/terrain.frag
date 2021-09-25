@@ -7,7 +7,6 @@ uniform vec3 skyColor;
 uniform vec3 eye;
 uniform float clip;
 
-varying float depth;
 varying vec3 worldPosition;
 
 /// import "sun.glsl"
@@ -26,5 +25,7 @@ void main() {
   vec3 eyeNormal = normalize(eye - worldPosition);
   vec3 sun = sunLight(surfaceNormal, eyeNormal, 5.0, 0.2, 0.8);
   vec3 color = lightHemisphere(surfaceNormal) + sun;
+  // 山到眼睛的距离
+  float depth = length(worldPosition - eye);
   gl_FragColor = vec4(color, depth);
 }

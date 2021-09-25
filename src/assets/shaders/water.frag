@@ -1,6 +1,5 @@
 precision highp float;
 
-varying float depth;
 varying vec4 projected;
 varying vec3 worldPosition;
 uniform vec3 color;
@@ -25,6 +24,7 @@ vec4 getNoise(vec2 uv) {
 }
 
 void main() {
+  // 水面到眼睛的距离
   float depth = length(worldPosition - eye);
 
   vec2 uv = vec2(worldPosition.x, worldPosition.z);
@@ -34,10 +34,10 @@ void main() {
   vec2 reflectionUV = clamp(screenPosition + vec2(noise.x, noise.y * 0.5) * 0.05, vec2(0.01), vec2(0.99));
   vec3 reflectionSample = vec3(texture2D(reflection, reflectionUV - vec2(noise) * 0.05));
 
-  vec4 refractionSample = texture2D(refraction, clamp(screenPosition - vec2(noise.x, noise.y * 0.5) * 0.01, vec2(0.01), vec2(0.99)));
+  vec4 refractionSample = texture2D(refraction, clamp(screenPosition - vec2(noise.x, noise.y * 0.5) * 0.01, vec2(0.001), vec2(0.999)));
 
-  float waterDepth = min(refractionSample.a * 20.0, 40.0);
-  vec3 extinction = min((waterDepth / 35.0) * vec3(2.0, 1.05, 1.0), vec3(1.0));
+  float waterDepth = min(refractionSample.a - depth, 40.0);
+  vec3 extinction = min((waterDepth / 250.0) * vec3(1.5, 1.05, 1.0), vec3(1.0));
   vec3 refractionColor = mix(vec3(refractionSample) * 0.5, color, extinction);
 
   vec3 eyeNormal = normalize(eye - worldPosition);
@@ -45,14 +45,12 @@ void main() {
 
   float theta1 = clamp(dot(eyeNormal, surfaceNormal), 0.0, 1.0);
   float rf0 = 0.02; // realtime rendering, page 236
-  float reflectance = rf0 + (1.0 - rf0) * pow((1.0 - theta1), 2.0);
+  float reflectance = rf0 + (1.0 - rf0) * pow((1.0 - theta1), 5.0);
 
-  vec3 diffuseColor = max(dot(sunDirection, surfaceNormal), 0.0) * sunColor * 1.5;
+  vec3 diffuseColor = max(dot(sunDirection, surfaceNormal), 0.0) * sunColor * 1.1;
   vec3 reflectionDirection = normalize(reflect(-sunDirection, surfaceNormal));
   float reflecttionDot = max(0.0, dot(eyeNormal, reflectionDirection));
   vec3 specularColor = pow(reflecttionDot, 128.0) * sunColor * 50.0;
   vec3 finalColor = mix(refractionColor * diffuseColor, reflectionSample * (diffuseColor + specularColor), reflectance);
-
   gl_FragColor = vec4(finalColor, depth);
-
 }
