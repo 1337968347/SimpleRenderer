@@ -52,8 +52,8 @@ export default async () => {
   let planeTransform: SceneTransform;
   const globaluniform = {
     skyColor: Uniform.Vec3([0.2, 0.3, 0.35]),
-    groundColor: Uniform.Vec3([0.2, 0.4, 0.2]),
-    sunColor: Uniform.Vec3([1.0, 1.0, 0.98]),
+    groundColor: Uniform.Vec3([-0.025, -0.05, -0.1]),
+    sunColor: Uniform.Vec3([1.0, 1.0, 1.0]),
     sunDirection: Uniform.Vec3(vec3.normalize(new Float32Array([0.577, 0.577, 0.077]))),
     clip: 1000,
     time: 0.0,
@@ -88,7 +88,7 @@ export default async () => {
     const mountain = new SceneMaterial(mountainShader, { heightmap: heightText2D }, [mountainTransform]);
     const sky = new SceneTransform([
       new SceneSkybox(skyShader, {
-        horizonColor: Uniform.Vec3([0.2, 0.5, 1]),
+        horizonColor: Uniform.Vec3([0.3, 0.6, 1.2]),
         zenithColor: Uniform.Vec3([0.15, 0.2, 0.8]),
       }),
     ]);
@@ -97,7 +97,7 @@ export default async () => {
     const flipTransform = new SceneMirror([mountain, sky]);
 
     const mountainDepthFbo = new FrameBufferObject(512, 512);
-    const mountainDepthTarget = new SceneRenderTarget(mountainDepthFbo, [new SceneUniforms({ clip: 0.0 }, [mountain])]);
+    const mountainDepthTarget = new SceneRenderTarget(mountainDepthFbo, [new SceneUniforms({ clip: 0.5 }, [mountain])]);
 
     const reflectionFBO = new FrameBufferObject(1024, 1024),
       reflectionTarget = new SceneRenderTarget(reflectionFBO, [new SceneUniforms({ clip: 0.0 }, [flipTransform])]);

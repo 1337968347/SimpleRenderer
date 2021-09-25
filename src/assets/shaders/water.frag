@@ -37,7 +37,7 @@ void main() {
   vec4 refractionSample = texture2D(refraction, clamp(screenPosition - vec2(noise.x, noise.y * 0.5) * 0.01, vec2(0.001), vec2(0.999)));
 
   float waterDepth = min(refractionSample.a - depth, 40.0);
-  vec3 extinction = min((waterDepth / 35.0) * vec3(2.0, 1.05, 1.0), vec3(1.0));
+  vec3 extinction = min((waterDepth / 35.0) * vec3(2.1, 1.05, 1.0), vec3(1.0));
   vec3 refractionColor = max(mix(vec3(refractionSample) * 0.5, color, extinction), vec3(0.0));
 
   vec3 eyeNormal = normalize(eye - worldPosition);
@@ -53,5 +53,5 @@ void main() {
   float reflecttionDot = max(0.0, dot(eyeNormal, reflectionDirection));
   vec3 specularColor = pow(reflecttionDot, 128.0) * sunColor * 50.0;
   vec3 finalColor = mix(refractionColor * diffuseColor, reflectionSample * (diffuseColor + specularColor), reflectance);
-  gl_FragColor = vec4(0.2 * amibientColor + finalColor, 1.0);
+  gl_FragColor = vec4(0.3 * amibientColor + finalColor, depth);
 }

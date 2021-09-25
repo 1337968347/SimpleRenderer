@@ -12,8 +12,8 @@ export default class CameraConstroller {
 
   tick() {
     const { x, y } = this.input.getOffsetFromElementCenter();
-    this.camera.yaw += x * 0.0001;
-    this.camera.pitch += y * 0.0001;
+    this.camera.yaw += x * 0.00005;
+    this.camera.pitch += y * 0.00005;
     const inverseRotation = this.camera.getInverseRotation();
     const direction = vec3.create();
     if (this.input.keys.W) {
