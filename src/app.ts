@@ -53,7 +53,7 @@ export default async () => {
   const globaluniform = {
     skyColor: Uniform.Vec3([0.2, 0.3, 0.35]),
     groundColor: Uniform.Vec3([0.2, 0.4, 0.2]),
-    sunColor: Uniform.Vec3([0.7, 0.7, 0.7]),
+    sunColor: Uniform.Vec3([1.0, 1.0, 0.98]),
     sunDirection: Uniform.Vec3(vec3.normalize(new Float32Array([0.577, 0.577, 0.077]))),
     clip: 1000,
     time: 0.0,
@@ -104,7 +104,7 @@ export default async () => {
 
     const water = new SceneMaterial(
       waterShader,
-      { color: Uniform.Vec3([0.3, 0.5, 0.9]), waterNoise: waterText2D, reflection: reflectionFBO, refraction: mountainDepthFbo },
+      { color: Uniform.Vec3([0.5, 0.7, 1.0]), waterNoise: waterText2D, reflection: reflectionFBO, refraction: mountainDepthFbo },
       [waterTransform],
     );
 
