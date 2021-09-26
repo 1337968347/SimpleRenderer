@@ -23,6 +23,7 @@ export class SceneNode {
     this.exit(scene);
   }
 
+  // overwrite
   exit(_scene: SceneGraph) {
     // console.log(scene);
   }
@@ -31,6 +32,7 @@ export class SceneNode {
     this.children.push(child);
   }
 
+  // overwrite
   enter(_scene: SceneGraph) {
     // console.log(scene);
   }
@@ -324,6 +326,9 @@ export class SceneSkybox extends SceneNode {
 
         // top
         -1, 1, -1, -1, 1, 1, 1, 1, 1, -1, 1, -1, 1, 1, 1, 1, 1, -1,
+
+        // bottom
+        -1, -1, -1, -1, -1, 1, 1, -1, 1, -1, -1, -1, 1, -1, 1, 1, -1, -1,
       ]),
     );
     const mesh = new SceneSimpleMesh();

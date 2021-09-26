@@ -8,7 +8,7 @@ const createClock = () => {
     isRunning = true;
     nowT = new Date().getTime();
     const intervalRequest = func => {
-      timeId = setInterval(func, 16);
+      timeId = setTimeout(func, 16);
     };
     const loopFunc = window.requestAnimationFrame || intervalRequest;
     const f = () => {

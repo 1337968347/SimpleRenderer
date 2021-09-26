@@ -51,9 +51,8 @@ export default async () => {
   let camera: SceneCamera;
   let planeTransform: SceneTransform;
   const globaluniform = {
-    skyColor: Uniform.Vec3([0.2, 0.3, 0.35]),
-    groundColor: Uniform.Vec3([-0.025, -0.05, -0.1]),
-    sunColor: Uniform.Vec3([0.7, 0.7, 0.7]),
+    skyColor: Uniform.Vec3([0.15, 0.2, 0.8]),
+    sunColor: Uniform.Vec3([1.0, 1.0, 1.0]),
     sunDirection: Uniform.Vec3(vec3.normalize(new Float32Array([0.577, 0.577, 0.077]))),
     color: Uniform.Vec3([1.0, 1.0, 1.0]),
     clip: 1000,
@@ -88,15 +87,21 @@ export default async () => {
     const plane = new SceneMaterial(
       planeShader,
       {
-        color: Uniform.Vec3([0.4, 0.6, 0.8]),
+        color: Uniform.Vec3([0.3, 0.4, 0.4]),
       },
       [planeTransform],
     );
-    const mountain = new SceneMaterial(mountainShader, { heightmap: heightText2D }, [mountainTransform]);
+    const mountain = new SceneMaterial(
+      mountainShader,
+      {
+        heightmap: heightText2D,
+        color: Uniform.Vec3([0.1, 0.1, 0.1]),
+      },
+      [mountainTransform],
+    );
     const sky = new SceneTransform([
       new SceneSkybox(skyShader, {
         horizonColor: Uniform.Vec3([0.3, 0.6, 1.2]),
-        zenithColor: Uniform.Vec3([0.15, 0.2, 0.8]),
       }),
     ]);
 
