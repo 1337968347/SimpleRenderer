@@ -55,6 +55,7 @@ export default async () => {
     groundColor: Uniform.Vec3([-0.025, -0.05, -0.1]),
     sunColor: Uniform.Vec3([0.7, 0.7, 0.7]),
     sunDirection: Uniform.Vec3(vec3.normalize(new Float32Array([0.577, 0.577, 0.077]))),
+    color: Uniform.Vec3([1.0, 1.0, 1.0]),
     clip: 1000,
     time: 0.0,
   };
@@ -84,7 +85,9 @@ export default async () => {
     const waterTransform = new SceneTransform([new SceneSimpleMesh(waterVbo)]);
     planeTransform = new SceneTransform([new SceneSimpleMesh(planeVbo)]);
 
-    const plane = new SceneMaterial(planeShader, {}, [planeTransform]);
+    const plane = new SceneMaterial(planeShader, {
+      color: Uniform.Vec3([0.15, 0.6, 0.8])
+    }, [planeTransform]);
     const mountain = new SceneMaterial(mountainShader, { heightmap: heightText2D }, [mountainTransform]);
     const sky = new SceneTransform([
       new SceneSkybox(skyShader, {

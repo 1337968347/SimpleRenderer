@@ -10,6 +10,6 @@ uniform vec3 eye;
 void main() {
 
     vec3 eyeNormal = normalize(eye - worldPosition);
-    vec3 sun = sunLight(surfaceNormal, eyeNormal, 205.0, 2.5, 1.9);
+    vec3 sun = sunLight(surfaceNormal, eyeNormal, 0.9, 205.0, 0.2, 1.3);
     gl_FragColor = vec4(sun, 1.0);
 }
