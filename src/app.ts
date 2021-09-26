@@ -52,9 +52,10 @@ export default async () => {
   let planeTransform: SceneTransform;
   const globaluniform = {
     skyColor: Uniform.Vec3([0.2, 0.3, 0.35]),
-    groundColor: Uniform.Vec3([0.2, 0.4, 0.2]),
-    sunColor: Uniform.Vec3([1.0, 1.0, 0.98]),
+    groundColor: Uniform.Vec3([-0.025, -0.05, -0.1]),
+    sunColor: Uniform.Vec3([0.7, 0.7, 0.7]),
     sunDirection: Uniform.Vec3(vec3.normalize(new Float32Array([0.577, 0.577, 0.077]))),
+    color: Uniform.Vec3([1.0, 1.0, 1.0]),
     clip: 1000,
     time: 0.0,
   };
@@ -75,20 +76,30 @@ export default async () => {
     const skyShader = shaderManager.get('sky.vert', 'sky.frag');
     const planeShader = shaderManager.get('plane.vert', 'plane.frag');
 
-    const mounTainVbo = new VertexBufferObject(gird(GRID_SIZE), mountainShader.getAttribLocation('position'));
-    const waterVbo = new VertexBufferObject(gird(100), waterShader.getAttribLocation('position'));
-    const planeVbo = new VertexBufferObject(new Float32Array(position), planeShader.getAttribLocation('position'));
-    new VertexBufferObject(new Float32Array(normal), planeShader.getAttribLocation('vNormal'));
+    const mounTainVbo = new VertexBufferObject();
+    const waterVbo = new VertexBufferObject();
+    const planeVbo = new VertexBufferObject();
+    const planeVnBo = new VertexBufferObject();
+    mountainShader.setAttribBufferData(mounTainVbo, 'position', gird(GRID_SIZE));
+    waterShader.setAttribBufferData(waterVbo, 'position', gird(100));
+    planeShader.setAttribBufferData(planeVbo, 'position', new Float32Array(position));
+    planeShader.setAttribBufferData(planeVnBo, 'vNormal', new Float32Array(normal));
 
     const mountainTransform = new SceneTransform([new SceneSimpleMesh(mounTainVbo)]);
     const waterTransform = new SceneTransform([new SceneSimpleMesh(waterVbo)]);
-    planeTransform = new SceneTransform([new SceneSimpleMesh(planeVbo)]);
+    planeTransform = new SceneTransform([new SceneSimpleMesh(planeVbo, planeVnBo)]);
 
-    const plane = new SceneMaterial(planeShader, {}, [planeTransform]);
+    const plane = new SceneMaterial(
+      planeShader,
+      {
+        color: Uniform.Vec3([0.4, 0.6, 0.8]),
+      },
+      [planeTransform],
+    );
     const mountain = new SceneMaterial(mountainShader, { heightmap: heightText2D }, [mountainTransform]);
     const sky = new SceneTransform([
       new SceneSkybox(skyShader, {
-        horizonColor: Uniform.Vec3([0.2, 0.5, 1]),
+        horizonColor: Uniform.Vec3([0.3, 0.6, 1.2]),
         zenithColor: Uniform.Vec3([0.15, 0.2, 0.8]),
       }),
     ]);
@@ -97,14 +108,14 @@ export default async () => {
     const flipTransform = new SceneMirror([mountain, sky]);
 
     const mountainDepthFbo = new FrameBufferObject(512, 512);
-    const mountainDepthTarget = new SceneRenderTarget(mountainDepthFbo, [new SceneUniforms({ clip: 0.0 }, [mountain])]);
+    const mountainDepthTarget = new SceneRenderTarget(mountainDepthFbo, [new SceneUniforms({ clip: 0.5 }, [mountain])]);
 
     const reflectionFBO = new FrameBufferObject(1024, 1024),
       reflectionTarget = new SceneRenderTarget(reflectionFBO, [new SceneUniforms({ clip: 0.0 }, [flipTransform])]);
 
     const water = new SceneMaterial(
       waterShader,
-      { color: Uniform.Vec3([0.5, 0.7, 1.0]), waterNoise: waterText2D, reflection: reflectionFBO, refraction: mountainDepthFbo },
+      { color: Uniform.Vec3([0.6, 0.6, 0.9]), waterNoise: waterText2D, reflection: reflectionFBO, refraction: mountainDepthFbo },
       [waterTransform],
     );
 

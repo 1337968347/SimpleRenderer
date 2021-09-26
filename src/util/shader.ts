@@ -1,5 +1,5 @@
 import { getGL } from './glUtils';
-import { Uniforms } from '../interface';
+import { BufferObject, Uniforms } from '../interface';
 /**
  * 创建一个Shader
  * @param gl
@@ -69,6 +69,15 @@ export class Shader {
         value.uniform(location);
       }
     }
+  }
+
+  /**
+   * 初始化设置attribute 数据时使用
+   */
+  setAttribBufferData(bufferObject: BufferObject, name: string, vertexData: Float32Array) {
+    this.use();
+    const location = this.getAttribLocation(name);
+    bufferObject.initBufferData(location, vertexData);
   }
 
   getAttribLocation(name: string) {
