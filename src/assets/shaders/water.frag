@@ -42,10 +42,10 @@ void main() {
   // refractionSample.a 山的顶点到eye的向量
   // 水面的顶点到eye的向量
   // 向量相减 = 山顶点指向水面的向量
-  float waterDepth = min(refractionSample.a - depth, 50.0);
+  float waterDepth = min(refractionSample.a - depth, 80.0);
 
   // 在折射颜色跟水面颜色之间根据水深插值
-  vec3 extinction = min((waterDepth / 40.0) * vec3(2.1, 1.05, 1.0), vec3(1.0));
+  vec3 extinction = min((waterDepth / 65.0) * vec3(2.1, 1.05, 1.0), vec3(1.0));
   vec3 refractionColor = max(mix(vec3(refractionSample) * 0.5, color, extinction), vec3(0.0));
 
   vec3 eyeNormal = normalize(eye - worldPosition);

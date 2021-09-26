@@ -12,6 +12,7 @@ import {
   ScenePostProcess,
   SceneMirror,
   SceneSkybox,
+  SceneNode,
 } from './util/scene';
 import { ShaderManager } from './util/shader';
 import Loader from './util/loader';
@@ -43,6 +44,10 @@ export default async () => {
     'shaders/sky.frag',
     'shaders/plane.vert',
     'shaders/plane.frag',
+    'shaders/brightpass.frag',
+    'shaders/vblur.frag',
+    'shaders/hblur.frag',
+
     'obj/seahawk.obj',
   ]);
 
@@ -68,12 +73,17 @@ export default async () => {
     const heightText2D = new Texture2D(loader.resources['heightmap.png']);
     const waterText2D = new Texture2D(loader.resources['normalnoise.png']);
     const { position, normal } = parseObj(loader.resources['obj/seahawk.obj']);
+
     // 着色器
     const mountainShader = shaderManager.get('terrain.vert', 'terrain.frag');
     const waterShader = shaderManager.get('water.vert', 'water.frag');
     const postShader = shaderManager.get('screen.vert', 'screen.frag');
     const skyShader = shaderManager.get('sky.vert', 'sky.frag');
     const planeShader = shaderManager.get('plane.vert', 'plane.frag');
+    const brightpassShader = shaderManager.get('screen.vert', 'brightpass.frag');
+    const vblurShader = shaderManager.get('screen.vert', 'vblur.frag');
+    const hblurShader = shaderManager.get('screen.vert', 'hblur.frag');
+
     // 顶点数据
     mountainShader.setAttribBufferData('position', gird(GRID_SIZE));
     waterShader.setAttribBufferData('position', gird(100));
@@ -87,7 +97,7 @@ export default async () => {
     const plane = new SceneMaterial(
       planeShader,
       {
-        color: Uniform.Vec3([0.3, 0.4, 0.4]),
+        color: Uniform.Vec3([0.3, 0.3, 0.3]),
       },
       [planeTransform],
     );
@@ -108,22 +118,45 @@ export default async () => {
     // 倒影
     const flipTransform = new SceneMirror([mountain, sky]);
 
-    const mountainDepthFbo = new FrameBufferObject(512, 512);
-    const mountainDepthTarget = new SceneRenderTarget(mountainDepthFbo, [new SceneUniforms({ clip: 0.5 }, [mountain])]);
+    // 水底的山
+    const mountainDepthFbo = new FrameBufferObject(1024, 512);
+    // 水面的倒影
+    const reflectionFBO = new FrameBufferObject(1024, 1024);
+    // 将所有的东西渲染到图片上，可以用来后处理
+    const combinedFBO = new FrameBufferObject(2048, 1024);
+    const bloomFbo0 = new FrameBufferObject(512, 256);
+    const bloomFbo1 = new FrameBufferObject(512, 256);
 
-    const reflectionFBO = new FrameBufferObject(1024, 1024),
-      reflectionTarget = new SceneRenderTarget(reflectionFBO, [new SceneUniforms({ clip: 0.0 }, [flipTransform])]);
+    const mountainDepthTarget = new SceneRenderTarget(mountainDepthFbo, [new SceneUniforms({ clip: 0.0 }, [mountain])]);
 
+    // 先把山的倒影画到帧缓存中
+    const reflectionTarget = new SceneRenderTarget(reflectionFBO, [new SceneUniforms({ clip: 0.0 }, [flipTransform])]);
+
+    // 然后用山的倒影生成的纹理 画水面
     const water = new SceneMaterial(
       waterShader,
       { color: Uniform.Vec3([0.6, 0.6, 0.9]), waterNoise: waterText2D, reflection: reflectionFBO, refraction: mountainDepthFbo },
       [waterTransform],
     );
 
-    const combinedFBO = new FrameBufferObject(1024, 1024),
-      combinedTarget = new SceneRenderTarget(combinedFBO, [plane, mountain, water, sky]);
-    // 场景图
-    // 被观察物
+    const combinedTarget = new SceneRenderTarget(combinedFBO, [plane, mountain, water, sky]);
+
+    const brightpass = new SceneRenderTarget(bloomFbo0, [
+        new ScenePostProcess(brightpassShader, {
+          texture: combinedFBO,
+        }),
+      ]),
+      hblurpass = new SceneRenderTarget(bloomFbo1, [
+        new ScenePostProcess(hblurShader, {
+          texture: bloomFbo0,
+        }),
+      ]),
+      vblurpass = new SceneRenderTarget(bloomFbo0, [
+        new ScenePostProcess(vblurShader, {
+          texture: bloomFbo1,
+        }),
+      ]),
+      bloom = new SceneNode([brightpass, hblurpass, vblurpass]);
 
     // 开放场景图数据传输
     // SceneGraph 场景
@@ -140,11 +173,12 @@ export default async () => {
     // 先画山的倒影， 然后画山 画水
     camera = new SceneCamera([new SceneUniforms(globaluniform, [mountainDepthTarget, reflectionTarget, combinedTarget])]);
 
-    const postprocess = new ScenePostProcess(postShader, { texture: combinedFBO });
+    const postprocess = new ScenePostProcess(postShader, { texture: combinedFBO, bloom: bloomFbo0 });
 
     cameraController = new CameraConstroller(inputHandler, camera);
 
     sceneGraph.root.append(camera);
+    sceneGraph.root.append(bloom);
     sceneGraph.root.append(postprocess);
 
     camera.position[1] = 10;
