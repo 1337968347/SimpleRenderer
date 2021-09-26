@@ -1,5 +1,5 @@
-import { getGL } from './glUtils';
-import { BufferObject, Uniforms } from '../interface';
+import { getGL, VertexBufferObject, BufferObject } from './glUtils';
+import { Uniforms } from '../interface';
 /**
  * 创建一个Shader
  * @param gl
@@ -49,6 +49,7 @@ const makeProgram = (gl: WebGLRenderingContext, vertexSource: string, fragmentSo
 export class Shader {
   gl: WebGLRenderingContext;
   program: WebGLProgram;
+  attributes: { [key: string]: BufferObject } = {};
 
   constructor(vertexSource: string, fragmentSource: string) {
     this.gl = getGL();
@@ -74,8 +75,10 @@ export class Shader {
   /**
    * 初始化设置attribute 数据时使用
    */
-  setAttribBufferData(bufferObject: BufferObject, name: string, vertexData: Float32Array) {
+  setAttribBufferData(name: string, vertexData: Float32Array) {
     this.use();
+    const bufferObject = name == 'position' ? new VertexBufferObject() : new BufferObject();
+    this.attributes[name] = bufferObject;
     const location = this.getAttribLocation(name);
     bufferObject.initBufferData(location, vertexData);
   }

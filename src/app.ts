@@ -1,5 +1,5 @@
 import createClock from './util/clock';
-import { VertexBufferObject, setCanvasFullScreen, Texture2D, FrameBufferObject, getGL } from './util/glUtils';
+import { setCanvasFullScreen, Texture2D, FrameBufferObject, getGL } from './util/glUtils';
 import Uniform from './util/uniform';
 import {
   SceneCamera,
@@ -75,19 +75,15 @@ export default async () => {
     const postShader = shaderManager.get('screen.vert', 'screen.frag');
     const skyShader = shaderManager.get('sky.vert', 'sky.frag');
     const planeShader = shaderManager.get('plane.vert', 'plane.frag');
+    // 顶点数据
+    mountainShader.setAttribBufferData('position', gird(GRID_SIZE));
+    waterShader.setAttribBufferData('position', gird(100));
+    planeShader.setAttribBufferData('position', new Float32Array(position));
+    planeShader.setAttribBufferData('vNormal', new Float32Array(normal));
 
-    const mounTainVbo = new VertexBufferObject();
-    const waterVbo = new VertexBufferObject();
-    const planeVbo = new VertexBufferObject();
-    const planeVnBo = new VertexBufferObject();
-    mountainShader.setAttribBufferData(mounTainVbo, 'position', gird(GRID_SIZE));
-    waterShader.setAttribBufferData(waterVbo, 'position', gird(100));
-    planeShader.setAttribBufferData(planeVbo, 'position', new Float32Array(position));
-    planeShader.setAttribBufferData(planeVnBo, 'vNormal', new Float32Array(normal));
-
-    const mountainTransform = new SceneTransform([new SceneSimpleMesh(mounTainVbo)]);
-    const waterTransform = new SceneTransform([new SceneSimpleMesh(waterVbo)]);
-    planeTransform = new SceneTransform([new SceneSimpleMesh(planeVbo, planeVnBo)]);
+    const mountainTransform = new SceneTransform([new SceneSimpleMesh()]);
+    const waterTransform = new SceneTransform([new SceneSimpleMesh()]);
+    planeTransform = new SceneTransform([new SceneSimpleMesh()]);
 
     const plane = new SceneMaterial(
       planeShader,

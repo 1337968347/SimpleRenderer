@@ -2,7 +2,7 @@ import { mat3, mat4, vec3, vec4 } from '../lib/MV';
 import { getGL } from './glUtils';
 import Uniform from './uniform';
 import { VertexBufferObject, Texture2D, FrameBufferObject } from './glUtils';
-import { BufferObject, GlValue, Shader } from '../interface';
+import { GlValue, Shader } from '../interface';
 
 export interface Uniforms {
   [k: string]: GlValue | Texture2D | FrameBufferObject | number;
@@ -194,29 +194,25 @@ export class SceneCamera extends SceneNode {
 }
 
 export class SceneSimpleMesh extends SceneNode {
-  vbo: VertexBufferObject;
-  vnBo: BufferObject;
-  gl: WebGLRenderingContext;
-
-  constructor(vbo: VertexBufferObject, vnBo?: BufferObject) {
+  constructor() {
     super();
-    this.vbo = vbo;
-    this.vnBo = vnBo;
-    this.gl = getGL();
   }
 
   visit(scene: SceneGraph) {
     const shader = scene.getShader();
-    if (this.vnBo) {
-      this.vnBo.bind();
-    }
-    this.vbo.bind();
-
     shader.uniforms(scene.uniforms);
-    this.vbo.drawTriangles();
-    this.vbo.unbind();
-    if (this.vnBo) {
-      this.vnBo.unbind();
+    const attributes = shader.attributes;
+    for (const name of Object.keys(attributes)) {
+      const bufferObject = attributes[name];
+      bufferObject.bind();
+      if (bufferObject instanceof VertexBufferObject) {
+        bufferObject.drawTriangles();
+      }
+    }
+
+    for (const name of Object.keys(attributes)) {
+      const bufferObject = attributes[name];
+      bufferObject.unbind();
     }
   }
 }
@@ -300,9 +296,8 @@ export class ScenePostProcess extends SceneNode {
   children: SceneNode[];
   constructor(shader: Shader, uniforms: Uniforms) {
     super();
-    const vbo = new VertexBufferObject();
-    shader.setAttribBufferData(vbo, 'position', new Float32Array([-1, 1, 0, -1, -1, 0, 1, -1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0]));
-    const mesh = new SceneSimpleMesh(vbo);
+    shader.setAttribBufferData('position', new Float32Array([-1, 1, 0, -1, -1, 0, 1, -1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0]));
+    const mesh = new SceneSimpleMesh();
     const material = new SceneMaterial(shader, uniforms, [mesh]);
     this.children = [material];
   }
@@ -312,10 +307,8 @@ export class SceneSkybox extends SceneNode {
   children: SceneNode[];
   constructor(shader: Shader, uniforms: Uniforms) {
     super();
-    const vbo = new VertexBufferObject();
 
     shader.setAttribBufferData(
-      vbo,
       'position',
       new Float32Array([
         -1, 1, 1, -1, -1, 1, 1, 1, 1, -1, 1, 1, 1, -1, 1, 1, 1, 1,
@@ -333,7 +326,7 @@ export class SceneSkybox extends SceneNode {
         -1, 1, -1, -1, 1, 1, 1, 1, 1, -1, 1, -1, 1, 1, 1, 1, 1, -1,
       ]),
     );
-    const mesh = new SceneSimpleMesh(vbo);
+    const mesh = new SceneSimpleMesh();
     const material = new SceneMaterial(shader, uniforms, [mesh]);
     this.children = [material];
   }
