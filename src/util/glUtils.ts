@@ -115,19 +115,23 @@ export class FrameBufferObject {
   }
 }
 
+/**
+ * 创建一个存储对象。可以在场景图遍历的过程中动态bind
+ */
 export class BufferObject {
   gl: WebGLRenderingContext;
   buffer: WebGLBuffer;
   length: number;
   location: number;
-  constructor(vertexData: Float32Array, location: number) {
+  constructor() {
     this.gl = getGL();
-    this.length = vertexData.length;
     this.buffer = this.gl.createBuffer();
-    this.location = location;
+  }
 
+  initBufferData(location: number, vertexData: Float32Array) {
     this.bind();
-
+    this.location = location;
+    this.length = vertexData.length;
     this.gl.bufferData(this.gl.ARRAY_BUFFER, vertexData, this.gl.STATIC_DRAW);
     this.unbind();
   }
@@ -150,8 +154,8 @@ export class VertexBufferObject extends BufferObject {
   buffer: WebGLBuffer;
   length: number;
   location: number;
-  constructor(vertexData: Float32Array, location: number) {
-    super(vertexData, location);
+  constructor() {
+    super();
   }
 
   drawTriangles() {
