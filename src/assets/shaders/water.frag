@@ -59,7 +59,7 @@ void main() {
   float reflectance = rf0 + (1.0 - rf0) * pow((1.0 - theta1), 5.0);
   // phong光照反射
   // 环境光
-  vec3 amibientColor = 0.3 * sunColor * color;
+  vec3 amibientColor = 0.5 * sunColor * color;
   // 漫反射
   vec3 diffuseColor = max(dot(sunDirection, surfaceNormal), 0.0) * sunColor * 1.3;
   // 镜面反射

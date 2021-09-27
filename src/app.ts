@@ -11,7 +11,7 @@ import { mat4, vec3 } from './lib/MV';
 
 const GRID_RESOLUTION = 512,
   GRID_SIZE = 512,
-  FAR_AWAY = 10000;
+  FAR_AWAY = 5000;
 
 export default async () => {
   const canvasEl = document.querySelector('canvas');
@@ -25,6 +25,8 @@ export default async () => {
     'shaders/water.frag',
     'heightmap.png',
     'normalnoise.png',
+    'snow.png',
+
     'shaders/terrain.vert',
     'shaders/terrain.frag',
     'shaders/screen.vert',
@@ -61,6 +63,7 @@ export default async () => {
     const shaderManager = new ShaderManager(loader.resources);
     const heightText2D = new Texture2D(loader.resources['heightmap.png']);
     const waterText2D = new Texture2D(loader.resources['normalnoise.png']);
+    const snowText2D = new Texture2D(loader.resources['snow.png']);
     const { position, normal } = parseObj(loader.resources['obj/seahawk.obj']);
 
     // 着色器
@@ -84,9 +87,11 @@ export default async () => {
     planeTransform = new Scene.Transform([new Scene.SimpleMesh()]);
 
     const plane = new Scene.Material(planeShader, { color: uniform.Vec3([0.3, 0.3, 0.3]) }, [planeTransform]);
-    const mountain = new Scene.Material(mountainShader, { heightmap: heightText2D, color: uniform.Vec3([0.1, 0.1, 0.1]) }, [
-      mountainTransform,
-    ]);
+    const mountain = new Scene.Material(
+      mountainShader,
+      { heightmap: heightText2D, snowTexture: snowText2D, color: uniform.Vec3([0.1, 0.1, 0.1]) },
+      [mountainTransform],
+    );
     const sky = new Scene.Transform([new Scene.Skybox(skyShader, { horizonColor: uniform.Vec3([0.3, 0.6, 1.2]) })]);
     // 倒影
     const flipTransform = new Scene.Mirror([mountain, sky]);
@@ -157,7 +162,7 @@ export default async () => {
     sceneGraph.root.append(postprocess);
 
     camera.position[1] = 10;
-    camera.position[2] += 200;
+    camera.position[2] += 150;
     // 把世界坐标 从 0-1 变成 0- MESHNUM
     // 并且 把坐标原点移到中心
     mat4.translate(mountainTransform.wordMatrix, new Float32Array([-0.5 * GRID_SIZE, -50, -0.5 * GRID_SIZE]));
@@ -165,10 +170,10 @@ export default async () => {
     // 倒影
     mat4.scale(flipTransform.wordMatrix, new Float32Array([1.0, -1.0, 1.0]));
 
-    mat4.translate(waterTransform.wordMatrix, new Float32Array([-1 * FAR_AWAY, 0, -1 * FAR_AWAY]));
-    mat4.scale(waterTransform.wordMatrix, new Float32Array([FAR_AWAY * 2, 1, FAR_AWAY * 2]));
+    mat4.translate(waterTransform.wordMatrix, new Float32Array([-0.5 * FAR_AWAY, 0, -0.5 * FAR_AWAY]));
+    mat4.scale(waterTransform.wordMatrix, new Float32Array([FAR_AWAY, 1, FAR_AWAY]));
 
-    // mat4.translate(sky.wordMatrix, [0, -200, 0]);
+    mat4.translate(sky.wordMatrix, [0, -200, 0]);
     mat4.scale(sky.wordMatrix, new Float32Array([FAR_AWAY, FAR_AWAY, FAR_AWAY]));
 
     camera.far = FAR_AWAY * 2;

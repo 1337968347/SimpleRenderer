@@ -21,6 +21,6 @@ void main() {
     vec3 sun = max(sunTheta - 0.9985, 0.0) * sunColor * 1000.0;
     // 光晕 光晕可以用太阳的颜色 减去天空的颜色
     vec3 sunAtmosphere = max(sunColor - skyColor, vec3(0.0)) * max(sunTheta - 0.994, 0.0) * 50.0;
-    sunAtmosphere = sunAtmosphere * sunAtmosphere * 50.0;
+    sunAtmosphere = sunAtmosphere * sunAtmosphere * 50.0 * vec3(2.0, 1.5, 0.4);
     gl_FragColor = vec4(skyColor + sun + sunAtmosphere, depth * (1.0 - a));
 }
