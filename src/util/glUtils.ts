@@ -1,4 +1,4 @@
-import { SceneGraph } from './scene';
+import * as Scene from './scene';
 let globalGL: WebGLRenderingContext;
 
 export const getGL = (canvas?: HTMLCanvasElement) => {
@@ -165,7 +165,7 @@ export class VertexBufferObject extends BufferObject {
   }
 }
 
-export const setCanvasFullScreen = (canvas: HTMLCanvasElement, scene: SceneGraph) => {
+export const setCanvasFullScreen = (canvas: HTMLCanvasElement, scene: Scene.Graph) => {
   const onResize = () => {
     canvas.width = scene.viewportWidth = window.innerWidth;
     canvas.height = scene.viewportHeight = window.innerHeight;

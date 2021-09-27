@@ -1,11 +1,11 @@
+import * as Scene from './scene';
 import { mat4, vec3 } from '../lib/MV';
 import InputHandler from './input';
-import { SceneCamera } from './scene';
 export default class CameraConstroller {
   input: InputHandler;
-  camera: SceneCamera;
+  camera: Scene.Camera;
 
-  constructor(input: InputHandler, camera: SceneCamera) {
+  constructor(input: InputHandler, camera: Scene.Camera) {
     this.input = input;
     this.camera = camera;
   }

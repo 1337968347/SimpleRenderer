@@ -16,34 +16,33 @@ const createGlValue = (set, value) => {
 };
 
 const gl: WebGLRenderingContext = getGL();
-export default class Uniform {
-  static Mat4(value) {
-    return createGlValue(location => {
-      gl.uniformMatrix4fv(location, false, value);
-    }, value);
-  }
 
-  static Mat3(value) {
-    return createGlValue(location => {
-      gl.uniformMatrix3fv(location, false, value);
-    }, value);
-  }
+export const Mat4 = value => {
+  return createGlValue((location: WebGLUniformLocation) => {
+    gl.uniformMatrix4fv(location, false, value);
+  }, value);
+};
 
-  static Vec3(value) {
-    return createGlValue(location => {
-      gl.uniform3fv(location, value);
-    }, value);
-  }
+export const Mat3 = value => {
+  return createGlValue((location: WebGLUniformLocation) => {
+    gl.uniformMatrix3fv(location, false, value);
+  }, value);
+};
 
-  static Vec4(value) {
-    return createGlValue(location => {
-      gl.uniform4fv(location, value);
-    }, value);
-  }
+export const Vec3 = value => {
+  return createGlValue((location: WebGLUniformLocation) => {
+    gl.uniform3fv(location, value);
+  }, value);
+};
 
-  static Int(value) {
-    return createGlValue(location => {
-      gl.uniform1i(location, value);
-    }, value);
-  }
-}
+export const Vec4 = value => {
+  return createGlValue((location: WebGLUniformLocation) => {
+    gl.uniform4fv(location, value);
+  }, value);
+};
+
+export const Int = value => {
+  return createGlValue((location: WebGLUniformLocation) => {
+    gl.uniform1i(location, value);
+  }, value);
+};

@@ -1,19 +1,7 @@
+import * as Scene from './util/scene';
+import * as uniform from './util/uniform';
 import createClock from './util/clock';
 import { setCanvasFullScreen, Texture2D, FrameBufferObject, getGL } from './util/glUtils';
-import Uniform from './util/uniform';
-import {
-  SceneCamera,
-  SceneGraph,
-  SceneMaterial,
-  SceneSimpleMesh,
-  SceneTransform,
-  SceneUniforms,
-  SceneRenderTarget,
-  ScenePostProcess,
-  SceneMirror,
-  SceneSkybox,
-  SceneNode,
-} from './util/scene';
 import { ShaderManager } from './util/shader';
 import Loader from './util/loader';
 import { gird, parseObj } from './util/mesh';
@@ -53,21 +41,21 @@ export default async () => {
   ]);
 
   let cameraController: CameraConstroller;
-  let sceneGraph: SceneGraph;
-  let camera: SceneCamera;
-  let planeTransform: SceneTransform;
+  let sceneGraph: Scene.Graph;
+  let camera: Scene.Camera;
+  let planeTransform: Scene.Transform;
   const globaluniform = {
-    skyColor: Uniform.Vec3([0.15, 0.2, 0.8]),
-    sunColor: Uniform.Vec3([1.0, 1.0, 1.0]),
-    sunDirection: Uniform.Vec3(vec3.normalize(new Float32Array([0.577, 0.577, 0.077]))),
-    color: Uniform.Vec3([1.0, 1.0, 1.0]),
+    skyColor: uniform.Vec3([0.15, 0.2, 0.8]),
+    sunColor: uniform.Vec3([1.0, 1.0, 1.0]),
+    sunDirection: uniform.Vec3(vec3.normalize(new Float32Array([0.577, 0.577, 0.077]))),
+    color: uniform.Vec3([1.0, 1.0, 1.0]),
     clip: 1000,
     time: 0.0,
   };
 
   const prepareScence = () => {
     const gl = getGL();
-    sceneGraph = new SceneGraph();
+    sceneGraph = new Scene.Graph();
 
     gl.clearColor(0.4, 0.6, 1.0, FAR_AWAY);
     const shaderManager = new ShaderManager(loader.resources);
@@ -91,17 +79,17 @@ export default async () => {
     planeShader.setAttribBufferData('position', new Float32Array(position));
     planeShader.setAttribBufferData('vNormal', new Float32Array(normal));
 
-    const mountainTransform = new SceneTransform([new SceneSimpleMesh()]);
-    const waterTransform = new SceneTransform([new SceneSimpleMesh()]);
-    planeTransform = new SceneTransform([new SceneSimpleMesh()]);
+    const mountainTransform = new Scene.Transform([new Scene.SimpleMesh()]);
+    const waterTransform = new Scene.Transform([new Scene.SimpleMesh()]);
+    planeTransform = new Scene.Transform([new Scene.SimpleMesh()]);
 
-    const plane = new SceneMaterial(planeShader, { color: Uniform.Vec3([0.3, 0.3, 0.3]) }, [planeTransform]);
-    const mountain = new SceneMaterial(mountainShader, { heightmap: heightText2D, color: Uniform.Vec3([0.1, 0.1, 0.1]) }, [
+    const plane = new Scene.Material(planeShader, { color: uniform.Vec3([0.3, 0.3, 0.3]) }, [planeTransform]);
+    const mountain = new Scene.Material(mountainShader, { heightmap: heightText2D, color: uniform.Vec3([0.1, 0.1, 0.1]) }, [
       mountainTransform,
     ]);
-    const sky = new SceneTransform([new SceneSkybox(skyShader, { horizonColor: Uniform.Vec3([0.3, 0.6, 1.2]) })]);
+    const sky = new Scene.Transform([new Scene.Skybox(skyShader, { horizonColor: uniform.Vec3([0.3, 0.6, 1.2]) })]);
     // 倒影
-    const flipTransform = new SceneMirror([mountain, sky]);
+    const flipTransform = new Scene.Mirror([mountain, sky]);
     // 水底的山
     const mountainDepthFbo = new FrameBufferObject(1024, 512);
     // 水面的倒影
@@ -111,56 +99,56 @@ export default async () => {
     const bloomFbo0 = new FrameBufferObject(512, 256);
     const bloomFbo1 = new FrameBufferObject(512, 256);
 
-    const mountainDepthTarget = new SceneRenderTarget(mountainDepthFbo, [new SceneUniforms({ clip: 0.0 }, [mountain])]);
+    const mountainDepthTarget = new Scene.RenderTarget(mountainDepthFbo, [new Scene.Uniforms({ clip: 0.0 }, [mountain])]);
     // 先把山的倒影画到帧缓存中
-    const reflectionTarget = new SceneRenderTarget(reflectionFBO, [new SceneUniforms({ clip: 0.0 }, [flipTransform])]);
+    const reflectionTarget = new Scene.RenderTarget(reflectionFBO, [new Scene.Uniforms({ clip: 0.0 }, [flipTransform])]);
 
     // 然后用山的倒影生成的纹理 画水面
-    const water = new SceneMaterial(
+    const water = new Scene.Material(
       waterShader,
-      { color: Uniform.Vec3([0.6, 0.6, 0.9]), waterNoise: waterText2D, reflection: reflectionFBO, refraction: mountainDepthFbo },
+      { color: uniform.Vec3([0.6, 0.6, 0.9]), waterNoise: waterText2D, reflection: reflectionFBO, refraction: mountainDepthFbo },
       [waterTransform],
     );
 
-    const combinedTarget = new SceneRenderTarget(combinedFBO, [plane, mountain, water, sky]);
+    const combinedTarget = new Scene.RenderTarget(combinedFBO, [plane, mountain, water, sky]);
 
     // 多纹理映射
     // 原始图像
-    const brightpass = new SceneRenderTarget(bloomFbo0, [
-      new ScenePostProcess(brightpassShader, {
+    const brightpass = new Scene.RenderTarget(bloomFbo0, [
+      new Scene.PostProcess(brightpassShader, {
         texture: combinedFBO,
       }),
     ]);
     // 水平卷积处理
-    const hblurpass = new SceneRenderTarget(bloomFbo1, [
-      new ScenePostProcess(hblurShader, {
+    const hblurpass = new Scene.RenderTarget(bloomFbo1, [
+      new Scene.PostProcess(hblurShader, {
         texture: bloomFbo0,
       }),
     ]);
     // 竖直卷积处理
-    const vblurpass = new SceneRenderTarget(bloomFbo0, [
-      new ScenePostProcess(vblurShader, {
+    const vblurpass = new Scene.RenderTarget(bloomFbo0, [
+      new Scene.PostProcess(vblurShader, {
         texture: bloomFbo1,
       }),
     ]);
-    const bloom = new SceneNode([brightpass, hblurpass, vblurpass]);
+    const bloom = new Scene.Node([brightpass, hblurpass, vblurpass]);
 
     // 开放场景图数据传输
-    // SceneGraph 场景
-    // SceneCamera  根据相机的位置获取MVP：ModelView Projection
-    // SceneUniforms 传输uniform变量|纹理
-    // SceneMaterial 绑定着色器 && 传递Uniform变量|纹理
-    // SceneTransform 生成世界缩放平移矩阵
-    // SceneSimpleMesh 绑定好着色器，传好变量后，并且绘制顶点
-    // SceneRenderTarget 将渲染的内容 渲染到图片上
+    // Scene.Graph 场景
+    // Scene.Camera  根据相机的位置获取MVP：ModelView Projection
+    // Scene.Uniforms 传输uniform变量|纹理
+    // Scene.Material 绑定着色器 && 传递Uniform变量|纹理
+    // Scene.Transform 生成世界缩放平移矩阵
+    // Scene.SimpleMesh 绑定好着色器，传好变量后，并且绘制顶点
+    // Scene.RenderTarget 将渲染的内容 渲染到图片上
     // VertexBufferObject 顶点相关数据
-    // ScenePostProcess 将生成的纹理进行后处理操作。将渲染生成的图片当成纹理，渲染到一个正方形上。
+    // Scene.PostProcess 将生成的纹理进行后处理操作。将渲染生成的图片当成纹理，渲染到一个正方形上。
     // can be optimized with a z only shader
 
     // 先画山的倒影， 然后画山 画水
-    camera = new SceneCamera([new SceneUniforms(globaluniform, [mountainDepthTarget, reflectionTarget, combinedTarget])]);
+    camera = new Scene.Camera([new Scene.Uniforms(globaluniform, [mountainDepthTarget, reflectionTarget, combinedTarget])]);
 
-    const postprocess = new ScenePostProcess(postShader, { texture: combinedFBO, bloom: bloomFbo0 });
+    const postprocess = new Scene.PostProcess(postShader, { texture: combinedFBO, bloom: bloomFbo0 });
 
     cameraController = new CameraConstroller(inputHandler, camera);
 

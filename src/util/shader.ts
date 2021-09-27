@@ -1,5 +1,5 @@
 import { getGL, VertexBufferObject, BufferObject } from './glUtils';
-import { Uniforms } from '../interface';
+import { UniformMap } from '../interface';
 /**
  * 创建一个Shader
  * @param gl
@@ -61,7 +61,7 @@ export class Shader {
     this.gl.useProgram(this.program);
   }
 
-  uniforms(values: Uniforms) {
+  uniforms(values: UniformMap) {
     for (let name in values) {
       const value = values[name];
       let location: WebGLUniformLocation;
