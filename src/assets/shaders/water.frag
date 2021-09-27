@@ -24,8 +24,7 @@ vec4 getNoise(vec2 uv) {
 }
 
 void main() {
-  // 水面到眼睛的距离
-  float depth = length(worldPosition - eye);
+ 
 
   vec2 uv = vec2(worldPosition.x, worldPosition.z);
   vec4 noise = getNoise(uv);
@@ -42,6 +41,8 @@ void main() {
   // refractionSample.a 山的顶点到eye的向量
   // 水面的顶点到eye的向量
   // 向量相减 = 山顶点指向水面的向量
+   // 水面到眼睛的距离
+  float depth = length(worldPosition - eye);
   float waterDepth = min(refractionSample.a - depth, 80.0);
 
   // 在折射颜色跟水面颜色之间根据水深插值

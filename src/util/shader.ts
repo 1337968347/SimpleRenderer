@@ -50,6 +50,7 @@ export class Shader {
   gl: WebGLRenderingContext;
   program: WebGLProgram;
   attributes: { [key: string]: BufferObject } = {};
+  uniformLocations: { [key: string]: WebGLUniformLocation } = {};
 
   constructor(vertexSource: string, fragmentSource: string) {
     this.gl = getGL();
@@ -63,7 +64,18 @@ export class Shader {
   uniforms(values: Uniforms) {
     for (let name in values) {
       const value = values[name];
-      const location = this.gl.getUniformLocation(this.program, name);
+      let location: WebGLUniformLocation;
+
+      if (this.uniformLocations[name] !== undefined) {
+        location = this.uniformLocations[name];
+      } else {
+        location = this.gl.getUniformLocation(this.program, name);
+        this.uniformLocations[name] = location;
+      }
+      // 着色器中没有用到这个变量
+      if (location === null) {
+        continue;
+      }
       if (typeof value === 'number') {
         this.gl.uniform1f(location, value);
       } else {

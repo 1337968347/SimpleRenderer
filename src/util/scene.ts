@@ -87,6 +87,7 @@ export class SceneGraph {
   }
 }
 
+// 渲染场景到FrameBufferObject上
 export class SceneRenderTarget extends SceneNode {
   fbo: FrameBufferObject;
   children: SceneNode[] = [];

@@ -21,7 +21,8 @@ import CameraConstroller from './util/cameraController';
 import InputHandler from './util/input';
 import { mat4, vec3 } from './lib/MV';
 
-const GRID_SIZE = 512,
+const GRID_RESOLUTION = 512,
+  GRID_SIZE = 512,
   FAR_AWAY = 10000;
 
 export default async () => {
@@ -85,7 +86,7 @@ export default async () => {
     const hblurShader = shaderManager.get('screen.vert', 'hblur.frag');
 
     // 顶点数据
-    mountainShader.setAttribBufferData('position', gird(GRID_SIZE));
+    mountainShader.setAttribBufferData('position', gird(GRID_RESOLUTION));
     waterShader.setAttribBufferData('position', gird(100));
     planeShader.setAttribBufferData('position', new Float32Array(position));
     planeShader.setAttribBufferData('vNormal', new Float32Array(normal));
@@ -94,30 +95,13 @@ export default async () => {
     const waterTransform = new SceneTransform([new SceneSimpleMesh()]);
     planeTransform = new SceneTransform([new SceneSimpleMesh()]);
 
-    const plane = new SceneMaterial(
-      planeShader,
-      {
-        color: Uniform.Vec3([0.3, 0.3, 0.3]),
-      },
-      [planeTransform],
-    );
-    const mountain = new SceneMaterial(
-      mountainShader,
-      {
-        heightmap: heightText2D,
-        color: Uniform.Vec3([0.1, 0.1, 0.1]),
-      },
-      [mountainTransform],
-    );
-    const sky = new SceneTransform([
-      new SceneSkybox(skyShader, {
-        horizonColor: Uniform.Vec3([0.3, 0.6, 1.2]),
-      }),
+    const plane = new SceneMaterial(planeShader, { color: Uniform.Vec3([0.3, 0.3, 0.3]) }, [planeTransform]);
+    const mountain = new SceneMaterial(mountainShader, { heightmap: heightText2D, color: Uniform.Vec3([0.1, 0.1, 0.1]) }, [
+      mountainTransform,
     ]);
-
+    const sky = new SceneTransform([new SceneSkybox(skyShader, { horizonColor: Uniform.Vec3([0.3, 0.6, 1.2]) })]);
     // 倒影
     const flipTransform = new SceneMirror([mountain, sky]);
-
     // 水底的山
     const mountainDepthFbo = new FrameBufferObject(1024, 512);
     // 水面的倒影
@@ -128,7 +112,6 @@ export default async () => {
     const bloomFbo1 = new FrameBufferObject(512, 256);
 
     const mountainDepthTarget = new SceneRenderTarget(mountainDepthFbo, [new SceneUniforms({ clip: 0.0 }, [mountain])]);
-
     // 先把山的倒影画到帧缓存中
     const reflectionTarget = new SceneRenderTarget(reflectionFBO, [new SceneUniforms({ clip: 0.0 }, [flipTransform])]);
 
@@ -141,22 +124,26 @@ export default async () => {
 
     const combinedTarget = new SceneRenderTarget(combinedFBO, [plane, mountain, water, sky]);
 
+    // 多纹理映射
+    // 原始图像
     const brightpass = new SceneRenderTarget(bloomFbo0, [
-        new ScenePostProcess(brightpassShader, {
-          texture: combinedFBO,
-        }),
-      ]),
-      hblurpass = new SceneRenderTarget(bloomFbo1, [
-        new ScenePostProcess(hblurShader, {
-          texture: bloomFbo0,
-        }),
-      ]),
-      vblurpass = new SceneRenderTarget(bloomFbo0, [
-        new ScenePostProcess(vblurShader, {
-          texture: bloomFbo1,
-        }),
-      ]),
-      bloom = new SceneNode([brightpass, hblurpass, vblurpass]);
+      new ScenePostProcess(brightpassShader, {
+        texture: combinedFBO,
+      }),
+    ]);
+    // 水平卷积处理
+    const hblurpass = new SceneRenderTarget(bloomFbo1, [
+      new ScenePostProcess(hblurShader, {
+        texture: bloomFbo0,
+      }),
+    ]);
+    // 竖直卷积处理
+    const vblurpass = new SceneRenderTarget(bloomFbo0, [
+      new ScenePostProcess(vblurShader, {
+        texture: bloomFbo1,
+      }),
+    ]);
+    const bloom = new SceneNode([brightpass, hblurpass, vblurpass]);
 
     // 开放场景图数据传输
     // SceneGraph 场景
