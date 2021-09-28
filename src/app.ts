@@ -13,7 +13,7 @@ const GRID_RESOLUTION = 512,
   GRID_SIZE = 512,
   FAR_AWAY = 5000;
 
-const cameraLocation = new Float32Array([0, 10, 160]);
+const cameraLocation = new Float32Array([0, 5, 160]);
 
 export default async () => {
   const canvasEl = document.querySelector('canvas');
@@ -49,7 +49,7 @@ export default async () => {
 
   const globaluniform = {
     sunColor: uniform.Vec3([0.7, 0.7, 0.7]),
-    sunDirection: uniform.Vec3(vec3.normalize(new Float32Array([0.5, 0.2, 0.5]))),
+    sunDirection: uniform.Vec3(vec3.normalize(new Float32Array([0.0, 0.5, 1.0]))),
     skyColor: uniform.Vec3([0.1, 0.15, 0.45]),
     groundColor: uniform.Vec3([0.025, 0.05, 0.1]),
     clip: 1000,
@@ -60,7 +60,7 @@ export default async () => {
     const gl = getGL();
     sceneGraph = new Scene.Graph();
 
-    gl.clearColor(0.4, 0.6, 1.0, FAR_AWAY);
+    gl.clearColor(1.0, 1.0, 1.0, FAR_AWAY)
     const shaderManager = new ShaderManager(loader.resources);
     const heightText2D = new Texture2D(loader.resources['heightmap.png']);
     const waterText2D = new Texture2D(loader.resources['normalnoise.png']);
@@ -165,6 +165,7 @@ export default async () => {
     sceneGraph.root.append(postprocess);
 
     camera.position = cameraLocation;
+    camera.far = FAR_AWAY * 2;
     // 把世界坐标 从 0-1 变成 0- MESHNUM
     // 并且 把坐标原点移到中心
     mat4.translate(mountainTransform.wordMatrix, new Float32Array([-0.5 * GRID_SIZE, -40, -0.5 * GRID_SIZE]));

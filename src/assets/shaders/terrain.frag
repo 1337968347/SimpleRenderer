@@ -28,8 +28,8 @@ void main() {
   vec3 normal = normalize(normalize(sample.rgb - 0.5) * tbn + surfaceNormal);
   //normal = surfaceNormal;
   vec3 eyeNormal = normalize(eye - worldPosition);
-  vec3 color = lightHemisphere(normal) + sunLight(normal, eyeNormal, 5.0, 0.2, 1.0);
+  vec3 color = sunLight(normal, eyeNormal, 5.0, 0.2, 1.0);
 
   float depth = length(worldPosition - eye);
-  gl_FragColor = vec4(color * vec3(0.7, 0.9, 1.0), depth);
+  gl_FragColor = vec4(color , depth);
 }
