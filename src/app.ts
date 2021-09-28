@@ -13,6 +13,8 @@ const GRID_RESOLUTION = 512,
   GRID_SIZE = 512,
   FAR_AWAY = 5000;
 
+const cameraLocation = new Float32Array([0, 100, 200]);
+
 export default async () => {
   const canvasEl = document.querySelector('canvas');
   const inputHandler = new InputHandler(canvasEl);
@@ -44,8 +46,7 @@ export default async () => {
 
   let cameraController: CameraController;
   let sceneGraph: Scene.Graph;
-  let camera: Scene.Camera;
-  let planeTransform: Scene.Transform;
+
   const globaluniform = {
     skyColor: uniform.Vec3([0.15, 0.2, 0.8]),
     sunColor: uniform.Vec3([1.0, 1.0, 1.0]),
@@ -82,14 +83,23 @@ export default async () => {
     planeShader.setAttribBufferData('position', new Float32Array(position));
     planeShader.setAttribBufferData('vNormal', new Float32Array(normal));
 
+    // 视口固定矩阵
+    const fixModelView = mat4.identity(mat4.create());
+    mat4.rotateY(fixModelView, Math.PI);
+    const offset = new Float32Array([0, -3, 10]);
+    // 然后缩放的基础上z坐标向前移动 10（右手坐标）
+    mat4.translate(fixModelView, offset);
+    // 飞机先缩放 100倍
+    mat4.scale(fixModelView, new Float32Array([0.01, 0.01, 0.01]));
+
     const mountainTransform = new Scene.Transform([new Scene.SimpleMesh()]);
     const waterTransform = new Scene.Transform([new Scene.SimpleMesh()]);
-    planeTransform = new Scene.Transform([new Scene.SimpleMesh()]);
+    const planeTransform: Scene.CameraFixUniform = new Scene.CameraFixUniform([new Scene.SimpleMesh()]);
 
     const plane = new Scene.Material(planeShader, { color: uniform.Vec3([0.3, 0.3, 0.3]) }, [planeTransform]);
     const mountain = new Scene.Material(
       mountainShader,
-      { heightmap: heightText2D, snowTexture: snowText2D, color: uniform.Vec3([0.1, 0.1, 0.1]) },
+      { heightmap: heightText2D, snowTexture: snowText2D, color: uniform.Vec3([0.3, 0.5, 0.3]) },
       [mountainTransform],
     );
     const sky = new Scene.Transform([new Scene.Skybox(skyShader, { horizonColor: uniform.Vec3([0.3, 0.6, 1.2]) })]);
@@ -117,25 +127,13 @@ export default async () => {
 
     const combinedTarget = new Scene.RenderTarget(combinedFBO, [plane, mountain, water, sky]);
 
-    // 多纹理映射
+    // 离屏渲染
     // 原始图像
-    const brightpass = new Scene.RenderTarget(bloomFbo0, [
-      new Scene.PostProcess(brightpassShader, {
-        texture: combinedFBO,
-      }),
-    ]);
+    const brightpass = new Scene.RenderTarget(bloomFbo0, [new Scene.PostProcess(brightpassShader, { texture: combinedFBO })]);
     // 水平卷积处理
-    const hblurpass = new Scene.RenderTarget(bloomFbo1, [
-      new Scene.PostProcess(hblurShader, {
-        texture: bloomFbo0,
-      }),
-    ]);
+    const hblurpass = new Scene.RenderTarget(bloomFbo1, [new Scene.PostProcess(hblurShader, { texture: bloomFbo0 })]);
     // 竖直卷积处理
-    const vblurpass = new Scene.RenderTarget(bloomFbo0, [
-      new Scene.PostProcess(vblurShader, {
-        texture: bloomFbo1,
-      }),
-    ]);
+    const vblurpass = new Scene.RenderTarget(bloomFbo0, [new Scene.PostProcess(vblurShader, { texture: bloomFbo1 })]);
     const bloom = new Scene.Node([brightpass, hblurpass, vblurpass]);
 
     // 开放场景图数据传输
@@ -151,7 +149,9 @@ export default async () => {
     // can be optimized with a z only shader
 
     // 先画山的倒影， 然后画山 画水
-    camera = new Scene.Camera([new Scene.Uniforms(globaluniform, [mountainDepthTarget, reflectionTarget, combinedTarget])]);
+    const camera: Scene.Camera = new Scene.Camera([
+      new Scene.Uniforms(globaluniform, [mountainDepthTarget, reflectionTarget, combinedTarget]),
+    ]);
 
     const postprocess = new Scene.PostProcess(postShader, { texture: combinedFBO, bloom: bloomFbo0 });
 
@@ -161,8 +161,7 @@ export default async () => {
     sceneGraph.root.append(bloom);
     sceneGraph.root.append(postprocess);
 
-    camera.position[1] = 10;
-    camera.position[2] += 150;
+    camera.position = cameraLocation;
     // 把世界坐标 从 0-1 变成 0- MESHNUM
     // 并且 把坐标原点移到中心
     mat4.translate(mountainTransform.wordMatrix, new Float32Array([-0.5 * GRID_SIZE, -50, -0.5 * GRID_SIZE]));
@@ -176,6 +175,11 @@ export default async () => {
     mat4.translate(sky.wordMatrix, [0, -200, 0]);
     mat4.scale(sky.wordMatrix, new Float32Array([FAR_AWAY, FAR_AWAY, FAR_AWAY]));
 
+    // 然后乘以 摄像机的齐次坐标
+    planeTransform.camera = camera;
+
+    planeTransform.fixMartix = fixModelView;
+
     camera.far = FAR_AWAY * 2;
     setCanvasFullScreen(canvasEl, sceneGraph);
   };
@@ -186,15 +190,6 @@ export default async () => {
     clock.setOnTick(t => {
       globaluniform.time += t;
       cameraController.tick();
-      // 然后乘以 摄像机的齐次坐标
-      const cameraModelView = mat4.inverse(camera.getWorldView());
-      mat4.rotateY(cameraModelView, Math.PI);
-      const offset = new Float32Array([0, -3, 10]);
-      // 然后缩放的基础上z坐标向前移动 10（右手坐标）
-      mat4.translate(cameraModelView, offset);
-      // 飞机先缩放 100倍
-      mat4.scale(cameraModelView, new Float32Array([0.01, 0.01, 0.01]));
-      planeTransform.wordMatrix = cameraModelView;
       sceneGraph.draw();
     });
     clock.start();

@@ -192,6 +192,29 @@ export class Camera extends Node {
   }
 }
 
+export class CameraFixUniform extends Node {
+  camera: Camera;
+  children: Node[] = [];
+  fixMartix: Float32Array = mat4.create();
+
+  constructor(children: Node[]) {
+    super();
+    this.children = children;
+  }
+
+  enter(scene: Graph) {
+    scene.pushUniforms();
+    // 相机标架
+    const cameraModelView = mat4.inverse(this.camera.getWorldView());
+    const aux = mat4.create();
+    mat4.multiply(cameraModelView, this.fixMartix, aux);
+    scene.uniforms.modelTransform = uniform.Mat4(aux);
+  }
+
+  exit(scene: Graph) {
+    scene.popUniforms();
+  }
+}
 export class SimpleMesh extends Node {
   constructor() {
     super();

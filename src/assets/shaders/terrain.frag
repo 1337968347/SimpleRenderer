@@ -29,7 +29,7 @@ void main() {
   vec3 normal = normalize(normalize(sample.xyz * 2.0 - 1.0) * tbn);
   normal = surfaceNormal;
   vec3 eyeNormal = normalize(eye - worldPosition);
-  vec3 color = lightHemisphere(normal) +sunLight(normal, eyeNormal, 0.1, 10.0, 0.1, 0.5);
+  vec3 color = lightHemisphere(normal) +sunLight(normal, eyeNormal, 0.3, 10.0, 0.1, 0.3);
   // 山到眼睛的距离
   float depth = length(worldPosition - eye);
   gl_FragColor = vec4(color, depth);
