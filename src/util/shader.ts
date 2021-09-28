@@ -1,5 +1,5 @@
 import { getGL, VertexBufferObject, BufferObject } from './glUtils';
-import { UniformMap } from '../interface';
+import { UniformMap } from './uniform';
 /**
  * 创建一个Shader
  * @param gl

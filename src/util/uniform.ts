@@ -1,8 +1,11 @@
-import { getGL } from './glUtils';
-
+import { getGL, Texture2D, FrameBufferObject } from './glUtils';
 export interface GlValue {
   uniform: (location: any) => void;
   value: any;
+}
+
+export interface UniformMap {
+  [k: string]: GlValue | Texture2D | FrameBufferObject | number;
 }
 
 const createGlValue = (set, value) => {

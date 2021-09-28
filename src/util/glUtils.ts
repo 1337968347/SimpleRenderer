@@ -1,4 +1,4 @@
-import * as Scene from './scene';
+import * as Scene from '../scene';
 let globalGL: WebGLRenderingContext;
 
 export const getGL = (canvas?: HTMLCanvasElement) => {

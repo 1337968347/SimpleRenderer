@@ -1,12 +1,8 @@
-import * as uniform from './uniform';
-import { mat3, mat4, vec3, vec4 } from '../lib/MV';
-import { getGL } from './glUtils';
-import { VertexBufferObject, Texture2D, FrameBufferObject } from './glUtils';
-import { GlValue, Shader } from '../interface';
-
-export interface UniformMap {
-  [k: string]: GlValue | Texture2D | FrameBufferObject | number;
-}
+import * as uniform from '../util/uniform';
+import { mat3, mat4, vec3, vec4 } from '../math/MV';
+import { getGL, VertexBufferObject, Texture2D, FrameBufferObject } from '../util/glUtils';
+import { Shader } from '../util/shader';
+import { UniformMap } from '../util/uniform';
 
 export class Node {
   children: Node[] = [];

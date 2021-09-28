@@ -1,13 +1,13 @@
-import * as Scene from './util/scene';
+import * as Scene from './scene';
 import * as uniform from './util/uniform';
 import createClock from './util/clock';
 import { setCanvasFullScreen, Texture2D, FrameBufferObject, getGL } from './util/glUtils';
 import { ShaderManager } from './util/shader';
-import Loader from './util/loader';
+import Loader from './loader';
 import { gird, parseObj } from './util/mesh';
-import CameraConstroller from './util/cameraController';
-import InputHandler from './util/input';
-import { mat4, vec3 } from './lib/MV';
+import CameraController from './control/cameraController';
+import InputHandler from './control/input';
+import { mat4, vec3 } from './math/MV';
 
 const GRID_RESOLUTION = 512,
   GRID_SIZE = 512,
@@ -42,7 +42,7 @@ export default async () => {
     'obj/seahawk.obj',
   ]);
 
-  let cameraController: CameraConstroller;
+  let cameraController: CameraController;
   let sceneGraph: Scene.Graph;
   let camera: Scene.Camera;
   let planeTransform: Scene.Transform;
@@ -155,7 +155,7 @@ export default async () => {
 
     const postprocess = new Scene.PostProcess(postShader, { texture: combinedFBO, bloom: bloomFbo0 });
 
-    cameraController = new CameraConstroller(inputHandler, camera);
+    cameraController = new CameraController(inputHandler, camera);
 
     sceneGraph.root.append(camera);
     sceneGraph.root.append(bloom);

@@ -1,7 +1,8 @@
-import * as Scene from './scene';
-import { mat4, vec3 } from '../lib/MV';
+import * as Scene from '../scene';
+import { mat4, vec3 } from '../math/MV';
 import InputHandler from './input';
-export default class CameraConstroller {
+
+export default class CameraController {
   input: InputHandler;
   camera: Scene.Camera;
 
