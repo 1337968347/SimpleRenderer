@@ -13,7 +13,7 @@ const GRID_RESOLUTION = 512,
   GRID_SIZE = 512,
   FAR_AWAY = 5000;
 
-const cameraLocation = new Float32Array([0, 100, 200]);
+const cameraLocation = new Float32Array([0, 10, 160]);
 
 export default async () => {
   const canvasEl = document.querySelector('canvas');
@@ -48,10 +48,10 @@ export default async () => {
   let sceneGraph: Scene.Graph;
 
   const globaluniform = {
-    skyColor: uniform.Vec3([0.15, 0.2, 0.8]),
-    sunColor: uniform.Vec3([1.0, 1.0, 1.0]),
-    sunDirection: uniform.Vec3(vec3.normalize(new Float32Array([0.577, 0.577, 0.077]))),
-    color: uniform.Vec3([1.0, 1.0, 1.0]),
+    sunColor: uniform.Vec3([0.7, 0.7, 0.7]),
+    sunDirection: uniform.Vec3(vec3.normalize(new Float32Array([0.5, 0.2, 0.5]))),
+    skyColor: uniform.Vec3([0.1, 0.15, 0.45]),
+    groundColor: uniform.Vec3([0.025, 0.05, 0.1]),
     clip: 1000,
     time: 0.0,
   };
@@ -99,7 +99,10 @@ export default async () => {
     const plane = new Scene.Material(planeShader, { color: uniform.Vec3([0.3, 0.3, 0.3]) }, [planeTransform]);
     const mountain = new Scene.Material(
       mountainShader,
-      { heightmap: heightText2D, snowTexture: snowText2D, color: uniform.Vec3([0.3, 0.5, 0.3]) },
+      {
+        heightmap: heightText2D,
+        snowTexture: snowText2D,
+      },
       [mountainTransform],
     );
     const sky = new Scene.Transform([new Scene.Skybox(skyShader, { horizonColor: uniform.Vec3([0.3, 0.6, 1.2]) })]);
@@ -164,7 +167,7 @@ export default async () => {
     camera.position = cameraLocation;
     // 把世界坐标 从 0-1 变成 0- MESHNUM
     // 并且 把坐标原点移到中心
-    mat4.translate(mountainTransform.wordMatrix, new Float32Array([-0.5 * GRID_SIZE, -50, -0.5 * GRID_SIZE]));
+    mat4.translate(mountainTransform.wordMatrix, new Float32Array([-0.5 * GRID_SIZE, -40, -0.5 * GRID_SIZE]));
     mat4.scale(mountainTransform.wordMatrix, new Float32Array([GRID_SIZE, 100, GRID_SIZE]));
     // 倒影
     mat4.scale(flipTransform.wordMatrix, new Float32Array([1.0, -1.0, 1.0]));
