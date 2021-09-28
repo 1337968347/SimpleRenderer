@@ -3,6 +3,7 @@ precision highp float;
 varying vec3 surfaceNormal;
 
 varying vec3 worldPosition;
+uniform vec3 color;
 uniform vec3 eye;
 
 /// import "sun.glsl"
@@ -10,6 +11,6 @@ uniform vec3 eye;
 void main() {
 
     vec3 eyeNormal = normalize(eye - worldPosition);
-    vec3 sun = sunLight(surfaceNormal, eyeNormal, 0.6, 205.0, 0.3, 1.3);
+    vec3 sun = color + sunLight(surfaceNormal, eyeNormal, 205.0, 0.3, 1.3);
     gl_FragColor = vec4(sun, 1.0);
 }

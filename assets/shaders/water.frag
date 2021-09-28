@@ -24,8 +24,7 @@ vec4 getNoise(vec2 uv) {
 }
 
 void main() {
-  // 水面到眼睛的距离
-  float depth = length(worldPosition - eye);
+ 
 
   vec2 uv = vec2(worldPosition.x, worldPosition.z);
   vec4 noise = getNoise(uv);
@@ -42,10 +41,12 @@ void main() {
   // refractionSample.a 山的顶点到eye的向量
   // 水面的顶点到eye的向量
   // 向量相减 = 山顶点指向水面的向量
-  float waterDepth = min(refractionSample.a - depth, 80.0);
+   // 水面到眼睛的距离
+  float depth = length(worldPosition - eye);
+  float waterDepth = min(refractionSample.a - depth, 40.0);
 
   // 在折射颜色跟水面颜色之间根据水深插值
-  vec3 extinction = min((waterDepth / 65.0) * vec3(2.1, 1.05, 1.0), vec3(1.0));
+  vec3 extinction = min((waterDepth / 35.0) * vec3(2.1, 1.05, 1.0), vec3(1.0));
   vec3 refractionColor = max(mix(vec3(refractionSample) * 0.5, color, extinction), vec3(0.0));
 
   vec3 eyeNormal = normalize(eye - worldPosition);
@@ -64,7 +65,7 @@ void main() {
   // 镜面反射
   vec3 reflectionDirection = normalize(reflect(-sunDirection, surfaceNormal));
   float reflecttionDot = max(0.0, dot(eyeNormal, reflectionDirection));
-  vec3 specularColor = pow(reflecttionDot, 128.0) * sunColor * 50.0;
+  vec3 specularColor = pow(reflecttionDot, 128.0) * sunColor * 5.0;
 
   vec3 finalColor = amibientColor + mix(refractionColor * diffuseColor, reflectionSample * (diffuseColor + specularColor), reflectance);
   gl_FragColor = vec4(finalColor, depth);
