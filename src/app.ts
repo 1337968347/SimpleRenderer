@@ -13,7 +13,7 @@ const GRID_RESOLUTION = 512,
   GRID_SIZE = 512,
   FAR_AWAY = 5000;
 
-const cameraLocation = new Float32Array([0, 5, 160]);
+const cameraLocation = new Float32Array([0, 2, 170]);
 
 export default async () => {
   const canvasEl = document.querySelector('canvas');
@@ -48,10 +48,9 @@ export default async () => {
   let sceneGraph: Scene.Graph;
 
   const globaluniform = {
-    sunColor: uniform.Vec3([0.7, 0.7, 0.7]),
+    sunColor: uniform.Vec3([0.9, 0.9, 0.9]),
     sunDirection: uniform.Vec3(vec3.normalize(new Float32Array([0.0, 0.5, 1.0]))),
     skyColor: uniform.Vec3([0.1, 0.15, 0.45]),
-    groundColor: uniform.Vec3([0.025, 0.05, 0.1]),
     clip: 1000,
     time: 0.0,
   };
@@ -60,7 +59,7 @@ export default async () => {
     const gl = getGL();
     sceneGraph = new Scene.Graph();
 
-    gl.clearColor(1.0, 1.0, 1.0, FAR_AWAY)
+    gl.clearColor(1.0, 1.0, 1.0, FAR_AWAY);
     const shaderManager = new ShaderManager(loader.resources);
     const heightText2D = new Texture2D(loader.resources['heightmap.png']);
     const waterText2D = new Texture2D(loader.resources['normalnoise.png']);
@@ -102,6 +101,8 @@ export default async () => {
       {
         heightmap: heightText2D,
         snowTexture: snowText2D,
+        snowColor: uniform.Vec3([0.8, 0.8, 0.8]),
+        groundColor: uniform.Vec3([0.5, 0.5, 0.5]),
       },
       [mountainTransform],
     );
@@ -124,7 +125,7 @@ export default async () => {
     // 然后用山的倒影生成的纹理 画水面
     const water = new Scene.Material(
       waterShader,
-      { color: uniform.Vec3([0.6, 0.6, 0.9]), waterNoise: waterText2D, reflection: reflectionFBO, refraction: mountainDepthFbo },
+      { color: uniform.Vec3([0.6, 0.6, 0.8]), waterNoise: waterText2D, reflection: reflectionFBO, refraction: mountainDepthFbo },
       [waterTransform],
     );
 
@@ -182,7 +183,7 @@ export default async () => {
     // 然后乘以 摄像机的齐次坐标
     planeTransform.camera = camera;
 
-    planeTransform.fixMartix = fixModelView;
+    planeTransform.wordMatrix = fixModelView;
 
     camera.far = FAR_AWAY * 2;
     setCanvasFullScreen(canvasEl, sceneGraph);

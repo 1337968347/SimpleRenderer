@@ -134,7 +134,7 @@ export class Camera extends Node {
   gl: WebGLRenderingContext;
   children: Node[] = [];
   position: Float32Array;
-  pitch: number = 0.3;
+  pitch: number = 0.0;
   yaw: number = 0.0;
   near: number = 0.5;
   far: number = 5000;
@@ -192,29 +192,6 @@ export class Camera extends Node {
   }
 }
 
-export class CameraFixUniform extends Node {
-  camera: Camera;
-  children: Node[] = [];
-  fixMartix: Float32Array = mat4.create();
-
-  constructor(children: Node[]) {
-    super();
-    this.children = children;
-  }
-
-  enter(scene: Graph) {
-    scene.pushUniforms();
-    // 相机标架
-    const cameraModelView = mat4.inverse(this.camera.getWorldView());
-    const aux = mat4.create();
-    mat4.multiply(cameraModelView, this.fixMartix, aux);
-    scene.uniforms.modelTransform = uniform.Mat4(aux);
-  }
-
-  exit(scene: Graph) {
-    scene.popUniforms();
-  }
-}
 export class SimpleMesh extends Node {
   constructor() {
     super();
@@ -278,6 +255,29 @@ export class Mirror extends Transform {
   exit(scene: Graph) {
     scene.gl.cullFace(scene.gl.BACK);
     super.exit.call(this, scene);
+  }
+}
+
+export class CameraFixUniform extends Transform {
+  camera: Camera;
+  wordMatrix = mat4.create();
+
+  constructor(children: Node[]) {
+    super(children);
+    this.children = children;
+  }
+
+  enter(scene: Graph) {
+    scene.pushUniforms();
+    // 相机标架
+    const cameraModelView = mat4.inverse(this.camera.getWorldView());
+    const aux = mat4.create();
+    mat4.multiply(cameraModelView, this.wordMatrix, aux);
+    scene.uniforms.modelTransform = uniform.Mat4(aux);
+  }
+
+  exit(scene: Graph) {
+    scene.popUniforms();
   }
 }
 export class Uniforms extends Node {

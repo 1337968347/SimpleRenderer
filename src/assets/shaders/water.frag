@@ -24,7 +24,6 @@ vec4 getNoise(vec2 uv) {
 }
 
 void main() {
- 
 
   vec2 uv = vec2(worldPosition.x, worldPosition.z);
   vec4 noise = getNoise(uv);
@@ -58,8 +57,6 @@ void main() {
   // 菲涅尔反射： 与水面夹角小主要反射， 大是折射
   float reflectance = rf0 + (1.0 - rf0) * pow((1.0 - theta1), 5.0);
   // phong光照反射
-  // 环境光
-  vec3 amibientColor = 0.3 * sunColor * color;
   // 漫反射
   vec3 diffuseColor = max(dot(sunDirection, surfaceNormal), 0.0) * sunColor * 1.3;
   // 镜面反射
@@ -67,6 +64,6 @@ void main() {
   float reflecttionDot = max(0.0, dot(eyeNormal, reflectionDirection));
   vec3 specularColor = pow(reflecttionDot, 128.0) * sunColor * 5.0;
 
-  vec3 finalColor = amibientColor + mix(refractionColor * diffuseColor, reflectionSample * (diffuseColor + specularColor), reflectance);
+  vec3 finalColor = mix(refractionColor * diffuseColor, reflectionSample * (diffuseColor + specularColor), reflectance);
   gl_FragColor = vec4(finalColor, depth);
 }
