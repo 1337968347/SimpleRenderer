@@ -13,7 +13,7 @@ const GRID_RESOLUTION = 512,
   GRID_SIZE = 512,
   FAR_AWAY = 5000;
 
-const cameraLocation = new Float32Array([0, 2, 170]);
+const cameraLocation = new Float32Array([0, 10, 220]);
 
 export default async () => {
   const canvasEl = document.querySelector('canvas');
@@ -28,6 +28,7 @@ export default async () => {
     'heightmap.png',
     'normalnoise.png',
     'snow.png',
+    'occlusion.png',
 
     'shaders/terrain.vert',
     'shaders/terrain.frag',
@@ -48,8 +49,8 @@ export default async () => {
   let sceneGraph: Scene.Graph;
 
   const globaluniform = {
-    sunColor: uniform.Vec3([0.9, 0.9, 0.9]),
-    sunDirection: uniform.Vec3(vec3.normalize(new Float32Array([0.0, 0.5, 1.0]))),
+    sunColor: uniform.Vec3([1.0, 1.0, 1.0]),
+    sunDirection: uniform.Vec3(vec3.normalize(new Float32Array([0.0, 0.4, -1.0]))),
     skyColor: uniform.Vec3([0.1, 0.15, 0.45]),
     clip: 1000,
     time: 0.0,
@@ -64,6 +65,7 @@ export default async () => {
     const heightText2D = new Texture2D(loader.resources['heightmap.png']);
     const waterText2D = new Texture2D(loader.resources['normalnoise.png']);
     const snowText2D = new Texture2D(loader.resources['snow.png']);
+    const occlusionText2D = new Texture2D(loader.resources['occlusion.png']);
     const { position, normal } = parseObj(loader.resources['obj/seahawk.obj']);
 
     // 着色器
@@ -95,12 +97,13 @@ export default async () => {
     const waterTransform = new Scene.Transform([new Scene.SimpleMesh()]);
     const planeTransform: Scene.CameraFixUniform = new Scene.CameraFixUniform([new Scene.SimpleMesh()]);
 
-    const plane = new Scene.Material(planeShader, { color: uniform.Vec3([0.3, 0.3, 0.3]) }, [planeTransform]);
+    const plane = new Scene.Material(planeShader, { color: uniform.Vec3([0.7, 0.2, 0.2]) }, [planeTransform]);
     const mountain = new Scene.Material(
       mountainShader,
       {
         heightmap: heightText2D,
         snowTexture: snowText2D,
+        occlusionmap: occlusionText2D,
         snowColor: uniform.Vec3([0.8, 0.8, 0.8]),
         groundColor: uniform.Vec3([0.5, 0.5, 0.5]),
       },
