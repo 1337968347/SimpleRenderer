@@ -9,7 +9,13 @@ import CameraController from './control/cameraController';
 import InputHandler from './control/input';
 import { mat4, vec3 } from './math/MV';
 
-const GRID_RESOLUTION = 512,
+const query = new URLSearchParams(location.search);
+
+const scale = parseFloat(query.get('d')) || 1.0;
+
+// 网格密度
+const GRID_RESOLUTION = 512 * scale * scale,
+  // 世界缩放
   GRID_SIZE = 512,
   FAR_AWAY = 5000;
 
@@ -97,7 +103,7 @@ export default async () => {
     const waterTransform = new Scene.Transform([new Scene.SimpleMesh()]);
     const planeTransform: Scene.CameraFixUniform = new Scene.CameraFixUniform([new Scene.SimpleMesh()]);
 
-    const plane = new Scene.Material(planeShader, { color: uniform.Vec3([0.7, 0.2, 0.2]) }, [planeTransform]);
+    const plane = new Scene.Material(planeShader, { color: uniform.Vec3([0.2, 0.2, 0.7]) }, [planeTransform]);
     const mountain = new Scene.Material(
       mountainShader,
       {
@@ -113,13 +119,13 @@ export default async () => {
     // 倒影
     const flipTransform = new Scene.Mirror([mountain, sky]);
     // 水底的山
-    const mountainDepthFbo = new FrameBufferObject(1024, 512);
+    const mountainDepthFbo = new FrameBufferObject(1024 * scale, 512 * scale);
     // 水面的倒影
-    const reflectionFBO = new FrameBufferObject(1024, 1024);
+    const reflectionFBO = new FrameBufferObject(1024 * scale, 1024 * scale);
     // 将所有的东西渲染到图片上，可以用来后处理
-    const combinedFBO = new FrameBufferObject(2048, 1024);
-    const bloomFbo0 = new FrameBufferObject(512, 256);
-    const bloomFbo1 = new FrameBufferObject(512, 256);
+    const combinedFBO = new FrameBufferObject(2048 * scale, 1024 * scale);
+    const bloomFbo0 = new FrameBufferObject(512 * scale, 256 * scale);
+    const bloomFbo1 = new FrameBufferObject(512 * scale, 256 * scale);
 
     const mountainDepthTarget = new Scene.RenderTarget(mountainDepthFbo, [new Scene.Uniforms({ clip: 0.0 }, [mountain])]);
     // 先把山的倒影画到帧缓存中
