@@ -26,11 +26,10 @@ void main() {
   vec4 worldPosition4 = modelTransform * vec4(position, 1.0);
   vec2 uv = vec2(worldPosition4.x, worldPosition4.z);
   vec4 noise = getNoise(uv);
-  worldPosition4 = vec4(worldPosition4.xyz + 20.0 * noise.y, 1.0);
+  worldPosition4 = vec4(worldPosition4.xyz + 10.0 * noise.y, 1.0);
   gl_Position = projection * worldPosition4;
 
   worldPosition = vec3(worldPosition4);
   depth = gl_Position.z;
-  surfaceNormal = normalize(vec3(0, 1, 0) + vec3(noise.x, 0, noise.y));
   projected = gl_Position;
 }
