@@ -58,7 +58,7 @@ void main() {
   float reflectance = rf0 + (1.0 - rf0) * pow((1.0 - theta1), 5.0);
   // phong光照反射
   // 漫反射
-  vec3 diffuseColor = max(dot(sunDirection, surfaceNormal), 0.0) * sunColor * 1.3;
+  vec3 diffuseColor = max(dot(sunDirection, surfaceNormal), 0.0) * sunColor * 3.0;
   // 镜面反射
   vec3 reflectionDirection = normalize(reflect(-sunDirection, surfaceNormal));
   float reflecttionDot = max(0.0, dot(eyeNormal, reflectionDirection));
