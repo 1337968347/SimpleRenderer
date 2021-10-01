@@ -56,7 +56,7 @@ export default async () => {
 
   const globaluniform = {
     sunColor: uniform.Vec3([1.0, 1.0, 1.0]),
-    sunDirection: uniform.Vec3(vec3.normalize(new Float32Array([0.0, 0.4, -1.0]))),
+    sunDirection: uniform.Vec3(vec3.normalize(new Float32Array([0.0, 0.4, 1.0]))),
     skyColor: uniform.Vec3([0.1, 0.15, 0.45]),
     clip: 1000,
     time: 0.0,
@@ -110,7 +110,7 @@ export default async () => {
         heightmap: heightText2D,
         snowTexture: snowText2D,
         occlusionmap: occlusionText2D,
-        snowColor: uniform.Vec3([0.8, 0.8, 0.8]),
+        snowColor: uniform.Vec3([0.9, 0.9, 0.9]),
         groundColor: uniform.Vec3([0.5, 0.5, 0.5]),
       },
       [mountainTransform],
@@ -134,7 +134,7 @@ export default async () => {
     // 然后用山的倒影生成的纹理 画水面
     const water = new Scene.Material(
       waterShader,
-      { color: uniform.Vec3([0.6, 0.6, 0.8]), waterNoise: waterText2D, reflection: reflectionFBO, refraction: mountainDepthFbo },
+      { color: uniform.Vec3([0.7, 0.7, 0.9]), waterNoise: waterText2D, reflection: reflectionFBO, refraction: mountainDepthFbo },
       [waterTransform],
     );
 
