@@ -129,7 +129,7 @@ export default async () => {
 
     const mountainDepthTarget = new Scene.RenderTarget(mountainDepthFbo, [new Scene.Uniforms({ clip: 0.0 }, [mountain])]);
     // 先把山的倒影画到帧缓存中
-    const reflectionTarget = new Scene.RenderTarget(reflectionFBO, [new Scene.Uniforms({ clip: 5.0 }, [flipTransform])]);
+    const reflectionTarget = new Scene.RenderTarget(reflectionFBO, [new Scene.Uniforms({ clip: 0.0 }, [flipTransform])]);
 
     // 然后用山的倒影生成的纹理 画水面
     const water = new Scene.Material(

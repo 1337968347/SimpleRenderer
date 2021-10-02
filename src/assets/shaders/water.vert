@@ -25,7 +25,7 @@ vec4 getNoise(vec2 uv) {
 void main() {
   vec4 worldPosition4 = modelTransform * vec4(position, 1.0);
   vec2 uv = vec2(worldPosition4.x, worldPosition4.z);
-  vec4 noise = getNoise(uv);
+  vec4 noise = min(getNoise(uv), vec4(0.0));
   worldPosition4 = vec4(worldPosition4.xyz + 10.0 * noise.y, 1.0);
   gl_Position = projection * worldPosition4;
 
