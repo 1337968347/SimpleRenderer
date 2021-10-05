@@ -5,7 +5,7 @@ export const getGL = (canvas?: HTMLCanvasElement) => {
   if (!globalGL) {
     if (!canvas) canvas = document.querySelector('canvas');
     if (!canvas) return null;
-    globalGL = canvas.getContext('webgl');
+    globalGL = canvas.getContext('webgl2', { xrCompatible: true }) as WebGLRenderingContext;
     globalGL.enable(globalGL.DEPTH_TEST);
     globalGL.enable(globalGL.CULL_FACE);
   }

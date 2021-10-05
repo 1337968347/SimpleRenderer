@@ -8,10 +8,11 @@ import { gird, parseObj } from './util/mesh';
 import CameraController from './control/cameraController';
 import InputHandler from './control/input';
 import { mat4, vec3 } from './math/MV';
+import { WebXr } from './util/webXR';
 
 const query = new URLSearchParams(location.search);
 
-const scale = parseFloat(query.get('d')) || 1.0;
+const scale = parseFloat(query.get('d')) || 0.5;
 
 // 网格密度
 const GRID_RESOLUTION = 512 * scale * scale,
@@ -53,17 +54,17 @@ export default async () => {
 
   let cameraController: CameraController;
   let sceneGraph: Scene.Graph;
-
+  let gl: WebGLRenderingContext;
   const globaluniform = {
     sunColor: uniform.Vec3([1.0, 1.0, 1.0]),
-    sunDirection: uniform.Vec3(vec3.normalize(new Float32Array([0.0, 0.4, 1.0]))),
+    sunDirection: uniform.Vec3(vec3.normalize(new Float32Array([0.0, 0.4, -1.0]))),
     skyColor: uniform.Vec3([0.1, 0.15, 0.45]),
     clip: 1000,
     time: 0.0,
   };
 
-  const prepareScence = () => {
-    const gl = getGL();
+  const prepareScence = xrSession => {
+    gl = getGL();
     sceneGraph = new Scene.Graph();
 
     gl.clearColor(1.0, 1.0, 1.0, FAR_AWAY);
@@ -172,7 +173,13 @@ export default async () => {
 
     sceneGraph.root.append(camera);
     sceneGraph.root.append(bloom);
-    sceneGraph.root.append(postprocess);
+    if (xrSession) {
+      const webXr = new WebXr(xrSession, gl);
+      const webXrProcess = new Scene.WebVr([postprocess], webXr);
+      sceneGraph.root.append(webXrProcess);
+    } else {
+      sceneGraph.root.append(postprocess);
+    }
 
     camera.position = cameraLocation;
     camera.far = FAR_AWAY * 2;
@@ -199,13 +206,18 @@ export default async () => {
   };
 
   loader.setOnRendy(() => {
-    prepareScence();
-
     clock.setOnTick(t => {
       globaluniform.time += t;
       cameraController.tick();
       sceneGraph.draw();
     });
-    clock.start();
+
+    document.querySelector('button').onclick = () => {
+      WebXr.attempGetWebVrSession().then(xrSession => {
+        prepareScence(xrSession);
+
+        clock.start(xrSession);
+      });
+    };
   });
 };

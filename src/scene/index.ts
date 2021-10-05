@@ -3,6 +3,7 @@ import { mat3, mat4, vec3, vec4 } from '../math/MV';
 import { getGL, VertexBufferObject, Texture2D, FrameBufferObject } from '../util/glUtils';
 import { Shader } from '../util/shader';
 import { UniformMap } from '../util/uniform';
+import { WebXr } from '../util/webXR';
 
 export class Node {
   children: Node[] = [];
@@ -322,6 +323,41 @@ export class PostProcess extends Node {
     const mesh = new SimpleMesh();
     const material = new Material(shader, uniforms, [mesh]);
     this.children = [material];
+  }
+}
+
+export class WebVr extends Node {
+  children: Node[];
+  webXR: any;
+  constructor(children: Node[], webXR: WebXr) {
+    super();
+    this.children = children;
+    this.webXR = webXR;
+  }
+
+  enter() {
+    // if (xrFrame) {
+    //   let pose = xrFrame.getViewerPose(xrReferenceSpace);
+
+    //   if (pose) {
+    //     let glLayer = webXRSession.renderState.baseLayer;
+    //     gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.Framebffer);
+
+    //     for (let view of pose.views) {
+    //       let viewport = glLayer.getViewport(view);
+    //       gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
+
+    //       /* Render the view */
+    //     }
+    //   }
+    const gl = this.webXR.gl;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.webXR.baseLayer.framebuffer);
+    // }
+  }
+
+  exit() {
+    const gl = this.webXR.gl;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
 }
 
