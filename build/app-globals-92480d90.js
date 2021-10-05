@@ -5254,44 +5254,28 @@ class Skybox extends Node$1 {
   }
 }
 
-const createClock = () => {
+const createClock = (webXRSession) => {
   let isRunning = false;
   let nowT;
   let timeId = null;
-  let webXRSession;
   let onTick = undefined;
-  let XRWebGLLayer = window.XRWebGLLayer;
-  const start = async (gl) => {
+  const start = async (webXRSession) => {
     if (isRunning)
       return;
     isRunning = true;
     nowT = new Date().getTime();
     let loopFunc;
-    let navigator = window.navigator;
-    const f = () => {
+    const f = time => {
       if (isRunning) {
-        tick();
+        tick(time);
         loopFunc(f);
       }
     };
-    // webXR支持
-    if (navigator.xr && (await navigator.xr.isSessionSupported('inline'))) {
-      // await (gl as any).makeXRCompatible();
-      navigator.xr.requestSession('inline').then(async (xr) => {
-        webXRSession = xr;
-        webXRSession.updateRenderState({
-          baseLayer: new XRWebGLLayer(webXRSession, gl),
-        });
-        loopFunc = webXRSession.requestAnimationFrame.bind(webXRSession);
-        loopFunc(f);
-      });
-      return;
-    }
     // 定时器
     const intervalRequest = func => {
       timeId = setTimeout(func, 16);
     };
-    loopFunc = window.requestAnimationFrame || intervalRequest;
+    loopFunc = webXRSession ? webXRSession.requestAnimationFrame.bind(webXRSession) : window.requestAnimationFrame || intervalRequest;
     loopFunc(f);
   };
   const stop = () => {
@@ -5305,7 +5289,7 @@ const createClock = () => {
       webXRSession = undefined;
     }
   };
-  const tick = () => {
+  const tick = _time => {
     const t = nowT;
     nowT = new Date().getTime();
     onTick && onTick((nowT - t) / 1000);
@@ -5826,6 +5810,31 @@ class InputHandler {
   }
 }
 
+let navigator = window.navigator;
+let XRWebGLLayer = window.XRWebGLLayer;
+class WebXr {
+  constructor(webXRSession, gl) {
+    this.webXRSession = webXRSession;
+    this.gl = gl;
+    this.init();
+  }
+  init() {
+    this.baseLayer = new XRWebGLLayer(this.webXRSession, this.gl);
+    this.webXRSession.updateRenderState({ baseLayer: this.baseLayer });
+  }
+  static async attempGetWebVrSession() {
+    return new Promise(async (resolve) => {
+      if (navigator.xr && (await navigator.xr.isSessionSupported('immersive-vr'))) {
+        // await (gl as any).makeXRCompatible();
+        navigator.xr.requestSession('immersive-vr').then(async (xr) => resolve(xr));
+      }
+      else {
+        resolve(null);
+      }
+    });
+  }
+}
+
 const query = new URLSearchParams(location.search);
 const scale = parseFloat(query.get('d')) || 0.5;
 // 网格密度
@@ -5870,6 +5879,7 @@ const appGlobalScript = async () => {
     clip: 1000,
     time: 0.0,
   };
+  let webXRSession;
   const prepareScence = () => {
     gl = getGL();
     sceneGraph = new Graph();
@@ -5984,7 +5994,10 @@ const appGlobalScript = async () => {
       sceneGraph.draw();
     });
     document.querySelector('button').onclick = () => {
-      clock.start(gl);
+      WebXr.attempGetWebVrSession().then(xrSession => {
+        webXRSession = xrSession;
+        clock.start(xrSession);
+      });
     };
   });
 };

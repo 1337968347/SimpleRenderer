@@ -5231,6 +5231,32 @@ class PostProcess extends Node$1 {
     this.children = [material];
   }
 }
+class WebVr extends Node$1 {
+  constructor(webXR) {
+    super();
+    this.webXR = webXR;
+  }
+  enter() {
+    // if (xrFrame) {
+    //   let pose = xrFrame.getViewerPose(xrReferenceSpace);
+    //   if (pose) {
+    //     let glLayer = webXRSession.renderState.baseLayer;
+    //     gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.Framebffer);
+    //     for (let view of pose.views) {
+    //       let viewport = glLayer.getViewport(view);
+    //       gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
+    //       /* Render the view */
+    //     }
+    //   }
+    const gl = this.webXR.gl;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.webXR.baseLayer.framebuffer);
+    // }
+  }
+  exit() {
+    const gl = this.webXR.gl;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+}
 class Skybox extends Node$1 {
   constructor(shader, uniforms) {
     super();
@@ -5254,46 +5280,28 @@ class Skybox extends Node$1 {
   }
 }
 
-const createClock = () => {
+const createClock = (webXRSession) => {
   let isRunning = false;
   let nowT;
   let timeId = null;
-  let webXRSession;
   let onTick = undefined;
-  let XRWebGLLayer = window.XRWebGLLayer;
-  let xrReferenceSpace;
-  const start = async (gl) => {
+  const start = async (webXRSession) => {
     if (isRunning)
       return;
     isRunning = true;
     nowT = new Date().getTime();
     let loopFunc;
-    let navigator = window.navigator;
-    const f = (time, xrFrame) => {
+    const f = time => {
       if (isRunning) {
-        tick(time, xrFrame);
+        tick(time);
         loopFunc(f);
       }
     };
-    // webXR支持
-    if (navigator.xr && (await navigator.xr.isSessionSupported('inline'))) {
-      // await (gl as any).makeXRCompatible();
-      navigator.xr.requestSession('inline').then(async (xr) => {
-        xrReferenceSpace = await xr.requestReferenceSpace('viewer');
-        webXRSession = xr;
-        webXRSession.updateRenderState({
-          baseLayer: new XRWebGLLayer(webXRSession, gl),
-        });
-        loopFunc = webXRSession.requestAnimationFrame.bind(webXRSession);
-        loopFunc(f);
-      });
-      return;
-    }
     // 定时器
     const intervalRequest = func => {
       timeId = setTimeout(func, 16);
     };
-    loopFunc = window.requestAnimationFrame || intervalRequest;
+    loopFunc = webXRSession ? webXRSession.requestAnimationFrame.bind(webXRSession) : window.requestAnimationFrame || intervalRequest;
     loopFunc(f);
   };
   const stop = () => {
@@ -5307,24 +5315,9 @@ const createClock = () => {
       webXRSession = undefined;
     }
   };
-  const tick = (_time, xrFrame) => {
+  const tick = _time => {
     const t = nowT;
     nowT = new Date().getTime();
-    const gl = getGL();
-    if (xrFrame) {
-      let pose = xrFrame.getViewerPose(xrReferenceSpace);
-      if (pose) {
-        let glLayer = webXRSession.renderState.baseLayer;
-        gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.Framebffer);
-        for (let view of pose.views) {
-          console.log(view);
-          let viewport = glLayer.getViewport(view);
-          gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
-          /* Render the view */
-        }
-      }
-      gl.bindFramebuffer(gl.FRAMEBUFFER, XRWebGLLayer.framebuffer);
-    }
     onTick && onTick((nowT - t) / 1000);
   };
   const setOnTick = _onTick => {
@@ -5843,6 +5836,31 @@ class InputHandler {
   }
 }
 
+let navigator = window.navigator;
+let XRWebGLLayer = window.XRWebGLLayer;
+class WebXr {
+  constructor(webXRSession, gl) {
+    this.webXRSession = webXRSession;
+    this.gl = gl;
+    this.init();
+  }
+  init() {
+    this.baseLayer = new XRWebGLLayer(this.webXRSession, this.gl);
+    this.webXRSession.updateRenderState({ baseLayer: this.baseLayer });
+  }
+  static async attempGetWebVrSession() {
+    return new Promise(async (resolve) => {
+      if (navigator.xr && (await navigator.xr.isSessionSupported('immersive-vr'))) {
+        // await (gl as any).makeXRCompatible();
+        navigator.xr.requestSession('immersive-vr').then(async (xr) => resolve(xr));
+      }
+      else {
+        resolve(null);
+      }
+    });
+  }
+}
+
 const query = new URLSearchParams(location.search);
 const scale = parseFloat(query.get('d')) || 0.5;
 // 网格密度
@@ -5887,6 +5905,7 @@ const appGlobalScript = async () => {
     clip: 1000,
     time: 0.0,
   };
+  let webXRSession;
   const prepareScence = () => {
     gl = getGL();
     sceneGraph = new Graph();
@@ -6001,7 +6020,10 @@ const appGlobalScript = async () => {
       sceneGraph.draw();
     });
     document.querySelector('button').onclick = () => {
-      clock.start(gl);
+      WebXr.attempGetWebVrSession().then(xrSession => {
+        webXRSession = xrSession;
+        clock.start(xrSession);
+      });
     };
   });
 };
