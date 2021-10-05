@@ -5262,27 +5262,31 @@ const createClock = () => {
   let onTick = undefined;
   const start = async () => {
     isRunning = true;
+    if (isRunning)
+      return;
     nowT = new Date().getTime();
     let loopFunc;
     let navigator = window.navigator;
-    // webXR支持
-    if (navigator.xr && (await navigator.xr.isSessionSupported('immersive-vr'))) {
-      webXRSession = await navigator.xr.requestSession('immersive-vr');
-      loopFunc = webXRSession.requestAnimationFrame;
-    }
-    else {
-      // 定时器
-      const intervalRequest = func => {
-        timeId = setTimeout(func, 16);
-      };
-      loopFunc = window.requestAnimationFrame || intervalRequest;
-    }
     const f = () => {
       if (isRunning) {
         tick();
         loopFunc(f);
       }
     };
+    // webXR支持
+    if (navigator.xr && (await navigator.xr.isSessionSupported('immersive-vr'))) {
+      navigator.xr.requestSession('immersive-vr').then(xr => {
+        webXRSession = xr;
+        loopFunc = webXRSession.requestAnimationFrame;
+        loopFunc(f);
+      });
+      return;
+    }
+    // 定时器
+    const intervalRequest = func => {
+      timeId = setTimeout(func, 16);
+    };
+    loopFunc = window.requestAnimationFrame || intervalRequest;
     loopFunc(f);
   };
   const stop = () => {
@@ -5973,7 +5977,9 @@ const appGlobalScript = async () => {
       cameraController.tick();
       sceneGraph.draw();
     });
-    clock.start();
+    document.querySelector('button').onclick = () => {
+      clock.start();
+    };
   });
 };
 
