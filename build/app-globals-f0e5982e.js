@@ -5261,9 +5261,9 @@ const createClock = () => {
   let webXRSession;
   let onTick = undefined;
   const start = async () => {
-    isRunning = true;
     if (isRunning)
       return;
+    isRunning = true;
     nowT = new Date().getTime();
     let loopFunc;
     let navigator = window.navigator;
@@ -5277,7 +5277,7 @@ const createClock = () => {
     if (navigator.xr && (await navigator.xr.isSessionSupported('immersive-vr'))) {
       navigator.xr.requestSession('immersive-vr').then(xr => {
         webXRSession = xr;
-        loopFunc = webXRSession.requestAnimationFrame;
+        loopFunc = webXRSession.requestAnimationFrame.bind(webXRSession);
         loopFunc(f);
       });
       return;
