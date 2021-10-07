@@ -259,7 +259,7 @@ export class Mirror extends Transform {
   }
 }
 
-export class CameraFixUniform extends Transform {
+export class CameraFixTransform extends Transform {
   camera: Camera;
   wordMatrix = mat4.create();
 

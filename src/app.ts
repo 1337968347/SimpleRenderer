@@ -102,7 +102,7 @@ export default async () => {
 
     const mountainTransform = new Scene.Transform([new Scene.SimpleMesh()]);
     const waterTransform = new Scene.Transform([new Scene.SimpleMesh()]);
-    const planeTransform: Scene.CameraFixUniform = new Scene.CameraFixUniform([new Scene.SimpleMesh()]);
+    const planeTransform: Scene.CameraFixTransform = new Scene.CameraFixTransform([new Scene.SimpleMesh()]);
 
     const plane = new Scene.Material(planeShader, { color: uniform.Vec3([0.2, 0.2, 0.7]) }, [planeTransform]);
     const mountain = new Scene.Material(
