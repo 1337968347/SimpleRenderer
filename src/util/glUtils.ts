@@ -167,8 +167,8 @@ export class VertexBufferObject extends BufferObject {
 
 export const setCanvasFullScreen = (canvas: HTMLCanvasElement, scene: Scene.Graph) => {
   const onResize = () => {
-    canvas.width = scene.viewportWidth = window.innerWidth;
-    canvas.height = scene.viewportHeight = window.innerHeight;
+    canvas.width = scene.viewport.width = window.innerWidth;
+    canvas.height = scene.viewport.height = window.innerHeight;
     scene.draw();
   };
   window.addEventListener('resize', onResize, false);

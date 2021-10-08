@@ -65,7 +65,8 @@ export default async () => {
 
   const prepareScence = xrSession => {
     gl = getGL();
-    sceneGraph = new Scene.Graph();
+    const webXr = new WebXr(xrSession, gl);
+    sceneGraph = new Scene.Graph(webXr);
 
     gl.clearColor(1.0, 1.0, 1.0, FAR_AWAY);
     const shaderManager = new ShaderManager(loader.resources);
@@ -143,11 +144,11 @@ export default async () => {
 
     // 离屏渲染
     // 原始图像
-    const brightpass = new Scene.RenderTarget(bloomFbo0, [new Scene.PostProcess(brightpassShader, { texture: combinedFBO })]);
+    const brightpass = new Scene.RenderTarget(bloomFbo0, [new Scene.PostProcess(brightpassShader, { texture: combinedFBO }, [])]);
     // 水平卷积处理
-    const hblurpass = new Scene.RenderTarget(bloomFbo1, [new Scene.PostProcess(hblurShader, { texture: bloomFbo0 })]);
+    const hblurpass = new Scene.RenderTarget(bloomFbo1, [new Scene.PostProcess(hblurShader, { texture: bloomFbo0 }, [])]);
     // 竖直卷积处理
-    const vblurpass = new Scene.RenderTarget(bloomFbo0, [new Scene.PostProcess(vblurShader, { texture: bloomFbo1 })]);
+    const vblurpass = new Scene.RenderTarget(bloomFbo0, [new Scene.PostProcess(vblurShader, { texture: bloomFbo1 }, [])]);
     const bloom = new Scene.Node([brightpass, hblurpass, vblurpass]);
 
     // 开放场景图数据传输
@@ -167,15 +168,12 @@ export default async () => {
       new Scene.Uniforms(globaluniform, [mountainDepthTarget, reflectionTarget, combinedTarget]),
     ]);
 
-    const postprocess = new Scene.PostProcess(postShader, { texture: combinedFBO, bloom: bloomFbo0 });
+    const postprocess = new Scene.PostProcess(postShader, { texture: combinedFBO, bloom: bloomFbo0 }, [camera, bloom]);
 
     cameraController = new CameraController(inputHandler, camera);
 
-    sceneGraph.root.append(camera);
-    sceneGraph.root.append(bloom);
     if (xrSession) {
-      const webXr = new WebXr(xrSession, gl);
-      const webXrProcess = new Scene.WebVr([postprocess], webXr);
+      const webXrProcess = new Scene.WebVr([postprocess]);
       sceneGraph.root.append(webXrProcess);
     } else {
       sceneGraph.root.append(postprocess);

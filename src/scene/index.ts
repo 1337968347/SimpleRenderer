@@ -40,19 +40,38 @@ export class Graph {
   root: Node;
   uniforms: UniformMap = {};
   shaders: Shader[] = [];
-  viewportWidth = 640;
-  viewportHeight = 480;
+  public viewport = {
+    x: 0,
+    y: 0,
+    width: 640,
+    height: 480,
+  };
   textureUnit: number = 0;
+  webXr: WebXr;
+  view: any;
 
-  constructor() {
+  constructor(webXr: WebXr) {
+    this.webXr = webXr;
     this.gl = getGL();
     this.root = new Node();
   }
 
   draw(frame?) {
-    this.gl.viewport(0, 0, this.viewportWidth, this.viewportHeight);
-    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-    this.root.visit(this, frame);
+    const gl = this.gl;
+    gl.clearColor(0, 0, 0, 1);
+    gl.clearDepth(1);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    if (frame) {
+      const poses = frame.getViewerPose(this.webXr.XRReferenceSpace);
+      let baseLayer = frame.session.renderState.baseLayer;
+      for (let view of poses.views) {
+        let i = baseLayer.getViewport(view);
+        gl.viewport(i.x, i.y, i.width, i.height);
+        this.pushView(view);
+        console.log(view);
+        this.root.visit(this, frame);
+      }
+    }
   }
 
   pushUniforms() {
@@ -71,6 +90,18 @@ export class Graph {
     this.textureUnit--;
   }
 
+  getWebXR() {
+    return this.webXr;
+  }
+
+  pushView(view: any) {
+    this.view = view;
+  }
+
+  popView() {
+    return this.view;
+  }
+
   pushShader(shader: Shader) {
     this.shaders.push(shader);
   }
@@ -83,7 +114,6 @@ export class Graph {
     return this.shaders[this.shaders.length - 1];
   }
 }
-
 // 渲染场景到FrameBufferObject上
 export class RenderTarget extends Node {
   fbo: FrameBufferObject;
@@ -102,7 +132,7 @@ export class RenderTarget extends Node {
 
   exit(scene: Graph) {
     this.fbo.unbind();
-    scene.gl.viewport(0, 0, scene.viewportWidth, scene.viewportHeight);
+    scene.gl.viewport(0, 0, scene.viewport.width, scene.viewport.height);
   }
 }
 
@@ -135,8 +165,9 @@ export class Camera extends Node {
   gl: WebGLRenderingContext;
   children: Node[] = [];
   position: Float32Array;
-  pitch: number = 0.0;
-  yaw: number = 0.0;
+  x: number = 0.0;
+  y: number = 0.0;
+  z: number = 0.0;
   near: number = 0.5;
   far: number = 5000;
   fov: number = 50;
@@ -150,15 +181,19 @@ export class Camera extends Node {
 
   enter(scene: Graph) {
     scene.pushUniforms();
+    const view = scene.popView();
+    this.position = new Float32Array([view.transform.position.x, view.transform.position.y, view.transform.position.z]);
+    this.x = view.transform.orientation.x
+    this.y = view.transform.orientation.y
+    this.z = view.transform.orientation.z
     const project = this.getProjection(scene);
     const wordView = this.getWorldView();
     // modeView Project ;
     // not most valuable player
     const mvp = mat4.create();
-
     mat4.multiply(project, wordView, mvp);
     scene.uniforms.projection = uniform.Mat4(mvp);
-    scene.uniforms.eye = uniform.Vec3(this.position);
+    scene.uniforms.eye = uniform.Vec3(new Float32Array(this.position));
   }
 
   exit(scene: Graph) {
@@ -179,15 +214,16 @@ export class Camera extends Node {
 
   // project
   getProjection(scene: Graph) {
-    return mat4.perspective(this.fov, scene.viewportWidth / scene.viewportHeight, this.near, this.far);
+    return mat4.perspective(this.fov, scene.viewport.width / scene.viewport.height, this.near, this.far);
   }
 
   // ModelView
   getWorldView() {
     // 先平移到标架原点， 然后再旋转
     const matrix = mat4.identity(mat4.create());
-    mat4.rotateX(matrix, this.pitch);
-    mat4.rotateY(matrix, this.yaw);
+    mat4.rotateX(matrix, this.x);
+    mat4.rotateY(matrix, this.y);
+    mat4.rotateZ(matrix, this.z);
     mat4.translate(matrix, vec3.negate(this.position, vec3.create()));
     return matrix;
   }
@@ -317,51 +353,33 @@ export class Uniforms extends Node {
 
 export class PostProcess extends Node {
   children: Node[];
-  constructor(shader: Shader, uniforms: UniformMap) {
+  constructor(shader: Shader, uniforms: UniformMap, children: Node[]) {
     super();
     shader.setAttribBufferData('position', new Float32Array([-1, 1, 0, -1, -1, 0, 1, -1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0]));
     const mesh = new SimpleMesh();
     const material = new Material(shader, uniforms, [mesh]);
-    this.children = [material];
+    this.children = [material, ...children];
   }
 }
 
 export class WebVr extends Node {
   children: Node[];
-  webXR: any;
-  constructor(children: Node[], webXR: WebXr) {
+  constructor(children: Node[]) {
     super();
     this.children = children;
-    this.webXR = webXR;
   }
 
-  visit(_scene, frame) {
-    if (!frame) return void super.visit(_scene, frame);
-    const poses = this.enter(_scene, frame),
-      gl = getGL();
-    let e = frame.session.renderState.baseLayer;
-    for (let r of poses.views) {
-      let i = e.getViewport(r);
-      gl.viewport(i.x, i.y, i.width, i.height);
-      for (let i = 0; i < this.children.length; i++) this.children[i].visit(_scene, frame);
-    }
-    this.exit(_scene, frame);
-  }
-
-  enter(_scene, frame) {
+  enter(scene: Graph, frame) {
     if (frame) {
-      const gl = this.webXR.gl;
-      const poses = frame.getViewerPose(this.webXR.XRReferenceSpace);
-      gl.bindFramebuffer(gl.FRAMEBUFFER, this.webXR.baseLayer.framebuffer);
-      gl.clearColor(0, 0, 0, 1);
-      gl.clearDepth(1);
-      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-      return poses;
+      const webXR = scene.getWebXR();
+      const gl = webXR.gl;
+      gl.bindFramebuffer(gl.FRAMEBUFFER, webXR.baseLayer.framebuffer);
     }
   }
 
-  exit(_scene, _s) {
-    const gl = this.webXR.gl;
+  exit(scene: Graph, _frame) {
+    const webXR = scene.getWebXR();
+    const gl = webXR.gl;
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
 }
