@@ -182,7 +182,7 @@ export class Camera extends Node {
   enter(scene: Graph) {
     scene.pushUniforms();
     const view = scene.popView();
-    this.position = new Float32Array([view.transform.position.x, view.transform.position.y, view.transform.position.z]);
+    this.position = new Float32Array([view.transform.position.x, view.transform.position.y+10, view.transform.position.z+200]);
     this.x = view.transform.orientation.x
     this.y = view.transform.orientation.y
     this.z = view.transform.orientation.z

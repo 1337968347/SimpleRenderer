@@ -17,6 +17,7 @@ export class WebXr {
     this.baseLayer = new XRWebGLLayer(this.webXRSession, this.gl);
     this.webXRSession.updateRenderState({ baseLayer: this.baseLayer });
     this.XRReferenceSpace = await this.webXRSession.requestReferenceSpace('local');
+   
   }
 
   static async attempGetWebVrSession() {
