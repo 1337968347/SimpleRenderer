@@ -4,17 +4,19 @@ export class WebXr {
   XRWebGLLayer: any;
   webXRSession: any;
   baseLayer: any;
+  XRReferenceSpace: any;
   gl: WebGLRenderingContext;
-  
+
   constructor(webXRSession, gl: WebGLRenderingContext) {
     this.webXRSession = webXRSession;
     this.gl = gl;
     this.init();
   }
 
-  init() {
+  async init() {
     this.baseLayer = new XRWebGLLayer(this.webXRSession, this.gl);
     this.webXRSession.updateRenderState({ baseLayer: this.baseLayer });
+    this.XRReferenceSpace = await this.webXRSession.requestReferenceSpace('viewer');
   }
 
   static async attempGetWebVrSession() {

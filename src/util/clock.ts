@@ -2,7 +2,7 @@ const createClock = (webXRSession?) => {
   let isRunning: boolean = false;
   let nowT: number;
   let timeId: number | null = null;
-  let onTick: (t: number) => void = undefined;
+  let onTick: (t: number, frame: any) => void = undefined;
 
   const start = async (webXRSession?) => {
     if (isRunning) return;
@@ -10,9 +10,9 @@ const createClock = (webXRSession?) => {
     nowT = new Date().getTime();
     let loopFunc: Function;
 
-    const f = time => {
+    const f = (time, frame) => {
       if (isRunning) {
-        tick(time);
+        tick(time, frame);
         loopFunc(f);
       }
     };
@@ -38,11 +38,11 @@ const createClock = (webXRSession?) => {
     }
   };
 
-  const tick = _time => {
+  const tick = (_time, frame) => {
     const t = nowT;
     nowT = new Date().getTime();
 
-    onTick && onTick((nowT - t) / 1000);
+    onTick && onTick((nowT - t) / 1000, frame);
   };
 
   const setOnTick = _onTick => {

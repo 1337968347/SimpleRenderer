@@ -12,16 +12,16 @@ export class Node {
     this.children = childrenP;
   }
 
-  visit(scene: Graph) {
-    this.enter(scene);
+  visit(scene: Graph, frame?) {
+    this.enter(scene, frame);
     for (let i = 0; i < this.children.length; i++) {
-      this.children[i].visit(scene);
+      this.children[i].visit(scene, frame);
     }
-    this.exit(scene);
+    this.exit(scene, frame);
   }
 
   // overwrite
-  exit(_scene: Graph) {
+  exit(_scene: Graph, _frame?) {
     // console.log(scene);
   }
 
@@ -30,7 +30,7 @@ export class Node {
   }
 
   // overwrite
-  enter(_scene: Graph) {
+  enter(_scene: Graph, _frame?) {
     // console.log(scene);
   }
 }
@@ -49,10 +49,10 @@ export class Graph {
     this.root = new Node();
   }
 
-  draw() {
+  draw(frame?) {
     this.gl.viewport(0, 0, this.viewportWidth, this.viewportHeight);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-    this.root.visit(this);
+    this.root.visit(this, frame);
   }
 
   pushUniforms() {
@@ -335,27 +335,32 @@ export class WebVr extends Node {
     this.webXR = webXR;
   }
 
-  enter() {
-    // if (xrFrame) {
-    //   let pose = xrFrame.getViewerPose(xrReferenceSpace);
-
-    //   if (pose) {
-    //     let glLayer = webXRSession.renderState.baseLayer;
-    //     gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.Framebffer);
-
-    //     for (let view of pose.views) {
-    //       let viewport = glLayer.getViewport(view);
-    //       gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
-
-    //       /* Render the view */
-    //     }
-    //   }
-    const gl = this.webXR.gl;
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.webXR.baseLayer.framebuffer);
-    // }
+  visit(_scene, frame) {
+    if (!frame) return void super.visit(_scene, frame);
+    const poses = this.enter(_scene, frame),
+      gl = getGL();
+    let e = frame.session.renderState.baseLayer;
+    for (let r of poses.views) {
+      let i = e.getViewport(r);
+      gl.viewport(i.x, i.y, i.width, i.height);
+      for (let i = 0; i < this.children.length; i++) this.children[i].visit(_scene, frame);
+    }
+    this.exit(_scene, frame);
   }
 
-  exit() {
+  enter(_scene, frame) {
+    if (frame) {
+      const gl = this.webXR.gl;
+      const poses = frame.getViewerPose(this.webXR.XRReferenceSpace);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.webXR.baseLayer.framebuffer);
+      gl.clearColor(0, 0, 0, 1);
+      gl.clearDepth(1);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      return poses;
+    }
+  }
+
+  exit(_scene, _s) {
     const gl = this.webXR.gl;
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }

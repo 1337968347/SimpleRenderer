@@ -206,10 +206,10 @@ export default async () => {
   };
 
   loader.setOnRendy(() => {
-    clock.setOnTick(t => {
+    clock.setOnTick((t, frame) => {
       globaluniform.time += t;
       cameraController.tick();
-      sceneGraph.draw();
+      sceneGraph.draw(frame);
     });
 
     document.querySelector('button').onclick = () => {
