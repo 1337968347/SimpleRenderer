@@ -50,10 +50,16 @@ export class Graph {
   webXr: WebXr;
   view: any;
 
-  constructor(webXr: WebXr) {
-    this.webXr = webXr;
+  constructor(xRSession) {
     this.gl = getGL();
+    this.attempWebXRInit(xRSession);
     this.root = new Node();
+  }
+
+  attempWebXRInit(xRSession) {
+    if (xRSession) {
+      this.webXr = new WebXr(xRSession, this.gl);
+    }
   }
 
   draw(frame?) {
@@ -179,13 +185,15 @@ export class Camera extends Node {
     this.position = vec3.create([0, 0, 0]);
   }
 
-  enter(scene: Graph) {
+  enter(scene: Graph, frame) {
     scene.pushUniforms();
-    const view = scene.popView();
-    this.position = new Float32Array([view.transform.position.x, view.transform.position.y+10, view.transform.position.z+200]);
-    this.x = view.transform.orientation.x
-    this.y = view.transform.orientation.y
-    this.z = view.transform.orientation.z
+    if (frame) {
+      const view = scene.popView();
+      this.position = new Float32Array([view.transform.position.x, view.transform.position.y + 10, view.transform.position.z + 200]);
+      this.x = view.transform.orientation.x;
+      this.y = view.transform.orientation.y;
+      this.z = view.transform.orientation.z;
+    }
     const project = this.getProjection(scene);
     const wordView = this.getWorldView();
     // modeView Project ;
@@ -317,6 +325,7 @@ export class CameraFixTransform extends Transform {
     scene.popUniforms();
   }
 }
+
 export class Uniforms extends Node {
   uniforms: UniformMap;
   children: Node[];
@@ -363,24 +372,16 @@ export class PostProcess extends Node {
 }
 
 export class WebVr extends Node {
-  children: Node[];
-  constructor(children: Node[]) {
-    super();
-    this.children = children;
-  }
-
   enter(scene: Graph, frame) {
     if (frame) {
       const webXR = scene.getWebXR();
-      const gl = webXR.gl;
-      gl.bindFramebuffer(gl.FRAMEBUFFER, webXR.baseLayer.framebuffer);
+      webXR.bind();
     }
   }
 
   exit(scene: Graph, _frame) {
     const webXR = scene.getWebXR();
-    const gl = webXR.gl;
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    webXR.unbind();
   }
 }
 

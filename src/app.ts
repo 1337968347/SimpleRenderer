@@ -12,7 +12,7 @@ import { WebXr } from './util/webXR';
 
 const query = new URLSearchParams(location.search);
 
-const scale = parseFloat(query.get('d')) || 0.5;
+const scale = parseFloat(query.get('d')) || 1.0;
 
 // 网格密度
 const GRID_RESOLUTION = 512 * scale * scale,
@@ -54,7 +54,7 @@ export default async () => {
 
   let cameraController: CameraController;
   let sceneGraph: Scene.Graph;
-  let gl: WebGLRenderingContext;
+  const gl: WebGLRenderingContext = getGL();
   const globaluniform = {
     sunColor: uniform.Vec3([1.0, 1.0, 1.0]),
     sunDirection: uniform.Vec3(vec3.normalize(new Float32Array([0.0, 0.4, -1.0]))),
@@ -63,10 +63,8 @@ export default async () => {
     time: 0.0,
   };
 
-  const prepareScence = xrSession => {
-    gl = getGL();
-    const webXr = new WebXr(xrSession, gl);
-    sceneGraph = new Scene.Graph(webXr);
+  const prepareScence = (xrSession?) => {
+    sceneGraph = new Scene.Graph(xrSession);
 
     gl.clearColor(1.0, 1.0, 1.0, FAR_AWAY);
     const shaderManager = new ShaderManager(loader.resources);
@@ -95,7 +93,7 @@ export default async () => {
     // 视口固定矩阵
     const fixModelView = mat4.identity(mat4.create());
     mat4.rotateY(fixModelView, Math.PI);
-    const offset = new Float32Array([0, -3, 10]);
+    const offset = new Float32Array([0, -2, 8.0]);
     // 然后缩放的基础上z坐标向前移动 10（右手坐标）
     mat4.translate(fixModelView, offset);
     // 飞机先缩放 100倍
@@ -144,11 +142,11 @@ export default async () => {
 
     // 离屏渲染
     // 原始图像
-    const brightpass = new Scene.RenderTarget(bloomFbo0, [new Scene.PostProcess(brightpassShader, { texture: combinedFBO }, [])]);
+    const brightpass = new Scene.RenderTarget(bloomFbo0, [new Scene.PostProcess(brightpassShader, { texture: combinedFBO },[])]);
     // 水平卷积处理
-    const hblurpass = new Scene.RenderTarget(bloomFbo1, [new Scene.PostProcess(hblurShader, { texture: bloomFbo0 }, [])]);
+    const hblurpass = new Scene.RenderTarget(bloomFbo1, [new Scene.PostProcess(hblurShader, { texture: bloomFbo0 },[])]);
     // 竖直卷积处理
-    const vblurpass = new Scene.RenderTarget(bloomFbo0, [new Scene.PostProcess(vblurShader, { texture: bloomFbo1 }, [])]);
+    const vblurpass = new Scene.RenderTarget(bloomFbo0, [new Scene.PostProcess(vblurShader, { texture: bloomFbo1 },[])]);
     const bloom = new Scene.Node([brightpass, hblurpass, vblurpass]);
 
     // 开放场景图数据传输
@@ -168,9 +166,10 @@ export default async () => {
       new Scene.Uniforms(globaluniform, [mountainDepthTarget, reflectionTarget, combinedTarget]),
     ]);
 
-    const postprocess = new Scene.PostProcess(postShader, { texture: combinedFBO, bloom: bloomFbo0 }, [camera, bloom]);
+    const postprocess = new Scene.PostProcess(postShader, { texture: combinedFBO, bloom: bloomFbo0 },[camera,bloom]);
 
     cameraController = new CameraController(inputHandler, camera);
+ 
 
     if (xrSession) {
       const webXrProcess = new Scene.WebVr([postprocess]);
@@ -209,9 +208,8 @@ export default async () => {
       cameraController.tick();
       sceneGraph.draw(frame);
     });
-
     document.querySelector('button').onclick = () => {
-      WebXr.attempGetWebVrSession().then(xrSession => {
+      WebXr.attempGetWebVrSession(gl).then(xrSession => {
         prepareScence(xrSession);
 
         clock.start(xrSession);

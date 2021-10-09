@@ -1,7 +1,6 @@
 let navigator: any = window.navigator;
 let XRWebGLLayer = (window as any).XRWebGLLayer;
 export class WebXr {
-  XRWebGLLayer: any;
   webXRSession: any;
   baseLayer: any;
   XRReferenceSpace: any;
@@ -17,13 +16,22 @@ export class WebXr {
     this.baseLayer = new XRWebGLLayer(this.webXRSession, this.gl);
     this.webXRSession.updateRenderState({ baseLayer: this.baseLayer });
     this.XRReferenceSpace = await this.webXRSession.requestReferenceSpace('local');
-   
   }
 
-  static async attempGetWebVrSession() {
-    return new Promise(async resolve => {
+  bind() {
+    const gl = this.gl;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.baseLayer.framebuffer);
+  }
+
+  unbind() {
+    const gl = this.gl;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+
+  static async attempGetWebVrSession(gl: WebGLRenderingContext) {
+    return new Promise<any>(async resolve => {
       if (navigator.xr && (await navigator.xr.isSessionSupported('immersive-vr'))) {
-        // await (gl as any).makeXRCompatible();
+        await (gl as any).makeXRCompatible();
         navigator.xr.requestSession('immersive-vr').then(async xr => resolve(xr));
       } else {
         resolve(null);
