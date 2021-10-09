@@ -8,7 +8,8 @@ import { gird, parseObj } from './util/mesh';
 import CameraController from './control/cameraController';
 import InputHandler from './control/input';
 import { mat4, vec3 } from './math/MV';
-import { WebXr } from './util/webXR';
+
+let navigator: any = window.navigator;
 
 const query = new URLSearchParams(location.search);
 
@@ -45,9 +46,6 @@ export default async () => {
     'shaders/sky.frag',
     'shaders/plane.vert',
     'shaders/plane.frag',
-    'shaders/brightpass.frag',
-    'shaders/vblur.frag',
-    'shaders/hblur.frag',
 
     'obj/seahawk.obj',
   ]);
@@ -77,12 +75,8 @@ export default async () => {
     // 着色器
     const mountainShader = shaderManager.get('terrain.vert', 'terrain.frag');
     const waterShader = shaderManager.get('water.vert', 'water.frag');
-    const postShader = shaderManager.get('screen.vert', 'screen.frag');
     const skyShader = shaderManager.get('sky.vert', 'sky.frag');
     const planeShader = shaderManager.get('plane.vert', 'plane.frag');
-    const brightpassShader = shaderManager.get('screen.vert', 'brightpass.frag');
-    const vblurShader = shaderManager.get('screen.vert', 'vblur.frag');
-    const hblurShader = shaderManager.get('screen.vert', 'hblur.frag');
 
     // 顶点数据
     mountainShader.setAttribBufferData('position', gird(GRID_RESOLUTION));
@@ -122,14 +116,12 @@ export default async () => {
     const mountainDepthFbo = new FrameBufferObject(1024 * scale, 512 * scale);
     // 水面的倒影
     const reflectionFBO = new FrameBufferObject(1024 * scale, 1024 * scale);
-    // 将所有的东西渲染到图片上，可以用来后处理
-    const combinedFBO = new FrameBufferObject(2048 * scale, 1024 * scale);
-    const bloomFbo0 = new FrameBufferObject(512 * scale, 256 * scale);
-    const bloomFbo1 = new FrameBufferObject(512 * scale, 256 * scale);
 
     const mountainDepthTarget = new Scene.RenderTarget(mountainDepthFbo, [new Scene.Uniforms({ clip: 0.0 }, [mountain])]);
     // 先把山的倒影画到帧缓存中
     const reflectionTarget = new Scene.RenderTarget(reflectionFBO, [new Scene.Uniforms({ clip: 0.0 }, [flipTransform])]);
+    // 水底下的东西
+    const underWaterTarget = new Scene.Node([mountainDepthTarget, reflectionTarget]);
 
     // 然后用山的倒影生成的纹理 画水面
     const water = new Scene.Material(
@@ -137,17 +129,7 @@ export default async () => {
       { color: uniform.Vec3([0.7, 0.7, 0.9]), waterNoise: waterText2D, reflection: reflectionFBO, refraction: mountainDepthFbo },
       [waterTransform],
     );
-
-    const combinedTarget = new Scene.RenderTarget(combinedFBO, [plane, mountain, water, sky]);
-
-    // 离屏渲染
-    // 原始图像
-    const brightpass = new Scene.RenderTarget(bloomFbo0, [new Scene.PostProcess(brightpassShader, { texture: combinedFBO },[])]);
-    // 水平卷积处理
-    const hblurpass = new Scene.RenderTarget(bloomFbo1, [new Scene.PostProcess(hblurShader, { texture: bloomFbo0 },[])]);
-    // 竖直卷积处理
-    const vblurpass = new Scene.RenderTarget(bloomFbo0, [new Scene.PostProcess(vblurShader, { texture: bloomFbo1 },[])]);
-    const bloom = new Scene.Node([brightpass, hblurpass, vblurpass]);
+    const webGlRenderTarget = new Scene.WebVrRenderTarget([plane, mountain, water, sky]);
 
     // 开放场景图数据传输
     // Scene.Graph 场景
@@ -162,21 +144,11 @@ export default async () => {
     // can be optimized with a z only shader
 
     // 先画山的倒影， 然后画山 画水
-    const camera: Scene.Camera = new Scene.Camera([
-      new Scene.Uniforms(globaluniform, [mountainDepthTarget, reflectionTarget, combinedTarget]),
-    ]);
-
-    const postprocess = new Scene.PostProcess(postShader, { texture: combinedFBO, bloom: bloomFbo0 },[camera,bloom]);
+    const camera: Scene.Camera = new Scene.Camera([new Scene.Uniforms(globaluniform, [underWaterTarget, webGlRenderTarget])]);
 
     cameraController = new CameraController(inputHandler, camera);
- 
 
-    if (xrSession) {
-      const webXrProcess = new Scene.WebVr([postprocess]);
-      sceneGraph.root.append(webXrProcess);
-    } else {
-      sceneGraph.root.append(postprocess);
-    }
+    sceneGraph.root.append(camera);
 
     camera.position = cameraLocation;
     camera.far = FAR_AWAY * 2;
@@ -202,17 +174,34 @@ export default async () => {
     setCanvasFullScreen(canvasEl, sceneGraph);
   };
 
-  loader.setOnRendy(() => {
+  loader.setOnRendy(async () => {
     clock.setOnTick((t, frame) => {
       globaluniform.time += t;
       cameraController.tick();
       sceneGraph.draw(frame);
     });
-    document.querySelector('button').onclick = () => {
-      WebXr.attempGetWebVrSession(gl).then(xrSession => {
-        prepareScence(xrSession);
 
-        clock.start(xrSession);
+    const enterVrButton = document.querySelector('button');
+
+    const startRender = (xrSession?) => {
+      clock.stop();
+      prepareScence(xrSession);
+
+      clock.start(xrSession);
+    };
+
+    startRender();
+
+    if (navigator.xr && (await navigator.xr.isSessionSupported('immersive-vr'))) {
+      enterVrButton.innerHTML = 'ENTER VR';
+      enterVrButton.disabled = false;
+    }
+
+    enterVrButton.onclick = () => {
+      //  需要用户点击 进入VR 后才可以获取到XRSession
+      (gl as any).makeXRCompatible();
+      navigator.xr.requestSession('immersive-vr').then(xrSession => {
+        startRender(xrSession);
       });
     };
   });

@@ -72,11 +72,18 @@ export class Graph {
       let baseLayer = frame.session.renderState.baseLayer;
       for (let view of poses.views) {
         let i = baseLayer.getViewport(view);
+        this.viewport = {
+          x: i.x,
+          y: i.y,
+          width: i.width,
+          height: i.height,
+        };
         gl.viewport(i.x, i.y, i.width, i.height);
         this.pushView(view);
-        console.log(view);
         this.root.visit(this, frame);
       }
+    } else {
+      this.root.visit(this, frame);
     }
   }
 
@@ -138,7 +145,7 @@ export class RenderTarget extends Node {
 
   exit(scene: Graph) {
     this.fbo.unbind();
-    scene.gl.viewport(0, 0, scene.viewport.width, scene.viewport.height);
+    scene.gl.viewport(scene.viewport.x, scene.viewport.y, scene.viewport.width, scene.viewport.height);
   }
 }
 
@@ -362,16 +369,16 @@ export class Uniforms extends Node {
 
 export class PostProcess extends Node {
   children: Node[];
-  constructor(shader: Shader, uniforms: UniformMap, children: Node[]) {
+  constructor(shader: Shader, uniforms: UniformMap) {
     super();
     shader.setAttribBufferData('position', new Float32Array([-1, 1, 0, -1, -1, 0, 1, -1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0]));
     const mesh = new SimpleMesh();
     const material = new Material(shader, uniforms, [mesh]);
-    this.children = [material, ...children];
+    this.children = [material];
   }
 }
 
-export class WebVr extends Node {
+export class WebVrRenderTarget extends Node {
   enter(scene: Graph, frame) {
     if (frame) {
       const webXR = scene.getWebXR();
@@ -379,9 +386,11 @@ export class WebVr extends Node {
     }
   }
 
-  exit(scene: Graph, _frame) {
-    const webXR = scene.getWebXR();
-    webXR.unbind();
+  exit(scene: Graph, frame) {
+    if (frame) {
+      const webXR = scene.getWebXR();
+      webXR.unbind();
+    }
   }
 }
 
