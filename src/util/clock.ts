@@ -1,22 +1,28 @@
-const createClock = () => {
+const createClock = (webXRSession?) => {
   let isRunning: boolean = false;
   let nowT: number;
   let timeId: number | null = null;
-  let onTick: (t: number) => void = undefined;
+  let onTick: (t: number, frame: any) => void = undefined;
 
-  const start = () => {
+  const start = async (webXRSession?) => {
+    if (isRunning) return;
     isRunning = true;
     nowT = new Date().getTime();
-    const intervalRequest = func => {
-      timeId = setTimeout(func, 16);
-    };
-    const loopFunc = window.requestAnimationFrame || intervalRequest;
-    const f = () => {
+    let loopFunc: Function;
+
+    const f = (time, frame) => {
       if (isRunning) {
-        tick();
+        tick(time, frame);
         loopFunc(f);
       }
     };
+
+    // 定时器
+    const intervalRequest = func => {
+      timeId = setTimeout(func, 16);
+    };
+    loopFunc = webXRSession ? webXRSession.requestAnimationFrame.bind(webXRSession) : window.requestAnimationFrame || intervalRequest;
+
     loopFunc(f);
   };
 
@@ -26,12 +32,17 @@ const createClock = () => {
       clearInterval(timeId);
       timeId = null;
     }
+    if (webXRSession) {
+      webXRSession.end();
+      webXRSession = undefined;
+    }
   };
 
-  const tick = () => {
+  const tick = (_time, frame) => {
     const t = nowT;
     nowT = new Date().getTime();
-    onTick && onTick((nowT - t) / 1000);
+
+    onTick && onTick((nowT - t) / 1000, frame);
   };
 
   const setOnTick = _onTick => {

@@ -13,8 +13,8 @@ export default class CameraController {
 
   tick() {
     const { x, y } = this.input.getOffsetFromElementCenter();
-    this.camera.yaw += x * 0.00008;
-    this.camera.pitch += y * 0.00008;
+    this.camera.y += x * 0.00008;
+    this.camera.x += y * 0.00008;
     const inverseRotation = this.camera.getInverseRotation();
     const direction = vec3.create();
     if (this.input.keys.W) {

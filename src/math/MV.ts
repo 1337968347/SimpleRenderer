@@ -43,7 +43,6 @@ export const vec3 = {
    */
   create: function (vec?) {
     var dest = new Float32Array(3);
-
     if (vec) {
       dest[0] = vec[0];
       dest[1] = vec[1];

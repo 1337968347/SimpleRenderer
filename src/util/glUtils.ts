@@ -5,7 +5,7 @@ export const getGL = (canvas?: HTMLCanvasElement) => {
   if (!globalGL) {
     if (!canvas) canvas = document.querySelector('canvas');
     if (!canvas) return null;
-    globalGL = canvas.getContext('webgl');
+    globalGL = canvas.getContext('webgl2', { xrCompatible: true }) as WebGLRenderingContext;
     globalGL.enable(globalGL.DEPTH_TEST);
     globalGL.enable(globalGL.CULL_FACE);
   }
@@ -167,8 +167,8 @@ export class VertexBufferObject extends BufferObject {
 
 export const setCanvasFullScreen = (canvas: HTMLCanvasElement, scene: Scene.Graph) => {
   const onResize = () => {
-    canvas.width = scene.viewportWidth = window.innerWidth;
-    canvas.height = scene.viewportHeight = window.innerHeight;
+    canvas.width = scene.viewport.width = window.innerWidth;
+    canvas.height = scene.viewport.height = window.innerHeight;
     scene.draw();
   };
   window.addEventListener('resize', onResize, false);
