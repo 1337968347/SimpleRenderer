@@ -207,9 +207,9 @@ export class Camera extends Node {
     if (frame) {
       this.view = scene.getCurrentView();
       this.position = new Float32Array([
-        this.view.transform.position.x,
-        this.view.transform.position.y + 10,
-        this.view.transform.position.z + 200,
+        this.view.transform.position.x * 10,
+        this.view.transform.position.y * 10+10,
+        this.view.transform.position.z * 10 + 200,
       ]);
     }
     const project = this.getProjection(scene);
@@ -235,7 +235,7 @@ export class Camera extends Node {
 
   getInverseRotation() {
     if (this.view) {
-      return this.view.transform.inverse;
+      return this.view.transform.matrix;
     }
     return mat3.toMat4(mat4.toInverseMat3(this.getWorldView()));
   }
@@ -251,8 +251,8 @@ export class Camera extends Node {
   // ModelView
   getWorldView() {
     if (this.view) {
-      mat4.translate(this.view.transform.matrix, vec3.negate(this.position, vec3.create()));
-      return this.view.transform.matrix;
+      mat4.translate(this.view.transform.inverse.matrix, vec3.negate(this.position, vec3.create()));
+      return this.view.transform.inverse.matrix;
     }
 
     // 先平移到标架原点， 然后再旋转
@@ -341,9 +341,8 @@ export class CameraFixTransform extends Transform {
   enter(scene: Graph) {
     scene.pushUniforms();
     // 相机标架
-    const cameraModelView = mat4.inverse(scene.getCamera().getWorldView());
     const aux = mat4.create();
-    mat4.multiply(cameraModelView, this.wordMatrix, aux);
+    mat4.multiply(scene.getCamera().getInverseRotation(), this.wordMatrix, aux);
     scene.uniforms.modelTransform = uniform.Mat4(aux);
   }
 

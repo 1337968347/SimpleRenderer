@@ -149,7 +149,7 @@ export default async () => {
     sceneGraph.setCamera(camera);
     sceneGraph.root.append(camera);
 
-    camera.position = new Float32Array([0, 30, 220]);
+    camera.position = new Float32Array([0, 20, 220]);
     camera.far = FAR_AWAY * 2;
     // 把世界坐标 从 0-1 变成 0- MESHNUM
     // 并且 把坐标原点移到中心
