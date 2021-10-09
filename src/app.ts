@@ -19,9 +19,7 @@ const scale = parseFloat(query.get('d')) || 1.0;
 const GRID_RESOLUTION = 512 * scale * scale,
   // 世界缩放
   GRID_SIZE = 512,
-  FAR_AWAY = 5000;
-
-const cameraLocation = new Float32Array([0, 10, 220]);
+  FAR_AWAY = GRID_SIZE;
 
 export default async () => {
   const canvasEl = document.querySelector('canvas');
@@ -147,10 +145,11 @@ export default async () => {
     const camera: Scene.Camera = new Scene.Camera([new Scene.Uniforms(globaluniform, [underWaterTarget, webGlRenderTarget])]);
 
     cameraController = new CameraController(inputHandler, camera);
-
+    
+    sceneGraph.setCamera(camera);
     sceneGraph.root.append(camera);
 
-    camera.position = cameraLocation;
+    camera.position = new Float32Array([0, 30, 220]);
     camera.far = FAR_AWAY * 2;
     // 把世界坐标 从 0-1 变成 0- MESHNUM
     // 并且 把坐标原点移到中心
@@ -162,11 +161,7 @@ export default async () => {
     mat4.translate(waterTransform.wordMatrix, new Float32Array([-0.5 * FAR_AWAY, 0, -0.5 * FAR_AWAY]));
     mat4.scale(waterTransform.wordMatrix, new Float32Array([FAR_AWAY, 1, FAR_AWAY]));
 
-    mat4.translate(sky.wordMatrix, [0, -200, 0]);
     mat4.scale(sky.wordMatrix, new Float32Array([FAR_AWAY, FAR_AWAY, FAR_AWAY]));
-
-    // 然后乘以 摄像机的齐次坐标
-    planeTransform.camera = camera;
 
     planeTransform.wordMatrix = fixModelView;
 
@@ -175,34 +170,38 @@ export default async () => {
   };
 
   loader.setOnRendy(async () => {
+    // loop函数
     clock.setOnTick((t, frame) => {
       globaluniform.time += t;
       cameraController.tick();
       sceneGraph.draw(frame);
     });
 
-    const enterVrButton = document.querySelector('button');
-
+    // 启动渲染
     const startRender = (xrSession?) => {
       clock.stop();
       prepareScence(xrSession);
-
       clock.start(xrSession);
     };
 
-    startRender();
-
+    const enterVrButton = document.querySelector('button');
+    let supportVr: boolean = false;
     if (navigator.xr && (await navigator.xr.isSessionSupported('immersive-vr'))) {
       enterVrButton.innerHTML = 'ENTER VR';
       enterVrButton.disabled = false;
+      supportVr = true;
     }
 
     enterVrButton.onclick = () => {
       //  需要用户点击 进入VR 后才可以获取到XRSession
-      (gl as any).makeXRCompatible();
-      navigator.xr.requestSession('immersive-vr').then(xrSession => {
-        startRender(xrSession);
-      });
+      if (supportVr) {
+        (gl as any).makeXRCompatible();
+        navigator.xr.requestSession('immersive-vr').then(xrSession => {
+          startRender(xrSession);
+        });
+      } else {
+        startRender();
+      }
     };
   });
 };

@@ -1,4 +1,5 @@
 let XRWebGLLayer = (window as any).XRWebGLLayer;
+let XRRigidTransform = (window as any).XRRigidTransform;
 export class WebXr {
   webXRSession: any;
   baseLayer: any;
@@ -15,6 +16,9 @@ export class WebXr {
     this.baseLayer = new XRWebGLLayer(this.webXRSession, this.gl);
     this.webXRSession.updateRenderState({ baseLayer: this.baseLayer });
     this.XRReferenceSpace = await this.webXRSession.requestReferenceSpace('local');
+    this.XRReferenceSpace = this.XRReferenceSpace.getOffsetReferenceSpace(
+      new XRRigidTransform([10, -110, 200], { x: 0, y: 0, z: 0.0, w: 1.0 }),
+    );
   }
 
   bind() {
@@ -26,5 +30,4 @@ export class WebXr {
     const gl = this.gl;
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
-
 }

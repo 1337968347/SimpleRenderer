@@ -47,6 +47,7 @@ export class Graph {
     height: 480,
   };
   textureUnit: number = 0;
+  camera: Camera;
   webXr: WebXr;
   view: any;
 
@@ -68,9 +69,9 @@ export class Graph {
     gl.clearDepth(1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     if (frame) {
-      const poses = frame.getViewerPose(this.webXr.XRReferenceSpace);
+      const eyes = frame.getViewerPose(this.webXr.XRReferenceSpace);
       let baseLayer = frame.session.renderState.baseLayer;
-      for (let view of poses.views) {
+      for (let view of eyes.views) {
         let i = baseLayer.getViewport(view);
         this.viewport = {
           x: i.x,
@@ -79,7 +80,7 @@ export class Graph {
           height: i.height,
         };
         gl.viewport(i.x, i.y, i.width, i.height);
-        this.pushView(view);
+        this.setCurrentView(view);
         this.root.visit(this, frame);
       }
     } else {
@@ -107,11 +108,20 @@ export class Graph {
     return this.webXr;
   }
 
-  pushView(view: any) {
+  setCamera(camera: Camera) {
+    this.camera = camera;
+  }
+
+  getCamera() {
+    return this.camera;
+  }
+
+  // 对VR来说 每双眼睛需要生成一帧不同的图像
+  setCurrentView(view: any) {
     this.view = view;
   }
 
-  popView() {
+  getCurrentView() {
     return this.view;
   }
 
@@ -180,10 +190,10 @@ export class Camera extends Node {
   position: Float32Array;
   x: number = 0.0;
   y: number = 0.0;
-  z: number = 0.0;
   near: number = 0.5;
   far: number = 5000;
   fov: number = 50;
+  view: any;
 
   constructor(children: Node[]) {
     super();
@@ -195,16 +205,16 @@ export class Camera extends Node {
   enter(scene: Graph, frame) {
     scene.pushUniforms();
     if (frame) {
-      const view = scene.popView();
-      this.position = new Float32Array([view.transform.position.x, view.transform.position.y + 10, view.transform.position.z + 200]);
-      this.x = view.transform.orientation.x;
-      this.y = view.transform.orientation.y;
-      this.z = view.transform.orientation.z;
+      this.view = scene.getCurrentView();
+      this.position = new Float32Array([
+        this.view.transform.position.x,
+        this.view.transform.position.y + 10,
+        this.view.transform.position.z + 200,
+      ]);
     }
     const project = this.getProjection(scene);
     const wordView = this.getWorldView();
-    // modeView Project ;
-    // not most valuable player
+
     const mvp = mat4.create();
     mat4.multiply(project, wordView, mvp);
     scene.uniforms.projection = uniform.Mat4(mvp);
@@ -224,21 +234,31 @@ export class Camera extends Node {
   }
 
   getInverseRotation() {
+    if (this.view) {
+      return this.view.transform.inverse;
+    }
     return mat3.toMat4(mat4.toInverseMat3(this.getWorldView()));
   }
 
   // project
   getProjection(scene: Graph) {
+    if (this.view) {
+      return this.view.projectionMatrix;
+    }
     return mat4.perspective(this.fov, scene.viewport.width / scene.viewport.height, this.near, this.far);
   }
 
   // ModelView
   getWorldView() {
+    if (this.view) {
+      mat4.translate(this.view.transform.matrix, vec3.negate(this.position, vec3.create()));
+      return this.view.transform.matrix;
+    }
+
     // 先平移到标架原点， 然后再旋转
     const matrix = mat4.identity(mat4.create());
     mat4.rotateX(matrix, this.x);
     mat4.rotateY(matrix, this.y);
-    mat4.rotateZ(matrix, this.z);
     mat4.translate(matrix, vec3.negate(this.position, vec3.create()));
     return matrix;
   }
@@ -311,7 +331,6 @@ export class Mirror extends Transform {
 }
 
 export class CameraFixTransform extends Transform {
-  camera: Camera;
   wordMatrix = mat4.create();
 
   constructor(children: Node[]) {
@@ -322,7 +341,7 @@ export class CameraFixTransform extends Transform {
   enter(scene: Graph) {
     scene.pushUniforms();
     // 相机标架
-    const cameraModelView = mat4.inverse(this.camera.getWorldView());
+    const cameraModelView = mat4.inverse(scene.getCamera().getWorldView());
     const aux = mat4.create();
     mat4.multiply(cameraModelView, this.wordMatrix, aux);
     scene.uniforms.modelTransform = uniform.Mat4(aux);
