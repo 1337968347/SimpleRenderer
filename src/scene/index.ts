@@ -206,23 +206,30 @@ export class Camera extends Node {
     scene.pushUniforms();
     if (frame) {
       this.view = scene.getCurrentView();
-      this.position = new Float32Array([
-        this.view.transform.position.x * 10,
-        this.view.transform.position.y * 10+10,
-        this.view.transform.position.z * 10 + 200,
-      ]);
     }
+    const mergePosition = this.getMergePosition();
     const project = this.getProjection(scene);
     const wordView = this.getWorldView();
-
     const mvp = mat4.create();
     mat4.multiply(project, wordView, mvp);
     scene.uniforms.projection = uniform.Mat4(mvp);
-    scene.uniforms.eye = uniform.Vec3(new Float32Array(this.position));
+    scene.uniforms.eye = uniform.Vec3(mergePosition);
   }
 
   exit(scene: Graph) {
     scene.popUniforms();
+  }
+
+  getMergePosition() {
+    if (this.view) {
+      const demo = new Float32Array([
+        this.view.transform.position.x * 30 + this.position[0],
+        this.view.transform.position.y * 30 + this.position[1],
+        this.view.transform.position.z * 30 + this.position[2],
+      ]);
+      return demo;
+    }
+    return new Float32Array(this.position);
   }
 
   project(point: Float32Array, scene: Graph) {
@@ -235,7 +242,7 @@ export class Camera extends Node {
 
   getInverseRotation() {
     if (this.view) {
-      return this.view.transform.matrix;
+      return mat3.toMat4(mat4.toInverseMat3(this.view.transform.matrix));
     }
     return mat3.toMat4(mat4.toInverseMat3(this.getWorldView()));
   }
@@ -250,8 +257,10 @@ export class Camera extends Node {
 
   // ModelView
   getWorldView() {
+    const mergePosition = this.getMergePosition();
     if (this.view) {
-      mat4.translate(this.view.transform.inverse.matrix, vec3.negate(this.position, vec3.create()));
+      mat4.translate(this.view.transform.inverse.matrix, vec3.negate(mergePosition, vec3.create()));
+
       return this.view.transform.inverse.matrix;
     }
 
@@ -259,7 +268,7 @@ export class Camera extends Node {
     const matrix = mat4.identity(mat4.create());
     mat4.rotateX(matrix, this.x);
     mat4.rotateY(matrix, this.y);
-    mat4.translate(matrix, vec3.negate(this.position, vec3.create()));
+    mat4.translate(matrix, vec3.negate(mergePosition, vec3.create()));
     return matrix;
   }
 }

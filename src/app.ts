@@ -52,8 +52,8 @@ export default async () => {
   let sceneGraph: Scene.Graph;
   const gl: WebGLRenderingContext = getGL();
   const globaluniform = {
-    sunColor: uniform.Vec3([1.0, 1.0, 1.0]),
-    sunDirection: uniform.Vec3(vec3.normalize(new Float32Array([0.0, 0.4, -1.0]))),
+    sunColor: uniform.Vec3([1.1, 1.0, 1.0]),
+    sunDirection: uniform.Vec3(vec3.normalize(new Float32Array([0.0, 0.6, -1.0]))),
     skyColor: uniform.Vec3([0.1, 0.15, 0.45]),
     clip: 1000,
     time: 0.0,
@@ -119,7 +119,7 @@ export default async () => {
     // 先把山的倒影画到帧缓存中
     const reflectionTarget = new Scene.RenderTarget(reflectionFBO, [new Scene.Uniforms({ clip: 0.0 }, [flipTransform])]);
     // 水底下的东西
-    const underWaterTarget = new Scene.Node([mountainDepthTarget, reflectionTarget]);
+    const underWaterTarget = new Scene.Node([reflectionTarget,mountainDepthTarget]);
 
     // 然后用山的倒影生成的纹理 画水面
     const water = new Scene.Material(
@@ -149,7 +149,7 @@ export default async () => {
     sceneGraph.setCamera(camera);
     sceneGraph.root.append(camera);
 
-    camera.position = new Float32Array([0, 20, 220]);
+    camera.position = new Float32Array([0, 10, 200]);
     camera.far = FAR_AWAY * 2;
     // 把世界坐标 从 0-1 变成 0- MESHNUM
     // 并且 把坐标原点移到中心
