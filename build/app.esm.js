@@ -1,1 +1,1 @@
-import{p as r,g as s,b as a}from"./p-da9dcee3.js";(()=>{const s=import.meta.url,a={};return""!==s&&(a.resourcesUrl=new URL(".",s).href),r(a)})().then((r=>(s(),a([],r))));
+import{p as r,g as s,b as o}from"./p-f062c227.js";(()=>{const s=import.meta.url,o={};return""!==s&&(o.resourcesUrl=new URL(".",s).href),r(o)})().then((r=>(s(),o([],r))));
