@@ -33,6 +33,145 @@ export const gird = (size: number) => {
   return buffer;
 };
 
+// 屏幕上一个正方形
+export const screen_quad = () => {
+  return new Float32Array([
+    -1, 1, 0, -1, -1, 0, 1, -1, 0,
+
+    -1, 1, 0, 1, -1, 0, 1, 1, 0,
+  ]);
+};
+
+export const cute = (scale?) => {
+  scale = scale || 1;
+  return new Float32Array([
+    // back
+    scale,
+    scale,
+    scale,
+    scale,
+    -scale,
+    scale,
+    -scale,
+    -scale,
+    scale,
+
+    scale,
+    scale,
+    scale,
+    -scale,
+    -scale,
+    scale,
+    -scale,
+    scale,
+    scale,
+
+    // front
+    -scale,
+    scale,
+    -scale,
+    -scale,
+    -scale,
+    -scale,
+    scale,
+    scale,
+    -scale,
+
+    scale,
+    scale,
+    -scale,
+    -scale,
+    -scale,
+    -scale,
+    scale,
+    -scale,
+    -scale,
+    // left
+    -scale,
+    scale,
+    scale,
+    -scale,
+    -scale,
+    -scale,
+    -scale,
+    scale,
+    -scale,
+
+    -scale,
+    scale,
+    scale,
+    -scale,
+    -scale,
+    scale,
+    -scale,
+    -scale,
+    -scale,
+
+    // right
+    scale,
+    scale,
+    scale,
+    scale,
+    scale,
+    -scale,
+    scale,
+    -scale,
+    -scale,
+
+    scale,
+    scale,
+    scale,
+    scale,
+    -scale,
+    -scale,
+    scale,
+    -scale,
+    scale,
+
+    // top
+    scale,
+    scale,
+    scale,
+    -scale,
+    scale,
+    scale,
+    -scale,
+    scale,
+    -scale,
+
+    scale,
+    scale,
+    -scale,
+    scale,
+    scale,
+    scale,
+    -scale,
+    scale,
+    -scale,
+
+    // bottom
+    -scale,
+    -scale,
+    -scale,
+    -scale,
+    -scale,
+    scale,
+    scale,
+    -scale,
+    scale,
+
+    -scale,
+    -scale,
+    -scale,
+    scale,
+    -scale,
+    scale,
+    scale,
+    -scale,
+    -scale,
+  ]);
+};
+
 // 解析Obj格式
 export const parseObj = (text: string) => {
   // because indices are base 1 let's just fill in the 0th data
@@ -109,3 +248,5 @@ export const parseObj = (text: string) => {
     normal: webglVertexData[2],
   };
 };
+
+export default { gird, cute, parseObj };
