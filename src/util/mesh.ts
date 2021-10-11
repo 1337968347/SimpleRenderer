@@ -33,6 +33,21 @@ export const gird = (size: number) => {
   return buffer;
 };
 
+export const wireFrame = (input: Float32Array) => {
+  const output = new Float32Array(input.length * 2);
+  const triangles = input.length / 9;
+  for (var t = 0; t < triangles; t++) {
+    for (var v1 = 0; v1 < 3; v1++) {
+      var v2 = (v1 + 1) % 3;
+      for (var i = 0; i < 3; i++) {
+        output[t * 18 + v1 * 3 + i] = input[t * 9 + v1 * 3 + i];
+        output[t * 18 + v1 * 3 + 9 + i] = input[t * 9 + v2 * 3 + i];
+      }
+    }
+  }
+  return output;
+};
+
 // 屏幕上一个正方形
 export const screen_quad = () => {
   return new Float32Array([
