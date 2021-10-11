@@ -232,9 +232,9 @@ export class Camera extends Node {
   getMergePosition() {
     if (this.view) {
       return new Float32Array([
-        this.view.transform.position.x  + this.position[0],
-        this.view.transform.position.y  + this.position[1],
-        this.view.transform.position.z  + this.position[2],
+        this.view.transform.position.x * 200 + this.position[0],
+        this.view.transform.position.y * 200 + this.position[1],
+        this.view.transform.position.z * 200 + this.position[2],
       ]);
     }
     return new Float32Array(this.position);
@@ -264,8 +264,8 @@ export class Camera extends Node {
   getWorldView() {
     const mergePosition = this.getMergePosition();
     if (this.view) {
-      const modeView = mat4.create()
-      mat4.translate(mat3.toMat4(mat4.toInverseMat3(this.view.transform.matrix)), vec3.negate(mergePosition, vec3.create()),modeView);
+      const modeView = mat4.create();
+      mat4.translate(mat3.toMat4(mat4.toInverseMat3(this.view.transform.matrix)), vec3.negate(mergePosition, vec3.create()), modeView);
 
       return modeView;
     }
