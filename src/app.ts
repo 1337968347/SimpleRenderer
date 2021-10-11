@@ -19,7 +19,7 @@ const scale = parseFloat(query.get('d')) || 1.0;
 const GRID_RESOLUTION = 512 * scale * scale,
   // 世界缩放
   GRID_SIZE = 512,
-  FAR_AWAY = GRID_SIZE;
+  FAR_AWAY = 10000;
 
 export default async () => {
   const canvasEl = document.querySelector('canvas');
@@ -48,6 +48,14 @@ export default async () => {
     'obj/seahawk.obj',
   ]);
 
+  const enterVrButton = document.querySelector('button');
+  let supportVr: boolean = false;
+  if (navigator.xr && (await navigator.xr.isSessionSupported('immersive-vr'))) {
+    enterVrButton.innerHTML = 'ENTER VR';
+    enterVrButton.disabled = false;
+    supportVr = true;
+  }
+
   let cameraController: CameraController;
   let sceneGraph: Scene.Graph;
   const gl: WebGLRenderingContext = getGL();
@@ -59,7 +67,7 @@ export default async () => {
     time: 0.0,
   };
 
-  const prepareScence = (xrSession?) => {
+  const prepareScence = (xrSession?: XRSession) => {
     sceneGraph = new Scene.Graph(xrSession);
 
     gl.clearColor(1.0, 1.0, 1.0, FAR_AWAY);
@@ -119,7 +127,7 @@ export default async () => {
     // 先把山的倒影画到帧缓存中
     const reflectionTarget = new Scene.RenderTarget(reflectionFBO, [new Scene.Uniforms({ clip: 0.0 }, [flipTransform])]);
     // 水底下的东西
-    const underWaterTarget = new Scene.Node([reflectionTarget,mountainDepthTarget]);
+    const underWaterTarget = new Scene.Node([reflectionTarget, mountainDepthTarget]);
 
     // 然后用山的倒影生成的纹理 画水面
     const water = new Scene.Material(
@@ -145,12 +153,12 @@ export default async () => {
     const camera: Scene.Camera = new Scene.Camera([new Scene.Uniforms(globaluniform, [underWaterTarget, webGlRenderTarget])]);
 
     cameraController = new CameraController(inputHandler, camera);
-    
+
     sceneGraph.setCamera(camera);
     sceneGraph.root.append(camera);
 
+    camera.setProjection(0.1, FAR_AWAY * 2, sceneGraph.getWebXR());
     camera.position = new Float32Array([0, 10, 200]);
-    camera.far = FAR_AWAY * 2;
     // 把世界坐标 从 0-1 变成 0- MESHNUM
     // 并且 把坐标原点移到中心
     mat4.translate(mountainTransform.wordMatrix, new Float32Array([-0.5 * GRID_SIZE, -40, -0.5 * GRID_SIZE]));
@@ -171,32 +179,23 @@ export default async () => {
 
   loader.setOnRendy(async () => {
     // loop函数
-    clock.setOnTick((t, frame) => {
+    clock.setOnTick((t: number, frame: XRFrame) => {
       globaluniform.time += t;
       cameraController.tick();
       sceneGraph.draw(frame);
     });
 
     // 启动渲染
-    const startRender = (xrSession?) => {
+    const startRender = (xrSession?: XRSession) => {
       clock.stop();
       prepareScence(xrSession);
       clock.start(xrSession);
     };
 
-    const enterVrButton = document.querySelector('button');
-    let supportVr: boolean = false;
-    if (navigator.xr && (await navigator.xr.isSessionSupported('immersive-vr'))) {
-      enterVrButton.innerHTML = 'ENTER VR';
-      enterVrButton.disabled = false;
-      supportVr = true;
-    }
-
     enterVrButton.onclick = () => {
       //  需要用户点击 进入VR 后才可以获取到XRSession
       if (supportVr) {
-        (gl as any).makeXRCompatible();
-        navigator.xr.requestSession('immersive-vr').then(xrSession => {
+        navigator.xr.requestSession('immersive-vr').then((xrSession: XRSession) => {
           startRender(xrSession);
         });
       } else {

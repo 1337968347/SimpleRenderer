@@ -1,8 +1,7 @@
-let XRWebGLLayer = (window as any).XRWebGLLayer;
 export class WebXr {
-  webXRSession: any;
-  baseLayer: any;
-  XRReferenceSpace: any;
+  webXRSession: XRSession;
+  baseLayer: XRWebGLLayer;
+  XRReferenceSpace: XRReferenceSpace;
   gl: WebGLRenderingContext;
 
   constructor(webXRSession, gl: WebGLRenderingContext) {
@@ -13,9 +12,11 @@ export class WebXr {
 
   async init() {
     this.baseLayer = new XRWebGLLayer(this.webXRSession, this.gl);
-    this.webXRSession.updateRenderState({ baseLayer: this.baseLayer });
     this.XRReferenceSpace = await this.webXRSession.requestReferenceSpace('local');
-    
+  }
+
+  setProjection(near: number, far: number) {
+    this.webXRSession.updateRenderState({ baseLayer: this.baseLayer, depthFar: far, depthNear: near });
   }
 
   bind() {

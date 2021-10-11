@@ -8,11 +8,11 @@ import { WebXr } from '../util/webXR';
 export class Node {
   children: Node[] = [];
 
-  constructor(childrenP: any[] = []) {
+  constructor(childrenP: Node[] = []) {
     this.children = childrenP;
   }
 
-  visit(scene: Graph, frame?) {
+  visit(scene: Graph, frame?: XRFrame) {
     this.enter(scene, frame);
     for (let i = 0; i < this.children.length; i++) {
       this.children[i].visit(scene, frame);
@@ -21,7 +21,7 @@ export class Node {
   }
 
   // overwrite
-  exit(_scene: Graph, _frame?) {
+  exit(_scene: Graph, _frame?: XRFrame) {
     // console.log(scene);
   }
 
@@ -30,7 +30,7 @@ export class Node {
   }
 
   // overwrite
-  enter(_scene: Graph, _frame?) {
+  enter(_scene: Graph, _frame?: XRFrame) {
     // console.log(scene);
   }
 }
@@ -202,7 +202,7 @@ export class Camera extends Node {
     this.position = vec3.create([0, 0, 0]);
   }
 
-  enter(scene: Graph, frame) {
+  enter(scene: Graph, frame: XRFrame) {
     scene.pushUniforms();
     if (frame) {
       this.view = scene.getCurrentView();
@@ -220,14 +220,22 @@ export class Camera extends Node {
     scene.popUniforms();
   }
 
+  setProjection(near: number, far: number, webXR?: WebXr) {
+    this.near = near;
+    this.far = far;
+    if (webXR) {
+      webXR.setProjection(near, far);
+    }
+  }
+
+  // VR 移动的距离加手柄移动的距离
   getMergePosition() {
     if (this.view) {
-      const demo = new Float32Array([
+      return new Float32Array([
         this.view.transform.position.x * 30 + this.position[0],
         this.view.transform.position.y * 30 + this.position[1],
         this.view.transform.position.z * 30 + this.position[2],
       ]);
-      return demo;
     }
     return new Float32Array(this.position);
   }
@@ -406,14 +414,14 @@ export class PostProcess extends Node {
 }
 
 export class WebVrRenderTarget extends Node {
-  enter(scene: Graph, frame) {
+  enter(scene: Graph, frame: XRFrame) {
     if (frame) {
       const webXR = scene.getWebXR();
       webXR.bind();
     }
   }
 
-  exit(scene: Graph, frame) {
+  exit(scene: Graph, frame: XRFrame) {
     if (frame) {
       const webXR = scene.getWebXR();
       webXR.unbind();
