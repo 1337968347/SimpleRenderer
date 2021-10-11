@@ -8,11 +8,11 @@ import { WebXr } from '../util/webXR';
 export class Node {
   children: Node[] = [];
 
-  constructor(childrenP: any[] = []) {
+  constructor(childrenP: Node[] = []) {
     this.children = childrenP;
   }
 
-  visit(scene: Graph, frame?) {
+  visit(scene: Graph, frame?: XRFrame) {
     this.enter(scene, frame);
     for (let i = 0; i < this.children.length; i++) {
       this.children[i].visit(scene, frame);
@@ -21,7 +21,7 @@ export class Node {
   }
 
   // overwrite
-  exit(_scene: Graph, _frame?) {
+  exit(_scene: Graph, _frame?: XRFrame) {
     // console.log(scene);
   }
 
@@ -30,7 +30,7 @@ export class Node {
   }
 
   // overwrite
-  enter(_scene: Graph, _frame?) {
+  enter(_scene: Graph, _frame?: XRFrame) {
     // console.log(scene);
   }
 }
@@ -202,27 +202,42 @@ export class Camera extends Node {
     this.position = vec3.create([0, 0, 0]);
   }
 
-  enter(scene: Graph, frame) {
+  enter(scene: Graph, frame: XRFrame) {
     scene.pushUniforms();
     if (frame) {
       this.view = scene.getCurrentView();
-      this.position = new Float32Array([
-        this.view.transform.position.x,
-        this.view.transform.position.y + 10,
-        this.view.transform.position.z + 200,
-      ]);
     }
+    const mergePosition = this.getMergePosition();
     const project = this.getProjection(scene);
     const wordView = this.getWorldView();
-
     const mvp = mat4.create();
     mat4.multiply(project, wordView, mvp);
     scene.uniforms.projection = uniform.Mat4(mvp);
-    scene.uniforms.eye = uniform.Vec3(new Float32Array(this.position));
+    scene.uniforms.eye = uniform.Vec3(mergePosition);
   }
 
   exit(scene: Graph) {
     scene.popUniforms();
+  }
+
+  setProjection(near: number, far: number, webXR?: WebXr) {
+    this.near = near;
+    this.far = far;
+    if (webXR) {
+      webXR.setProjection(near, far);
+    }
+  }
+
+  // VR 移动的距离加手柄移动的距离
+  getMergePosition() {
+    if (this.view) {
+      return new Float32Array([
+        this.view.transform.position.x * 30 + this.position[0],
+        this.view.transform.position.y * 30 + this.position[1],
+        this.view.transform.position.z * 30 + this.position[2],
+      ]);
+    }
+    return new Float32Array(this.position);
   }
 
   project(point: Float32Array, scene: Graph) {
@@ -235,7 +250,7 @@ export class Camera extends Node {
 
   getInverseRotation() {
     if (this.view) {
-      return this.view.transform.inverse;
+      return mat3.toMat4(mat4.toInverseMat3(this.view.transform.matrix));
     }
     return mat3.toMat4(mat4.toInverseMat3(this.getWorldView()));
   }
@@ -250,16 +265,18 @@ export class Camera extends Node {
 
   // ModelView
   getWorldView() {
+    const mergePosition = this.getMergePosition();
     if (this.view) {
-      mat4.translate(this.view.transform.matrix, vec3.negate(this.position, vec3.create()));
-      return this.view.transform.matrix;
+      mat4.translate(this.view.transform.inverse.matrix, vec3.negate(mergePosition, vec3.create()));
+
+      return this.view.transform.inverse.matrix;
     }
 
     // 先平移到标架原点， 然后再旋转
     const matrix = mat4.identity(mat4.create());
     mat4.rotateX(matrix, this.x);
     mat4.rotateY(matrix, this.y);
-    mat4.translate(matrix, vec3.negate(this.position, vec3.create()));
+    mat4.translate(matrix, vec3.negate(mergePosition, vec3.create()));
     return matrix;
   }
 }
@@ -341,9 +358,8 @@ export class CameraFixTransform extends Transform {
   enter(scene: Graph) {
     scene.pushUniforms();
     // 相机标架
-    const cameraModelView = mat4.inverse(scene.getCamera().getWorldView());
     const aux = mat4.create();
-    mat4.multiply(cameraModelView, this.wordMatrix, aux);
+    mat4.multiply(scene.getCamera().getInverseRotation(), this.wordMatrix, aux);
     scene.uniforms.modelTransform = uniform.Mat4(aux);
   }
 
@@ -398,14 +414,14 @@ export class PostProcess extends Node {
 }
 
 export class WebVrRenderTarget extends Node {
-  enter(scene: Graph, frame) {
+  enter(scene: Graph, frame: XRFrame) {
     if (frame) {
       const webXR = scene.getWebXR();
       webXR.bind();
     }
   }
 
-  exit(scene: Graph, frame) {
+  exit(scene: Graph, frame: XRFrame) {
     if (frame) {
       const webXR = scene.getWebXR();
       webXR.unbind();

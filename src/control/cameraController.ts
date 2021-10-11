@@ -27,7 +27,7 @@ export default class CameraController {
     } else if (this.input.keys.D) {
       direction[0] = 1;
     }
-    vec3.scale(vec3.normalize(direction), 1.0);
+    vec3.normalize(direction)
     // 先获取方向, 然后在这个方向上平移
     mat4.multiplyVec3(inverseRotation, direction);
     vec3.add(this.camera.position, direction);

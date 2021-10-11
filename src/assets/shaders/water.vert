@@ -7,7 +7,6 @@ uniform mat4 modelTransform;
 
 varying vec3 worldPosition;
 varying float depth;
-varying vec3 surfaceNormal;
 varying vec4 projected;
 
 vec4 getNoise(vec2 uv) {

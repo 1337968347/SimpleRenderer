@@ -58,11 +58,11 @@ void main() {
   float reflectance = rf0 + (1.0 - rf0) * pow((1.0 - theta1), 5.0);
   // phong光照反射
   // 漫反射
-  vec3 diffuseColor = max(dot(sunDirection, surfaceNormal), 0.0) * sunColor * 3.0;
+  vec3 diffuseColor = max(dot(sunDirection, surfaceNormal), 0.0) * sunColor * 1.5;
   // 镜面反射
   vec3 reflectionDirection = normalize(reflect(-sunDirection, surfaceNormal));
   float reflecttionDot = max(0.0, dot(eyeNormal, reflectionDirection));
-  vec3 specularColor = pow(reflecttionDot, 128.0) * sunColor * 5.0;
+  vec3 specularColor = pow(reflecttionDot, 128.0) * sunColor * 10.0;
 
   vec3 finalColor = mix(refractionColor * diffuseColor, reflectionSample * (diffuseColor + specularColor), reflectance);
   gl_FragColor = vec4(finalColor, depth);
