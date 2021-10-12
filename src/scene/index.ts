@@ -49,7 +49,7 @@ export class Graph {
   textureUnit: number = 0;
   camera: Camera;
   webXr: WebXr;
-  view: any;
+  view: XRView;
 
   constructor(xRSession) {
     this.gl = getGL();
@@ -193,7 +193,7 @@ export class Camera extends Node {
   near: number = 0.5;
   far: number = 5000;
   fov: number = 50;
-  view: any;
+  view: XRView;
 
   constructor(children: Node[]) {
     super();
@@ -232,9 +232,9 @@ export class Camera extends Node {
   getMergePosition() {
     if (this.view) {
       return new Float32Array([
-        this.view.transform.position.x * 30 + this.position[0],
-        this.view.transform.position.y * 30 + this.position[1],
-        this.view.transform.position.z * 30 + this.position[2],
+        this.view.transform.position.x * 200 + this.position[0],
+        this.view.transform.position.y * 200 + this.position[1],
+        this.view.transform.position.z * 200 + this.position[2],
       ]);
     }
     return new Float32Array(this.position);
@@ -249,9 +249,6 @@ export class Camera extends Node {
   }
 
   getInverseRotation() {
-    if (this.view) {
-      return mat3.toMat4(mat4.toInverseMat3(this.view.transform.matrix));
-    }
     return mat3.toMat4(mat4.toInverseMat3(this.getWorldView()));
   }
 
@@ -267,9 +264,10 @@ export class Camera extends Node {
   getWorldView() {
     const mergePosition = this.getMergePosition();
     if (this.view) {
-      mat4.translate(this.view.transform.inverse.matrix, vec3.negate(mergePosition, vec3.create()));
+      const modeView = mat4.create();
+      mat4.translate(mat3.toMat4(mat4.toInverseMat3(this.view.transform.matrix)), vec3.negate(mergePosition, vec3.create()), modeView);
 
-      return this.view.transform.inverse.matrix;
+      return modeView;
     }
 
     // 先平移到标架原点， 然后再旋转
@@ -359,7 +357,7 @@ export class CameraFixTransform extends Transform {
     scene.pushUniforms();
     // 相机标架
     const aux = mat4.create();
-    mat4.multiply(scene.getCamera().getInverseRotation(), this.wordMatrix, aux);
+    mat4.multiply(mat4.inverse(scene.getCamera().getWorldView()), this.wordMatrix, aux);
     scene.uniforms.modelTransform = uniform.Mat4(aux);
   }
 
