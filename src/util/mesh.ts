@@ -264,4 +264,4 @@ export const parseObj = (text: string) => {
   };
 };
 
-export default { gird, cute, parseObj };
+export default { gird, cute, parseObj, wireFrame, screen_quad };
