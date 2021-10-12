@@ -193,7 +193,7 @@ export default async () => {
       prepareScence(xrSession);
       clock.start(xrSession);
     };
-
+    document.body.removeChild(document.querySelector('span'));
     enterVrButton.onclick = () => {
       //  需要用户点击 进入VR 后才可以获取到XRSession
       if (supportVr) {

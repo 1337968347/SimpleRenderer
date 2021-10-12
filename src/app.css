@@ -35,3 +35,15 @@ button {
   color: white;
   font-weight: bold;
 }
+
+span{
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 20%;
+  z-index: 111;
+  border: none;
+  padding: 3px 15px;
+  font-weight: bold;
+  font-size: 30px;
+}
