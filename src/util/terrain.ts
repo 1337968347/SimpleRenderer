@@ -12,6 +12,6 @@ export class Terrain {
     this.camera = camera;
     this.resolution = resolution;
     this.depth = depth;
-    this.mesh = new Scene.SimpleMesh()
+    // this.mesh = new Scene.SimpleMesh()
   }
 }

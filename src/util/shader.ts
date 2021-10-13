@@ -1,4 +1,4 @@
-import { getGL, VertexBufferObject, BufferObject } from './glUtils';
+import { getGL } from './glUtils';
 import { UniformMap } from './uniform';
 /**
  * 创建一个Shader
@@ -49,7 +49,6 @@ const makeProgram = (gl: WebGLRenderingContext, vertexSource: string, fragmentSo
 export class Shader {
   gl: WebGLRenderingContext;
   program: WebGLProgram;
-  attributes: { [key: string]: BufferObject } = {};
   uniformLocations: { [key: string]: WebGLUniformLocation } = {};
 
   constructor(vertexSource: string, fragmentSource: string) {
@@ -82,17 +81,6 @@ export class Shader {
         value.uniform(location);
       }
     }
-  }
-
-  /**
-   * 初始化设置attribute 数据时使用
-   */
-  setAttribBufferData(name: string, vertexData: Float32Array) {
-    this.use();
-    const bufferObject = name == 'position' ? new VertexBufferObject() : new BufferObject();
-    this.attributes[name] = bufferObject;
-    const location = this.getAttribLocation(name);
-    bufferObject.initBufferData(location, vertexData);
   }
 
   getAttribLocation(name: string) {

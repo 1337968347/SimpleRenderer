@@ -1,7 +1,7 @@
 import * as Scene from './scene';
 import * as uniform from './util/uniform';
 import createClock from './util/clock';
-import { setCanvasFullScreen, Texture2D, FrameBufferObject, getGL } from './util/glUtils';
+import { setCanvasFullScreen, Texture2D, FrameBufferObject, getGL, VertexBufferObject } from './util/glUtils';
 import { ShaderManager } from './util/shader';
 import Loader from './loader';
 import Mesh from './util/mesh';
@@ -78,12 +78,11 @@ export default async () => {
     const waterShader = shaderManager.get('water.vert', 'water.frag');
     const skyShader = shaderManager.get('sky.vert', 'sky.frag');
 
-    // 顶点数据
-    mountainShader.setAttribBufferData('position', Mesh.gird(GRID_RESOLUTION));
-    waterShader.setAttribBufferData('position', Mesh.gird(100));
+    const moutainVbo = new VertexBufferObject(Mesh.gird(GRID_RESOLUTION));
+    const waterVbo = new VertexBufferObject(Mesh.gird(100));
 
-    const mountainTransform = new Scene.Transform([new Scene.SimpleMesh()]);
-    const waterTransform = new Scene.Transform([new Scene.SimpleMesh()]);
+    const mountainTransform = new Scene.Transform([new Scene.SimpleMesh({ position: moutainVbo })]);
+    const waterTransform = new Scene.Transform([new Scene.SimpleMesh({ position: waterVbo })]);
 
     const mountain = new Scene.Material(
       mountainShader,
