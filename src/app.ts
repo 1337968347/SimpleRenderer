@@ -1,15 +1,13 @@
 import * as Scene from './scene';
 import * as uniform from './util/uniform';
 import createClock from './util/clock';
-import { setCanvasFullScreen, Texture2D, FrameBufferObject, getGL, VertexBufferObject } from './util/glUtils';
+import { setCanvasFullScreen, Texture2D, getGL, VertexBufferObject } from './util/glUtils';
 import { ShaderManager } from './util/shader';
 import Loader from './loader';
 import Mesh from './util/mesh';
 import CameraController from './control/cameraController';
 import InputHandler from './control/input';
 import { mat4, vec3 } from './math/MV';
-
-let navigator: any = window.navigator;
 
 const query = new URLSearchParams(location.search);
 
@@ -38,19 +36,7 @@ export default async () => {
 
     'shaders/terrain.vert',
     'shaders/terrain.frag',
-    'shaders/screen.vert',
-    'shaders/screen.frag',
-    'shaders/sky.vert',
-    'shaders/sky.frag',
   ]);
-
-  const enterVrButton = document.querySelector('button');
-  let supportVr: boolean = false;
-  if (navigator.xr && (await navigator.xr.isSessionSupported('immersive-vr'))) {
-    enterVrButton.innerHTML = 'ENTER VR';
-    enterVrButton.disabled = false;
-    supportVr = true;
-  }
 
   let cameraController: CameraController;
   let sceneGraph: Scene.Graph;
@@ -58,7 +44,7 @@ export default async () => {
   const globaluniform = {
     sunColor: uniform.Vec3([1.1, 1.0, 1.0]),
     sunDirection: uniform.Vec3(vec3.normalize(new Float32Array([0.0, 0.6, -1.0]))),
-    skyColor: uniform.Vec3([0.1, 0.15, 0.45]),
+    skyColor: uniform.Vec3([0.3, 0.3, 0.45]),
     clip: 1000,
     time: 0.0,
   };
@@ -76,7 +62,6 @@ export default async () => {
     // 着色器
     const mountainShader = shaderManager.get('terrain.vert', 'terrain.frag');
     const waterShader = shaderManager.get('water.vert', 'water.frag');
-    const skyShader = shaderManager.get('sky.vert', 'sky.frag');
 
     const moutainVbo = new VertexBufferObject(Mesh.gird(GRID_RESOLUTION));
     const waterVbo = new VertexBufferObject(Mesh.gird(100));
@@ -95,27 +80,9 @@ export default async () => {
       },
       [mountainTransform],
     );
-    const sky = new Scene.Transform([new Scene.Skybox(skyShader, { horizonColor: uniform.Vec3([0.3, 0.6, 1.2]) })]);
-    // 倒影
-    const flipTransform = new Scene.Mirror([mountain, sky]);
-    // 水底的山
-    const mountainDepthFbo = new FrameBufferObject(1024 * scale, 512 * scale);
-    // 水面的倒影
-    const reflectionFBO = new FrameBufferObject(1024 * scale, 1024 * scale);
-
-    const mountainDepthTarget = new Scene.RenderTarget(mountainDepthFbo, [new Scene.Uniforms({ clip: 0.0 }, [mountain])]);
-    // 先把山的倒影画到帧缓存中
-    const reflectionTarget = new Scene.RenderTarget(reflectionFBO, [new Scene.Uniforms({ clip: 0.0 }, [flipTransform])]);
-    // 水底下的东西
-    const underWaterTarget = new Scene.Node([reflectionTarget, mountainDepthTarget]);
 
     // 然后用山的倒影生成的纹理 画水面
-    const water = new Scene.Material(
-      waterShader,
-      { color: uniform.Vec3([0.7, 0.7, 0.9]), waterNoise: waterText2D, reflection: reflectionFBO, refraction: mountainDepthFbo },
-      [waterTransform],
-    );
-    const webGlRenderTarget = new Scene.WebVrRenderTarget([mountain, water, sky]);
+    const water = new Scene.Material(waterShader, { color: uniform.Vec3([0.2, 0.3, 0.3]), waterNoise: waterText2D }, [waterTransform]);
 
     // 开放场景图数据传输
     // Scene.Graph 场景
@@ -130,7 +97,7 @@ export default async () => {
     // can be optimized with a z only shader
 
     // 先画山的倒影， 然后画山 画水
-    const camera: Scene.Camera = new Scene.Camera([new Scene.Uniforms(globaluniform, [underWaterTarget, webGlRenderTarget])]);
+    const camera: Scene.Camera = new Scene.Camera([new Scene.Uniforms(globaluniform, [mountain, water])]);
 
     cameraController = new CameraController(inputHandler, camera);
 
@@ -143,13 +110,9 @@ export default async () => {
     // 并且 把坐标原点移到中心
     mat4.translate(mountainTransform.wordMatrix, new Float32Array([-0.5 * GRID_SIZE, -40, -0.5 * GRID_SIZE]));
     mat4.scale(mountainTransform.wordMatrix, new Float32Array([GRID_SIZE, 100, GRID_SIZE]));
-    // 倒影
-    mat4.scale(flipTransform.wordMatrix, new Float32Array([1.0, -1.0, 1.0]));
 
     mat4.translate(waterTransform.wordMatrix, new Float32Array([-0.5 * FAR_AWAY, 0, -0.5 * FAR_AWAY]));
     mat4.scale(waterTransform.wordMatrix, new Float32Array([FAR_AWAY, 1, FAR_AWAY]));
-
-    mat4.scale(sky.wordMatrix, new Float32Array([FAR_AWAY, FAR_AWAY, FAR_AWAY]));
 
     camera.far = FAR_AWAY * 2;
     setCanvasFullScreen(canvasEl, sceneGraph);
@@ -163,22 +126,7 @@ export default async () => {
       sceneGraph.draw(frame);
     });
 
-    // 启动渲染
-    const startRender = (xrSession?: XRSession) => {
-      clock.stop();
-      prepareScence(xrSession);
-      clock.start(xrSession);
-    };
-    document.body.removeChild(document.querySelector('span'));
-    enterVrButton.onclick = () => {
-      //  需要用户点击 进入VR 后才可以获取到XRSession
-      if (supportVr) {
-        navigator.xr.requestSession('immersive-vr').then((xrSession: XRSession) => {
-          startRender(xrSession);
-        });
-      } else {
-        startRender();
-      }
-    };
+    prepareScence();
+    clock.start();
   });
 };
