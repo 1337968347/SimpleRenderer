@@ -33,6 +33,160 @@ export const gird = (size: number) => {
   return buffer;
 };
 
+export const wireFrame = (input: Float32Array) => {
+  const output = new Float32Array(input.length * 2);
+  const triangles = input.length / 9;
+  for (var t = 0; t < triangles; t++) {
+    for (var v1 = 0; v1 < 3; v1++) {
+      var v2 = (v1 + 1) % 3;
+      for (var i = 0; i < 3; i++) {
+        output[t * 18 + v1 * 3 + i] = input[t * 9 + v1 * 3 + i];
+        output[t * 18 + v1 * 3 + 9 + i] = input[t * 9 + v2 * 3 + i];
+      }
+    }
+  }
+  return output;
+};
+
+// 屏幕上一个正方形
+export const screen_quad = () => {
+  return new Float32Array([
+    -1, 1, 0, -1, -1, 0, 1, -1, 0,
+
+    -1, 1, 0, 1, -1, 0, 1, 1, 0,
+  ]);
+};
+
+export const cute = (scale?) => {
+  scale = scale || 1;
+  return new Float32Array([
+    // back
+    scale,
+    scale,
+    scale,
+    scale,
+    -scale,
+    scale,
+    -scale,
+    -scale,
+    scale,
+
+    scale,
+    scale,
+    scale,
+    -scale,
+    -scale,
+    scale,
+    -scale,
+    scale,
+    scale,
+
+    // front
+    -scale,
+    scale,
+    -scale,
+    -scale,
+    -scale,
+    -scale,
+    scale,
+    scale,
+    -scale,
+
+    scale,
+    scale,
+    -scale,
+    -scale,
+    -scale,
+    -scale,
+    scale,
+    -scale,
+    -scale,
+    // left
+    -scale,
+    scale,
+    scale,
+    -scale,
+    -scale,
+    -scale,
+    -scale,
+    scale,
+    -scale,
+
+    -scale,
+    scale,
+    scale,
+    -scale,
+    -scale,
+    scale,
+    -scale,
+    -scale,
+    -scale,
+
+    // right
+    scale,
+    scale,
+    scale,
+    scale,
+    scale,
+    -scale,
+    scale,
+    -scale,
+    -scale,
+
+    scale,
+    scale,
+    scale,
+    scale,
+    -scale,
+    -scale,
+    scale,
+    -scale,
+    scale,
+
+    // top
+    scale,
+    scale,
+    scale,
+    -scale,
+    scale,
+    scale,
+    -scale,
+    scale,
+    -scale,
+
+    scale,
+    scale,
+    -scale,
+    scale,
+    scale,
+    scale,
+    -scale,
+    scale,
+    -scale,
+
+    // bottom
+    -scale,
+    -scale,
+    -scale,
+    -scale,
+    -scale,
+    scale,
+    scale,
+    -scale,
+    scale,
+
+    -scale,
+    -scale,
+    -scale,
+    scale,
+    -scale,
+    scale,
+    scale,
+    -scale,
+    -scale,
+  ]);
+};
+
 // 解析Obj格式
 export const parseObj = (text: string) => {
   // because indices are base 1 let's just fill in the 0th data
@@ -109,3 +263,5 @@ export const parseObj = (text: string) => {
     normal: webglVertexData[2],
   };
 };
+
+export default { gird, cute, parseObj, wireFrame, screen_quad };

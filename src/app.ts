@@ -4,7 +4,7 @@ import createClock from './util/clock';
 import { setCanvasFullScreen, Texture2D, FrameBufferObject, getGL } from './util/glUtils';
 import { ShaderManager } from './util/shader';
 import Loader from './loader';
-import { gird, parseObj } from './util/mesh';
+import Mesh from './util/mesh';
 import CameraController from './control/cameraController';
 import InputHandler from './control/input';
 import { mat4, vec3 } from './math/MV';
@@ -67,6 +67,8 @@ export default async () => {
     time: 0.0,
   };
 
+  console.log(Mesh.wireFrame(Mesh.gird(1)));
+
   const prepareScence = (xrSession?: XRSession) => {
     sceneGraph = new Scene.Graph(xrSession);
 
@@ -76,7 +78,7 @@ export default async () => {
     const waterText2D = new Texture2D(loader.resources['normalnoise.png']);
     const snowText2D = new Texture2D(loader.resources['snow.png']);
     const occlusionText2D = new Texture2D(loader.resources['occlusion.png']);
-    const { position, normal } = parseObj(loader.resources['obj/seahawk.obj']);
+    const { position, normal } = Mesh.parseObj(loader.resources['obj/seahawk.obj']);
 
     // 着色器
     const mountainShader = shaderManager.get('terrain.vert', 'terrain.frag');
@@ -85,8 +87,8 @@ export default async () => {
     const planeShader = shaderManager.get('plane.vert', 'plane.frag');
 
     // 顶点数据
-    mountainShader.setAttribBufferData('position', gird(GRID_RESOLUTION));
-    waterShader.setAttribBufferData('position', gird(100));
+    mountainShader.setAttribBufferData('position', Mesh.gird(GRID_RESOLUTION));
+    waterShader.setAttribBufferData('position', Mesh.gird(100));
     planeShader.setAttribBufferData('position', new Float32Array(position));
     planeShader.setAttribBufferData('vNormal', new Float32Array(normal));
 
@@ -191,7 +193,7 @@ export default async () => {
       prepareScence(xrSession);
       clock.start(xrSession);
     };
-
+    document.body.removeChild(document.querySelector('span'));
     enterVrButton.onclick = () => {
       //  需要用户点击 进入VR 后才可以获取到XRSession
       if (supportVr) {
