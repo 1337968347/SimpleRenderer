@@ -75,14 +75,14 @@ export default async () => {
         heightmap: heightText2D,
         snowTexture: snowText2D,
         occlusionmap: occlusionText2D,
-        snowColor: uniform.Vec3([0.9, 0.9, 0.9]),
-        groundColor: uniform.Vec3([0.5, 0.5, 0.5]),
+        snowColor: uniform.Vec3([1.0, 1.0, 1.0]),
+        groundColor: uniform.Vec3([0.5, 0.4, 0.3]),
       },
       [mountainTransform],
     );
 
     // 然后用山的倒影生成的纹理 画水面
-    const water = new Scene.Material(waterShader, { color: uniform.Vec3([0.2, 0.3, 0.3]), waterNoise: waterText2D }, [waterTransform]);
+    const water = new Scene.Material(waterShader, { color: uniform.Vec3([0.2, 0.28, 0.3]), waterNoise: waterText2D }, [waterTransform]);
 
     // 开放场景图数据传输
     // Scene.Graph 场景

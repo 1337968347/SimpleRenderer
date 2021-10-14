@@ -25,8 +25,8 @@ void main() {
   vec4 noise = getNoise(uv);
 
   vec3 eyeNormal = normalize(eye - worldPosition);
-  vec3 surfaceNormal = normalize(vec3(0, 3.0, 0) + vec3(noise.x, 0, noise.y));
+  vec3 surfaceNormal = normalize(vec3(0, 2.0, 0) + vec3(noise.x, 0, noise.y));
 
-  vec3 sun = sunLight(surfaceNormal, eyeNormal, 200.0, 1.0, 0.5);
-  gl_FragColor = vec4(sun + color, 1.0);
+  vec3 sun = sunLight(surfaceNormal, eyeNormal, 200.0, 0.7, 1.2);
+  gl_FragColor = vec4(sun * color, 1.0);
 }
