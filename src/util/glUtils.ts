@@ -161,6 +161,26 @@ export class VertexBufferObject extends BufferObject {
   }
 }
 
+// 获取图片的RGBA数组
+export const getImageData = (imageEl: HTMLImageElement) => {
+  const canvasEl = document.createElement('canvas');
+  const ctx = canvasEl.getContext('2d');
+  canvasEl.width = imageEl.width;
+  canvasEl.height = imageEl.height;
+  ctx.drawImage(imageEl, 0, 0);
+  return ctx.getImageData(0, 0, imageEl.width, imageEl.height);
+};
+
+// 获取图片指定纹理地址的高度
+export const sampleHeight = (imgData: ImageData, u: number, v: number) => {
+  // ~~ 符号是向下取整
+  if (u < 0 || u > 1 || v < 0 || v > 1) return 0.0;
+  var x = ~~(imgData.width * u),
+    y = ~~(imgData.height * v),
+    i = (y * imgData.width + x) * 4 + 3;
+  return imgData.data[i] / 255;
+};
+
 export const setCanvasFullScreen = (canvas: HTMLCanvasElement, scene: Scene.Graph) => {
   const onResize = () => {
     canvas.width = scene.viewport.width = window.innerWidth;

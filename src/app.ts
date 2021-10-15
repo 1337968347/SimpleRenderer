@@ -1,13 +1,13 @@
 import * as Scene from './scene';
 import * as uniform from './util/uniform';
 import createClock from './util/clock';
-import { setCanvasFullScreen, Texture2D, getGL, VertexBufferObject } from './util/glUtils';
+import { setCanvasFullScreen, Texture2D, getGL, VertexBufferObject, getImageData, sampleHeight } from './util/glUtils';
 import { ShaderManager } from './util/shader';
 import Loader from './loader';
 import Mesh from './util/mesh';
 import CameraController from './control/cameraController';
 import InputHandler from './control/input';
-import { mat4, vec3 } from './math/MV';
+import { mat3, mat4, vec3 } from './math/MV';
 
 const query = new URLSearchParams(location.search);
 
@@ -48,6 +48,8 @@ export default async () => {
     clip: 1000,
     time: 0.0,
   };
+  const inverseWorldMatrix = mat4.create();
+  let sampleImage: ImageData;
 
   const prepareScence = (xrSession?: XRSession) => {
     sceneGraph = new Scene.Graph(xrSession);
@@ -58,6 +60,7 @@ export default async () => {
     const waterText2D = new Texture2D(loader.resources['normalnoise.png']);
     const snowText2D = new Texture2D(loader.resources['snow.png']);
     const occlusionText2D = new Texture2D(loader.resources['occlusion.png']);
+    sampleImage = getImageData(loader.resources['heightmap.png']);
 
     // 着色器
     const mountainShader = shaderManager.get('terrain.vert', 'terrain.frag');
@@ -105,7 +108,7 @@ export default async () => {
     sceneGraph.root.append(camera);
 
     camera.setProjection(0.1, FAR_AWAY * 2, sceneGraph.getWebXR());
-    camera.position = new Float32Array([0, 10, 200]);
+    camera.position = new Float32Array([0, 10, 180]);
     // 把世界坐标 从 0-1 变成 0- MESHNUM
     // 并且 把坐标原点移到中心
     mat4.translate(mountainTransform.wordMatrix, new Float32Array([-0.5 * GRID_SIZE, -40, -0.5 * GRID_SIZE]));
@@ -113,6 +116,8 @@ export default async () => {
 
     mat4.translate(waterTransform.wordMatrix, new Float32Array([-0.5 * FAR_AWAY, 0, -0.5 * FAR_AWAY]));
     mat4.scale(waterTransform.wordMatrix, new Float32Array([FAR_AWAY, 1, FAR_AWAY]));
+
+    mat3.toMat4(mat4.toInverseMat3(mountainTransform.wordMatrix), inverseWorldMatrix);
 
     camera.far = FAR_AWAY * 2;
     setCanvasFullScreen(canvasEl, sceneGraph);
@@ -123,6 +128,10 @@ export default async () => {
     clock.setOnTick((t: number, frame: XRFrame) => {
       globaluniform.time += t;
       cameraController.tick();
+      const camera = cameraController.camera;
+      const fakePosition = vec3.create();
+      mat4.multiplyVec3(inverseWorldMatrix, camera.position, fakePosition);
+      console.log(sampleHeight(sampleImage, fakePosition[0], fakePosition[2]));
       sceneGraph.draw(frame);
     });
 
