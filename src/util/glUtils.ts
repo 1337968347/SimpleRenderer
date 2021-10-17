@@ -125,14 +125,10 @@ export class BufferObject {
   buffer: WebGLBuffer;
   length: number;
   location: number;
-  constructor() {
+  constructor(vertexData: Float32Array) {
     this.gl = getGL();
     this.buffer = this.gl.createBuffer();
-  }
-
-  initBufferData(location: number, vertexData: Float32Array) {
     this.bind();
-    this.location = location;
     this.length = vertexData.length;
     this.gl.bufferData(this.gl.ARRAY_BUFFER, vertexData, this.gl.STATIC_DRAW);
     this.unbind();
@@ -156,8 +152,8 @@ export class VertexBufferObject extends BufferObject {
   buffer: WebGLBuffer;
   length: number;
   location: number;
-  constructor() {
-    super();
+  constructor(vertexData: Float32Array) {
+    super(vertexData);
   }
 
   drawTriangles() {

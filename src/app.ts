@@ -1,7 +1,7 @@
 import * as Scene from './scene';
 import * as uniform from './util/uniform';
 import createClock from './util/clock';
-import { setCanvasFullScreen, Texture2D, FrameBufferObject, getGL } from './util/glUtils';
+import { setCanvasFullScreen, Texture2D, FrameBufferObject, getGL, VertexBufferObject } from './util/glUtils';
 import { ShaderManager } from './util/shader';
 import Loader from './loader';
 import Mesh from './util/mesh';
@@ -42,10 +42,6 @@ export default async () => {
     'shaders/screen.frag',
     'shaders/sky.vert',
     'shaders/sky.frag',
-    'shaders/plane.vert',
-    'shaders/plane.frag',
-
-    'obj/seahawk.obj',
   ]);
 
   const enterVrButton = document.querySelector('button');
@@ -67,8 +63,6 @@ export default async () => {
     time: 0.0,
   };
 
-  console.log(Mesh.wireFrame(Mesh.gird(1)));
-
   const prepareScence = (xrSession?: XRSession) => {
     sceneGraph = new Scene.Graph(xrSession);
 
@@ -78,34 +72,18 @@ export default async () => {
     const waterText2D = new Texture2D(loader.resources['normalnoise.png']);
     const snowText2D = new Texture2D(loader.resources['snow.png']);
     const occlusionText2D = new Texture2D(loader.resources['occlusion.png']);
-    const { position, normal } = Mesh.parseObj(loader.resources['obj/seahawk.obj']);
 
     // 着色器
     const mountainShader = shaderManager.get('terrain.vert', 'terrain.frag');
     const waterShader = shaderManager.get('water.vert', 'water.frag');
     const skyShader = shaderManager.get('sky.vert', 'sky.frag');
-    const planeShader = shaderManager.get('plane.vert', 'plane.frag');
 
-    // 顶点数据
-    mountainShader.setAttribBufferData('position', Mesh.gird(GRID_RESOLUTION));
-    waterShader.setAttribBufferData('position', Mesh.gird(100));
-    planeShader.setAttribBufferData('position', new Float32Array(position));
-    planeShader.setAttribBufferData('vNormal', new Float32Array(normal));
+    const moutainVbo = new VertexBufferObject(Mesh.gird(GRID_RESOLUTION));
+    const waterVbo = new VertexBufferObject(Mesh.gird(100));
 
-    // 视口固定矩阵
-    const fixModelView = mat4.identity(mat4.create());
-    mat4.rotateY(fixModelView, Math.PI);
-    const offset = new Float32Array([0, -2, 8.0]);
-    // 然后缩放的基础上z坐标向前移动 10（右手坐标）
-    mat4.translate(fixModelView, offset);
-    // 飞机先缩放 100倍
-    mat4.scale(fixModelView, new Float32Array([0.01, 0.01, 0.01]));
+    const mountainTransform = new Scene.Transform([new Scene.SimpleMesh({ position: moutainVbo })]);
+    const waterTransform = new Scene.Transform([new Scene.SimpleMesh({ position: waterVbo })]);
 
-    const mountainTransform = new Scene.Transform([new Scene.SimpleMesh()]);
-    const waterTransform = new Scene.Transform([new Scene.SimpleMesh()]);
-    const planeTransform: Scene.CameraFixTransform = new Scene.CameraFixTransform([new Scene.SimpleMesh()]);
-
-    const plane = new Scene.Material(planeShader, { color: uniform.Vec3([0.2, 0.2, 0.7]) }, [planeTransform]);
     const mountain = new Scene.Material(
       mountainShader,
       {
@@ -137,7 +115,7 @@ export default async () => {
       { color: uniform.Vec3([0.7, 0.7, 0.9]), waterNoise: waterText2D, reflection: reflectionFBO, refraction: mountainDepthFbo },
       [waterTransform],
     );
-    const webGlRenderTarget = new Scene.WebVrRenderTarget([plane, mountain, water, sky]);
+    const webGlRenderTarget = new Scene.WebVrRenderTarget([mountain, water, sky]);
 
     // 开放场景图数据传输
     // Scene.Graph 场景
@@ -172,8 +150,6 @@ export default async () => {
     mat4.scale(waterTransform.wordMatrix, new Float32Array([FAR_AWAY, 1, FAR_AWAY]));
 
     mat4.scale(sky.wordMatrix, new Float32Array([FAR_AWAY, FAR_AWAY, FAR_AWAY]));
-
-    planeTransform.wordMatrix = fixModelView;
 
     camera.far = FAR_AWAY * 2;
     setCanvasFullScreen(canvasEl, sceneGraph);
