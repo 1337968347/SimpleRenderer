@@ -108,10 +108,10 @@ export default async () => {
     sceneGraph.root.append(camera);
 
     camera.setProjection(0.1, FAR_AWAY * 2, sceneGraph.getWebXR());
-    camera.position = new Float32Array([0, 10, 180]);
+    camera.position = new Float32Array([0, 0, 0]);
     // 把世界坐标 从 0-1 变成 0- MESHNUM
     // 并且 把坐标原点移到中心
-    mat4.translate(mountainTransform.wordMatrix, new Float32Array([-0.5 * GRID_SIZE, -40, -0.5 * GRID_SIZE]));
+    mat4.translate(mountainTransform.wordMatrix, new Float32Array([-0.5 * GRID_SIZE, 0, -0.5 * GRID_SIZE]));
     mat4.scale(mountainTransform.wordMatrix, new Float32Array([GRID_SIZE, 100, GRID_SIZE]));
 
     mat4.translate(waterTransform.wordMatrix, new Float32Array([-0.5 * FAR_AWAY, 0, -0.5 * FAR_AWAY]));
@@ -131,7 +131,8 @@ export default async () => {
       const camera = cameraController.camera;
       const fakePosition = vec3.create();
       mat4.multiplyVec3(inverseWorldMatrix, camera.position, fakePosition);
-      console.log(sampleHeight(sampleImage, fakePosition[0], fakePosition[2]));
+      const uv = [(fakePosition[0] + 1.0) / 2, (fakePosition[2] + 1.0) / 2];
+      console.log(sampleHeight(sampleImage, uv[0], uv[1]) * 100, camera.position[1]);
       sceneGraph.draw(frame);
     });
 
