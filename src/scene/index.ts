@@ -1,8 +1,9 @@
 import * as uniform from '../util/uniform';
-import { mat3, mat4, vec3, vec4 } from '../math/MV';
-import { getGL, VertexBufferObject, Texture2D, FrameBufferObject } from '../util/glUtils';
-import { Shader } from '../util/shader';
 import { UniformMap } from '../util/uniform';
+import * as Mesh from '../util/mesh';
+import { mat3, mat4, vec3, vec4 } from '../math/MV';
+import { getGL, VertexBufferObject, Texture2D, FrameBufferObject, BufferObject } from '../util/glUtils';
+import { Shader } from '../util/shader';
 import { WebXr } from '../util/webXR';
 
 export class Node {
@@ -280,24 +281,25 @@ export class Camera extends Node {
 }
 
 export class SimpleMesh extends Node {
-  constructor() {
+  bufferGeometry: { [key: string]: BufferObject };
+  constructor(BufferGeometry: { [key: string]: BufferObject }) {
     super();
+    this.bufferGeometry = BufferGeometry;
   }
 
   visit(scene: Graph) {
     const shader = scene.getShader();
     shader.uniforms(scene.uniforms);
-    const attributes = shader.attributes;
-    for (const name of Object.keys(attributes)) {
-      const bufferObject = attributes[name];
+    for (const name of Object.keys(this.bufferGeometry)) {
+      const bufferObject = this.bufferGeometry[name];
       bufferObject.bind();
       if (bufferObject instanceof VertexBufferObject) {
         bufferObject.drawTriangles();
       }
     }
 
-    for (const name of Object.keys(attributes)) {
-      const bufferObject = attributes[name];
+    for (const name of Object.keys(this.bufferGeometry)) {
+      const bufferObject = this.bufferGeometry[name];
       bufferObject.unbind();
     }
   }
@@ -404,8 +406,8 @@ export class PostProcess extends Node {
   children: Node[];
   constructor(shader: Shader, uniforms: UniformMap) {
     super();
-    shader.setAttribBufferData('position', new Float32Array([-1, 1, 0, -1, -1, 0, 1, -1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0]));
-    const mesh = new SimpleMesh();
+    const screenVbo = new VertexBufferObject(Mesh.screen_quad());
+    const mesh = new SimpleMesh({ position: screenVbo });
     const material = new Material(shader, uniforms, [mesh]);
     this.children = [material];
   }
@@ -432,24 +434,8 @@ export class Skybox extends Node {
   constructor(shader: Shader, uniforms: UniformMap) {
     super();
 
-    shader.setAttribBufferData(
-      'position',
-      new Float32Array([
-        // back
-        1, 1, 1, 1, -1, 1, -1, -1, 1, 1, 1, 1, -1, -1, 1, -1, 1, 1,
-        // front
-        -1, 1, -1, -1, -1, -1, 1, 1, -1, 1, 1, -1, -1, -1, -1, 1, -1, -1,
-        // left
-        -1, 1, 1, -1, -1, -1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1, -1, -1,
-        // right
-        1, 1, 1, 1, 1, -1, 1, -1, -1, 1, 1, 1, 1, -1, -1, 1, -1, 1,
-        // top
-        1, 1, 1, -1, 1, 1, -1, 1, -1, 1, 1, -1, 1, 1, 1, -1, 1, -1,
-        // bottom
-        -1, -1, -1, -1, -1, 1, 1, -1, 1, -1, -1, -1, 1, -1, 1, 1, -1, -1,
-      ]),
-    );
-    const mesh = new SimpleMesh();
+    const skyVbo = new VertexBufferObject(Mesh.cute());
+    const mesh = new SimpleMesh({ position: skyVbo });
     const material = new Material(shader, uniforms, [mesh]);
     this.children = [material];
   }
