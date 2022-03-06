@@ -18,7 +18,7 @@ vec3 lightHemisphere(const vec3 surfaceNormal) {
   float costheta = dot(surfaceNormal, vec3(0.0, 1.0, 0.0));
   float a = max(costheta, 0.0);
 
-  if(a > 0.5) {
+  if(a > 0.3) {
     return mix(groundColor, snowColor, a);
   }
   return groundColor;

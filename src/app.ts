@@ -13,7 +13,7 @@ let navigator: any = window.navigator;
 
 const query = new URLSearchParams(location.search);
 
-const scale = parseFloat(query.get('d')) || 1.0;
+const scale = parseFloat(query.get('d')) || 0.5;
 
 // 网格密度
 const GRID_RESOLUTION = 512 * scale * scale,
@@ -57,7 +57,7 @@ export default async () => {
   const gl: WebGLRenderingContext = getGL();
   const globaluniform = {
     sunColor: uniform.Vec3([1.1, 1.0, 1.0]),
-    sunDirection: uniform.Vec3(vec3.normalize(new Float32Array([0.0, 0.6, -1.0]))),
+    sunDirection: uniform.Vec3(vec3.normalize(new Float32Array([0.0, 0.5, -1.0]))),
     skyColor: uniform.Vec3([0.1, 0.15, 0.45]),
     clip: 1000,
     time: 0.0,
@@ -91,7 +91,7 @@ export default async () => {
         snowTexture: snowText2D,
         occlusionmap: occlusionText2D,
         snowColor: uniform.Vec3([0.9, 0.9, 0.9]),
-        groundColor: uniform.Vec3([0.5, 0.5, 0.5]),
+        groundColor: uniform.Vec3([0.4, 0.4, 0.4]),
       },
       [mountainTransform],
     );
@@ -130,7 +130,7 @@ export default async () => {
     // can be optimized with a z only shader
 
     // 先画山的倒影， 然后画山 画水
-    const camera: Scene.Camera = new Scene.Camera([new Scene.Uniforms(globaluniform, [underWaterTarget, webGlRenderTarget])]);
+    const camera: Scene.Camera = new Scene.Camera([new Scene.Uniforms(globaluniform, [webGlRenderTarget, underWaterTarget])]);
 
     cameraController = new CameraController(inputHandler, camera);
 
@@ -138,11 +138,11 @@ export default async () => {
     sceneGraph.root.append(camera);
 
     camera.setProjection(0.1, FAR_AWAY * 2, sceneGraph.getWebXR());
-    camera.position = new Float32Array([0, 10, 200]);
+    camera.position = new Float32Array([0, 10, 250]);
     // 把世界坐标 从 0-1 变成 0- MESHNUM
     // 并且 把坐标原点移到中心
     mat4.translate(mountainTransform.wordMatrix, new Float32Array([-0.5 * GRID_SIZE, -40, -0.5 * GRID_SIZE]));
-    mat4.scale(mountainTransform.wordMatrix, new Float32Array([GRID_SIZE, 100, GRID_SIZE]));
+    mat4.scale(mountainTransform.wordMatrix, new Float32Array([GRID_SIZE, 120, GRID_SIZE]));
     // 倒影
     mat4.scale(flipTransform.wordMatrix, new Float32Array([1.0, -1.0, 1.0]));
 
