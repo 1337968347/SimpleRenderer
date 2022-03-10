@@ -18,7 +18,7 @@ void main() {
     surfaceNormal = normalize(heightPixel.rbg - 0.5);
 
     // dot(position.xz, vec2(1.0, 0.0)) 是在x-z平面里， 点在x轴上投影的坐标
-    uv = vec2(position.z, dot(position.xz, vec2(1.0, 0.0)) * 0.5 + 0.5) * vec2(100.0);
+    uv = vec2(position.z, dot(position.xz, vec2(1.0, 0.0)) * 0.5 + 0.5) * vec2(50.0);
     // 切线
     vec3 surfaceTangent = normalize(cross(surfaceNormal, vec3(0.0, 1.0, 0.0)));
     // 副法线
