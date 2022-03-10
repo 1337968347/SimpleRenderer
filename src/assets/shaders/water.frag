@@ -11,6 +11,8 @@ uniform float time;
 uniform vec3 sunColor;
 uniform vec3 sunDirection;
 
+/// import "fog.glsl"
+
 vec4 getNoise(vec2 uv) {
   vec2 uv0 = (uv / 103.0) + vec2(time / 50.0, time / 60.0);
   vec2 uv1 = uv / 107.0 - vec2(time / -45.0, time / 70.0);
@@ -65,5 +67,5 @@ void main() {
   vec3 specularColor = pow(reflecttionDot, 128.0) * sunColor * 20.0;
 
   vec3 finalColor = mix(refractionColor * diffuseColor, reflectionSample * (diffuseColor + specularColor), reflectance);
-  gl_FragColor = vec4(finalColor, depth);
+  gl_FragColor = vec4(heightFog(eye, worldPosition, finalColor), 1.0);
 }

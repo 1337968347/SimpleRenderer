@@ -29,6 +29,7 @@ export default async () => {
   loader.load([
     'shaders/sun.glsl',
     'shaders/transform.glsl',
+    'shaders/fog.glsl',
     'shaders/water.vert',
     'shaders/water.frag',
     'heightmap.png',
@@ -57,8 +58,9 @@ export default async () => {
   const gl: WebGLRenderingContext = getGL();
   const globaluniform = {
     sunColor: uniform.Vec3([1.1, 1.0, 1.0]),
-    sunDirection: uniform.Vec3(vec3.normalize(new Float32Array([0.0, 0.5, -1.0]))),
+    sunDirection: uniform.Vec3(vec3.normalize(new Float32Array([0.0, 0.4, -1.0]))),
     skyColor: uniform.Vec3([0.1, 0.15, 0.45]),
+    fogColor: uniform.Vec3([0.5, 0.6, 0.7]),
     clip: 1000,
     time: 0.0,
   };

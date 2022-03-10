@@ -14,6 +14,8 @@ varying mat3 tbn;
 
 /// import "sun.glsl"
 
+/// import "fog.glsl"
+
 vec3 lightHemisphere(const vec3 surfaceNormal) {
   float costheta = dot(surfaceNormal, vec3(0.0, 1.0, 0.0));
   float a = max(costheta, 0.0);
@@ -34,5 +36,8 @@ void main() {
   vec3 color = lightHemisphere(normal) + sunLight(normal, eyeNormal, 100.0, 5.0, 0.5);
 
   float depth = length(worldPosition - eye);
-  gl_FragColor = vec4(color * occlusion, depth);
+
+  vec3 finalColor = color * occlusion;
+
+  gl_FragColor = vec4(heightFog(eye, worldPosition, finalColor), depth);
 }
