@@ -1,7 +1,7 @@
 const createClock = (webXRSession?) => {
   let isRunning: boolean = false;
   let nowT: number;
-  let timeId: number | null = null;
+  let timeId: any = null;
   let onTick: (t: number, frame: any) => void = undefined;
 
   const start = async (webXRSession?) => {

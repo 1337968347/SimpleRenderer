@@ -13,7 +13,7 @@ let navigator: any = window.navigator;
 
 const query = new URLSearchParams(location.search);
 
-const scale = parseFloat(query.get('d')) || 0.5;
+const scale = parseFloat(query.get('d')) || 1.0;
 
 // 网格密度
 const GRID_RESOLUTION = 512 * scale * scale,
@@ -63,6 +63,8 @@ export default async () => {
     fogColor: uniform.Vec3([0.5, 0.6, 0.7]),
     clip: 1000,
     time: 0.0,
+    globalFogDensity: 0.1,
+    fogHeight: 100
   };
 
   const prepareScence = (xrSession?: XRSession) => {
@@ -93,7 +95,7 @@ export default async () => {
         snowTexture: snowText2D,
         occlusionmap: occlusionText2D,
         snowColor: uniform.Vec3([0.9, 0.9, 0.9]),
-        groundColor: uniform.Vec3([0.4, 0.4, 0.4]),
+        groundColor: uniform.Vec3([0.15, 0.15, 0.18]),
       },
       [mountainTransform],
     );
@@ -173,6 +175,7 @@ export default async () => {
     };
     document.body.removeChild(document.querySelector('span'));
     enterVrButton.onclick = () => {
+      enterVrButton.remove();
       //  需要用户点击 进入VR 后才可以获取到XRSession
       if (supportVr) {
         navigator.xr.requestSession('immersive-vr').then((xrSession: XRSession) => {
