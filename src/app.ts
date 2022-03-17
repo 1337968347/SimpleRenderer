@@ -13,13 +13,13 @@ let navigator: any = window.navigator;
 
 const query = new URLSearchParams(location.search);
 
-const scale = parseFloat(query.get('d')) || 1.0;
+const scale = parseFloat(query.get('d')) || 0.5;
 
 // 网格密度
 const GRID_RESOLUTION = 512 * scale * scale,
   // 世界缩放
   GRID_SIZE = 512,
-  FAR_AWAY = 10000;
+  FAR_AWAY = 500;
 
 export default async () => {
   const canvasEl = document.querySelector('canvas');
@@ -63,8 +63,8 @@ export default async () => {
     fogColor: uniform.Vec3([0.5, 0.6, 0.7]),
     clip: 1000,
     time: 0.0,
-    globalFogDensity: 0.1,
-    fogHeight: 100
+    globalFogDensity: 0.01,
+    fogHeight: 20
   };
 
   const prepareScence = (xrSession?: XRSession) => {
@@ -94,8 +94,8 @@ export default async () => {
         heightmap: heightText2D,
         snowTexture: snowText2D,
         occlusionmap: occlusionText2D,
-        snowColor: uniform.Vec3([0.9, 0.9, 0.9]),
-        groundColor: uniform.Vec3([0.15, 0.15, 0.18]),
+        snowColor: uniform.Vec3([0.8, 0.8, 0.8]),
+        groundColor: uniform.Vec3([0.1, 0.1, 0.12]),
       },
       [mountainTransform],
     );
