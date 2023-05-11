@@ -11,16 +11,18 @@ uniform float time;
 uniform vec3 sunColor;
 uniform vec3 sunDirection;
 
+/// import "fog.glsl"
+
 vec4 getNoise(vec2 uv) {
-  vec2 uv0 = (uv / 103.0) + vec2(time / 17.0, time / 29.0);
-  vec2 uv1 = uv / 107.0 - vec2(time / -19.0, time / 31.0);
+  vec2 uv0 = (uv / 103.0) + vec2(time / 50.0, time / 60.0);
+  vec2 uv1 = uv / 107.0 - vec2(time / -45.0, time / 70.0);
   vec2 uv2 = uv / vec2(897.0, 983.0) + vec2(time / 101.0, time / 97.0);
   vec2 uv3 = uv / vec2(991.0, 877.0) - vec2(time / 109.0, time / -113.0);
   vec4 noise = (texture2D(waterNoise, uv0)) +
     (texture2D(waterNoise, uv1)) +
     (texture2D(waterNoise, uv2)) +
     (texture2D(waterNoise, uv3));
-  return noise * 0.25 - 0.5;
+  return noise * 0.5 - 1.0;
 }
 
 void main() {
@@ -49,7 +51,7 @@ void main() {
   vec3 refractionColor = max(mix(vec3(refractionSample) * 0.5, color, extinction), vec3(0.0));
 
   vec3 eyeNormal = normalize(eye - worldPosition);
-  vec3 surfaceNormal = normalize(vec3(0, 1, 0) + vec3(noise.x, 0, noise.y));
+  vec3 surfaceNormal = normalize(vec3(0, 3.0, 0) + vec3(noise.x, 0, noise.y));
 
   // 视线跟水面法线的夹角
   float theta1 = clamp(dot(eyeNormal, surfaceNormal), 0.0, 1.0);
@@ -58,13 +60,12 @@ void main() {
   float reflectance = rf0 + (1.0 - rf0) * pow((1.0 - theta1), 5.0);
   // phong光照反射
   // 漫反射
-  vec3 diffuseColor = max(dot(sunDirection, surfaceNormal), 0.0) * sunColor * 2.5;
+  vec3 diffuseColor = max(dot(sunDirection, surfaceNormal), 0.0) * sunColor * 2.0;
   // 镜面反射
   vec3 reflectionDirection = normalize(reflect(-sunDirection, surfaceNormal));
   float reflecttionDot = max(0.0, dot(eyeNormal, reflectionDirection));
-  vec3 specularColor = pow(reflecttionDot, 30.0) * sunColor * 20.0;
+  vec3 specularColor = pow(reflecttionDot, 128.0) * sunColor * 20.0;
 
-  // BRDF  能量守恒 总共能量 = 被折射的能量的比率 * 漫反射 + 被反射能量的比率 * 镜面反射
-  vec3 finalColor = mix(refractionColor * diffuseColor, reflectionSample * specularColor, reflectance);
-  gl_FragColor = vec4(finalColor, depth);
+  vec3 finalColor = mix(refractionColor * diffuseColor, reflectionSample * (diffuseColor + specularColor), reflectance);
+  gl_FragColor = vec4(heightFog(eye, worldPosition, finalColor), 1.0);
 }
