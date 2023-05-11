@@ -63,7 +63,7 @@ export default async () => {
     fogColor: uniform.Vec3([0.5, 0.6, 0.7]),
     clip: 1000,
     time: 0.0,
-    globalFogDensity: 0.015,
+    globalFogDensity: 0.001,
     fogHeight: 20
   };
 
@@ -142,7 +142,7 @@ export default async () => {
     sceneGraph.root.append(camera);
 
     camera.setProjection(0.1, FAR_AWAY * 2, sceneGraph.getWebXR());
-    camera.position = new Float32Array([0, 40, 200]);
+    camera.position = new Float32Array([0, 20, 118]);
     // 把世界坐标 从 0-1 变成 0- MESHNUM
     // 并且 把坐标原点移到中心
     mat4.translate(mountainTransform.wordMatrix, new Float32Array([-0.5 * GRID_SIZE, -40, -0.5 * GRID_SIZE]));

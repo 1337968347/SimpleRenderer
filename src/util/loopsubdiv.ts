@@ -25,6 +25,3 @@ class SDFace {
   }
 }
 
-class SDEdge {
-  constructor(parameters) {}
-}

@@ -215,6 +215,8 @@ export class Camera extends Node {
     mat4.multiply(project, wordView, mvp);
     scene.uniforms.projection = uniform.Mat4(mvp);
     scene.uniforms.eye = uniform.Vec3(mergePosition);
+    const p = this.project(vec4.create(new Float32Array([0, 0, 0.6, 1.0])), scene);
+    console.log([...p]);
   }
 
   exit(scene: Graph) {
@@ -242,8 +244,9 @@ export class Camera extends Node {
   }
 
   project(point: Float32Array, scene: Graph) {
-    const mvp = mat4.create();
-    mat4.multiply(this.getProjection(scene), this.getWorldView(), mvp);
+    const mvp = mat4.identity(mat4.create());
+    const projectMat4 = this.getProjection(scene);
+    mat4.multiply(this.getWorldView(), projectMat4, mvp);
     const projected = mat4.multiplyVec4(mvp, point, vec4.create());
     vec4.scale(projected, 1 / projected[3]);
     return projected;
